@@ -50,9 +50,11 @@ app.use((req, res) => res.status(404).json({ success: false, message: 'Route not
 // ── Global Error Handler ──────────────────────────────────────
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`\n🚀  SmartCheckout API running on http://localhost:${PORT}`);
-  console.log(`📋  Health: http://localhost:${PORT}/api/health\n`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`\n🚀  SmartCheckout API running on http://localhost:${PORT}`);
+    console.log(`📋  Health: http://localhost:${PORT}/api/health\n`);
+  });
+}
 
 module.exports = app;
