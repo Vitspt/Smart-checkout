@@ -88,6 +88,21 @@
     <div style="font-size:13px;opacity:0.8;margin-top:4px">Analyzing product packaging...</div>
   </div>
 
+  <!-- SCAN CONFIRMATION OVERLAY -->
+  <div id="scan-confirmation" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:300;align-items:center;justify-content:center;padding:20px">
+    <div class="glass-card" style="width:100%;max-width:320px;padding:32px 24px;text-align:center;animation:slideUp 0.4s ease">
+      <div id="conf-emoji" style="font-size:64px;margin-bottom:16px">🛒</div>
+      <div id="conf-name" style="font-size:20px;font-weight:900;margin-bottom:4px;color:#fff">Product Name</div>
+      <div id="conf-brand" style="font-size:14px;color:var(--muted);margin-bottom:12px">Brand Name</div>
+      <div id="conf-price" style="font-size:24px;font-weight:900;color:var(--primary);margin-bottom:24px">₹0</div>
+      
+      <div style="display:flex;gap:12px">
+        <button class="btn btn-outline" onclick="dismissScan()" style="flex:1">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmScan()" style="flex:1">Add to Cart</button>
+      </div>
+    </div>
+  </div>
+
   <!-- RECENTLY SCANNED -->
   <div class="recent-list" id="recent-wrap" style="margin-top:20px;display:none">
     <div class="sh" style="margin-bottom:8px">Recently Added</div>
@@ -136,16 +151,51 @@ function showStatus(msg){
   setTimeout(()=>s.style.display='none', 2500);
 }
 
+let lastScan = null;
+
 function handleScanned(code){
+  if (lastScan === code.trim()) return; // Prevent immediate re-scan of same item
   document.getElementById('debug-info').textContent = `Last detected: ${code}`;
   const p = getProductById(code.trim());
   if(!p){ toast('Scanned: ' + code + ' (Not in DB)','amber'); return; }
-  addToCart(p);
-  addScanHistory(p);
-  checkListAuto(p.name);
-  showStatus(`✅ ${p.name} added to cart!`);
-  toast(`${p.emoji} ${p.name} added!`);
-  renderRecent();
+  
+  // Pause scanner
+  if(scanner) scanner.pause(true);
+  
+  // Show confirmation
+  const overlay = document.getElementById('scan-confirmation');
+  document.getElementById('conf-emoji').textContent = p.emoji || '🛒';
+  document.getElementById('conf-name').textContent = p.name;
+  document.getElementById('conf-brand').textContent = p.brand;
+  document.getElementById('conf-price').textContent = '₹' + p.price;
+  overlay.style.display = 'flex';
+  
+  window.currentPendingProduct = p;
+  lastScan = code.trim();
+}
+
+window.confirmScan = function(){
+  const p = window.currentPendingProduct;
+  if(p){
+    addToCart(p);
+    addScanHistory(p);
+    checkListAuto(p.name);
+    showStatus(`✅ ${p.name} added to cart!`);
+    toast(`${p.emoji} ${p.name} added!`);
+    renderRecent();
+  }
+  closeScanConfirmation();
+};
+
+window.dismissScan = function(){
+  closeScanConfirmation();
+};
+
+function closeScanConfirmation(){
+  document.getElementById('scan-confirmation').style.display = 'none';
+  if(scanner) scanner.resume();
+  // Clear last scan after a delay to allow re-scanning same item if desired later
+  setTimeout(() => { lastScan = null; }, 2000);
 }
 
 function simulateScan(){
