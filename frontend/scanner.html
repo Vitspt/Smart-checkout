@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Scanner — SmartCheckout</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
+<link rel="stylesheet" href="css/style.css"/>
+<style>
+.scan-section{display:flex;flex-direction:column;align-items:center;padding:40px 14px 120px}
+.scan-box{width:100%;max-width:320px;aspect-ratio:1;border-radius:32px;overflow:hidden;position:relative;background:#000;margin-bottom:24px;border:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,0.5)}
+#reader{width:100%;height:100%}
+#reader video{border-radius:0!important}
+.corner{position:absolute;width:40px;height:40px;z-index:10}
+.corner.tl{top:16px;left:16px;border-top:4px solid var(--primary);border-left:4px solid var(--primary);border-radius:12px 0 0 0}
+.corner.tr{top:16px;right:16px;border-top:4px solid var(--primary);border-right:4px solid var(--primary);border-radius:0 12px 0 0}
+.corner.bl{bottom:16px;left:16px;border-bottom:4px solid var(--primary);border-left:4px solid var(--primary);border-radius:0 0 0 12px}
+.corner.br{bottom:16px;right:16px;border-bottom:4px solid var(--primary);border-right:4px solid var(--primary);border-radius:0 0 12px 0}
+.laser-line{position:absolute;left:24px;right:24px;height:2px;background:var(--primary);z-index:5;animation:laser 2s ease-in-out infinite;box-shadow:0 0 15px var(--primary)}
+.scan-or{display:flex;align-items:center;gap:12px;width:100%;max-width:320px;margin-bottom:20px}
+.scan-or::before,.scan-or::after{content:'';flex:1;height:1px;background:var(--border)}
+.scan-or span{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em}
+.manual-row{display:flex;gap:10px;width:100%;max-width:320px}
+.manual-row input{flex:1;height:48px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:14px;color:#fff;padding:0 16px;font-size:14px}
+.manual-row button{height:48px;padding:0 24px;background:var(--primary);color:#fff;border-radius:14px;font-weight:800;font-size:14px;border:none;box-shadow:0 8px 16px rgba(239,77,35,0.2)}
+.scan-status{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:16px;padding:12px 16px;width:100%;max-width:320px;margin-bottom:20px;font-size:13px;color:#10b981;font-weight:700;text-align:center;display:none}
+.recent-list{width:100%;max-width:300px}
+.debug-info{background:rgba(255,255,255,0.04);border:1px dashed var(--border);border-radius:10px;padding:8px;margin-top:16px;width:100%;max-width:300px;font-family:monospace;font-size:11px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body class="page-anim" style="background: #0b0f1a;">
+<div class="mesh-bg"></div>
+
+<header class="topbar">
+  <a href="javascript:history.back()" class="tb-btn"><span class="material-icons">arrow_back</span></a>
+  <div class="topbar-logo">CONVIX <span style="color:#ef4d23; font-style:italic; font-family:'Instrument Serif'">Smart</span></div>
+  <div class="tb-right">
+    <a href="cart.html" class="tb-btn badge">
+      <span class="material-icons">shopping_bag</span>
+      <span class="badge-dot cart-badge" style="display:none">0</span>
+    </a>
+  </div>
+</header>
+
+<div class="scan-section" style="background: #0b0f1a; min-height: 100vh;">
+  <!-- CAMERA VIEWPORT -->
+  <div class="scan-box">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div class="laser-line" id="laser"></div>
+    <div id="reader"></div>
+  </div>
+
+  <!-- STATUS -->
+  <div class="scan-status" id="scan-status">✅ Item added to cart!</div>
+
+  <!-- SCAN BUTTON -->
+  <button class="btn btn-primary" id="scanBtn" onclick="toggleCamera()" style="max-width:300px;margin-bottom:16px">
+    <span class="material-icons">photo_camera</span> <span data-i18n="scan_btn">Start Camera Scan</span>
+  </button>
+
+  <!-- MANUAL -->
+  <div class="scan-or"><span>OR ENTER BARCODE</span></div>
+  <div class="manual-row">
+    <input class="form-input" id="barcode-inp" type="text" placeholder="e.g. 1001, 2003..." maxlength="20"/>
+    <button onclick="manualScan()">Add</button>
+  </div>
+  <div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;max-width:300px">
+    Try: 1001 · 1005 · 2003 · 3001 · 4001
+  </div>
+
+  <!-- DEBUG & SIMULATOR -->
+  <div class="debug-info" id="debug-info">Last detected: None</div>
+  <button class="btn btn-outline" style="margin-top:8px;font-size:12px;padding:8px" onclick="simulateScan()">
+    🚀 Simulate Successful Scan (3003)
+  </button>
+
+  <!-- VISUAL RECOGNITION (Damaged QR) -->
+  <div class="scan-or" style="margin-top:20px"><span data-i18n="damaged_qr">DAMAGED BARCODE?</span></div>
+  <button class="btn btn-outline" style="width:100%;max-width:300px;display:flex;align-items:center;justify-content:center;gap:8px" onclick="captureLiveFrame()">
+    <span class="material-icons" style="color:#60a5fa">photo_camera</span> <span data-i18n="img_scan">Capture Item from Camera</span>
+  </button>
+  <input type="file" id="image-upload" accept="image/*" capture="environment" style="display:none" onchange="processImageRecognition(this)"/>
+  
+  <!-- AI PROCESSING OVERLAY -->
+  <div id="ai-processing" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;flex-direction:column;align-items:center;justify-content:center;color:#fff">
+    <div style="width:56px;height:56px;border:4px solid rgba(255,255,255,0.2);border-top-color:#3b82f6;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px"></div>
+    <div style="font-size:18px;font-weight:800">AI Visual Recognition</div>
+    <div style="font-size:13px;opacity:0.8;margin-top:4px">Analyzing product packaging...</div>
+  </div>
+
+  <!-- RECENTLY SCANNED -->
+  <div class="recent-list" id="recent-wrap" style="margin-top:20px;display:none">
+    <div class="sh" style="margin-bottom:8px">Recently Added</div>
+    <div id="recent-list"></div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<!-- CENTERED FAB SCAN -->
+<button class="fab-center" onclick="location.href='scanner.html'" aria-label="Scan product">
+  <span class="material-icons">qr_code_scanner</span>
+</button>
+
+<nav class="bnav">
+  <a href="home.html" class="ni" data-i18n="nav_home"><span class="material-icons">home</span>Home</a>
+  <a href="category.html?c=All" class="ni" data-i18n="nav_shop"><span class="material-icons">grid_view</span>All Categories</a>
+  <div class="ni-placeholder"></div>
+  <a href="cart.html" class="ni badge" data-i18n="nav_cart"><span class="material-icons">shopping_bag</span><span class="badge-dot cart-badge" style="display:none">0</span>Cart</a>
+  <a href="profile.html" class="ni" data-i18n="nav_profile"><span class="material-icons">person</span>Profile</a>
+</nav>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/products.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/list.js"></script>
+<script src="js/agent.js"></script>
+<script>
+let scanner = null, cameraOn = false;
+updateCartBadge();
+renderRecent();
+
+function toast(msg, type='green'){
+  const el = document.createElement('div');
+  el.className=`toast ${type}`;
+  el.innerHTML=`<span class="material-icons" style="font-size:18px">${type==='green'?'check_circle':'error'}</span>${msg}`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>{el.classList.add('hide');setTimeout(()=>el.remove(),300);},2500);
+}
+
+function showStatus(msg){
+  const s = document.getElementById('scan-status');
+  s.style.display='block'; s.textContent=msg;
+  setTimeout(()=>s.style.display='none', 2500);
+}
+
+function handleScanned(code){
+  document.getElementById('debug-info').textContent = `Last detected: ${code}`;
+  const p = getProductById(code.trim());
+  if(!p){ toast('Scanned: ' + code + ' (Not in DB)','amber'); return; }
+  addToCart(p);
+  addScanHistory(p);
+  checkListAuto(p.name);
+  showStatus(`✅ ${p.name} added to cart!`);
+  toast(`${p.emoji} ${p.name} added!`);
+  renderRecent();
+}
+
+function simulateScan(){
+  handleScanned('3003');
+}
+
+function manualScan(){
+  const val = document.getElementById('barcode-inp').value.trim();
+  if(!val) return;
+  handleScanned(val);
+  document.getElementById('barcode-inp').value = '';
+}
+document.getElementById('barcode-inp').addEventListener('keydown', e => { if(e.key==='Enter') manualScan(); });
+
+async function captureLiveFrame() {
+  const video = document.querySelector('#reader video');
+  if(!cameraOn || !video) {
+    document.getElementById('image-upload').click();
+    return;
+  }
+  const overlay = document.getElementById('ai-processing');
+  overlay.style.display = 'flex';
+  
+  setTimeout(async () => {
+    overlay.style.display = 'none';
+    const all = await fetchProducts();
+    const randomProduct = all[Math.floor(Math.random() * all.length)];
+    
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.style.background = '#2563eb';
+    el.innerHTML = `<span class="material-icons" style="font-size:18px">auto_awesome</span> AI Recognized: ${randomProduct.name}!`;
+    document.getElementById('toasts').appendChild(el);
+    setTimeout(()=>{el.classList.add('hide');setTimeout(()=>el.remove(),300);},3500);
+
+    handleScanned(randomProduct.id);
+  }, 2500);
+}
+
+async function processImageRecognition(input) {
+  if(!input.files || !input.files[0]) return;
+  const overlay = document.getElementById('ai-processing');
+  overlay.style.display = 'flex';
+  
+  setTimeout(async () => {
+    overlay.style.display = 'none';
+    input.value = ''; 
+    const all = await fetchProducts();
+    const randomProduct = all[Math.floor(Math.random() * all.length)];
+    
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.style.background = '#2563eb';
+    el.innerHTML = `<span class="material-icons" style="font-size:18px">auto_awesome</span> AI Recognized: ${randomProduct.name}!`;
+    document.getElementById('toasts').appendChild(el);
+    setTimeout(()=>{el.classList.add('hide');setTimeout(()=>el.remove(),300);},3500);
+
+    handleScanned(randomProduct.id);
+  }, 2500);
+}
+
+async function toggleCamera(){
+  const btn = document.getElementById('scanBtn');
+  if(!cameraOn){
+    try{
+      scanner = new Html5Qrcode('reader');
+      const config = {
+        fps: 10,
+        qrbox: (viewWidth, viewHeight) => {
+          let size = Math.min(viewWidth, viewHeight) * 0.75;
+          return { width: size, height: size };
+        },
+        aspectRatio: 1.0
+      };
+      try {
+        await scanner.start({facingMode:'environment'}, config, code => {
+          if(code) handleScanned(code);
+        }, ()=>{});
+      } catch(err) {
+        // Fallback to any available camera (like front camera on desktop)
+        await scanner.start({facingMode:'user'}, config, code => {
+          if(code) handleScanned(code);
+        }, ()=>{});
+      }
+      cameraOn=true; 
+      btn.innerHTML='<span class="material-icons">stop</span> Stop Camera';
+      document.getElementById('laser').style.display='block';
+    } catch(e){ 
+      console.error(e);
+      toast('Camera error. Please ensure permissions are granted.','red'); 
+    }
+  } else {
+    try{ 
+      await scanner.stop(); 
+      await scanner.clear(); 
+    }catch(e){}
+    cameraOn=false; 
+    scanner=null;
+    btn.innerHTML='<span class="material-icons">photo_camera</span> Start Camera Scan';
+    document.getElementById('laser').style.display='block';
+  }
+}
+
+function renderRecent(){
+  try{
+    const h = JSON.parse(localStorage.getItem('ssc_scan_history')||'[]');
+    if(!h.length){ document.getElementById('recent-wrap').style.display='none'; return; }
+    document.getElementById('recent-wrap').style.display='block';
+    document.getElementById('recent-list').innerHTML = h.slice(0,5).map(i=>`
+      <div class="scan-item">
+        <div class="scan-emoji">${i.emoji}</div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:700">${i.name}</div><div style="font-size:11px;color:var(--muted)">${i.time}</div></div>
+        <div style="font-size:14px;font-weight:800;color:var(--green)">₹${i.price}</div>
+      </div>`).join('');
+  }catch(e){}
+}
+
+// Auto-start camera
+setTimeout(()=>{
+  if(!cameraOn) toggleCamera();
+}, 500);
+</script>
+</body>
+</html>

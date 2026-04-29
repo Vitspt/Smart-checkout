@@ -1,0 +1,38 @@
+// ============================================
+// SmartCheckout — Auth System
+// ============================================
+const DEMO_USER = { name:'Demo User', email:'user@store.com', password:'password', phone:'9876543210', joined:'April 2025' };
+
+function getSession(){ try{ return JSON.parse(localStorage.getItem('ssc_session')); }catch(e){ return null; } }
+function getUsers(){ try{ return JSON.parse(localStorage.getItem('ssc_users')) || [DEMO_USER]; }catch(e){ return [DEMO_USER]; } }
+function saveUsers(u){ localStorage.setItem('ssc_users', JSON.stringify(u)); }
+function setSession(user){ localStorage.setItem('ssc_session', JSON.stringify({ user, ts: Date.now() })); }
+function clearSession(){ localStorage.removeItem('ssc_session'); }
+
+async function authGuard(){
+  if(!getSession()){ window.location.href='login.html'; return false; }
+  return true;
+}
+
+async function signIn(email, password){
+  const users = getUsers();
+  const user = users.find(u => u.email === email && u.password === password);
+  if(!user) throw new Error('Invalid credentials');
+  setSession(user);
+  return user;
+}
+
+async function signUp(name, email, password, phone){
+  const users = getUsers();
+  if(users.find(u => u.email === email)) throw new Error('Email already registered');
+  const user = { name, email, password, phone, joined: new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'}) };
+  users.push(user);
+  saveUsers(users);
+  setSession(user);
+  return user;
+}
+
+function signOut(){
+  clearSession();
+  window.location.href = 'login.html';
+}

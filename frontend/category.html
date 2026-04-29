@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Category — SmartCheckout</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
+<link rel="stylesheet" href="css/style.css"/>
+<style>
+.filter-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(255,255,255,0.02);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.filter-bar::-webkit-scrollbar{display:none}
+.filter-pill{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--card);color:#fff;white-space:nowrap;transition:all .2s}
+.filter-pill.active{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 0 15px rgba(239,77,35,0.3)}
+.sort-bar{display:flex;gap:8px;padding:10px 14px;background:rgba(255,255,255,0.03);border-bottom:1px solid var(--border)}
+.sort-btn{padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--muted);transition:all .2s}
+.sort-btn.active{background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.2)}
+.cat-search{padding:10px 14px;background:transparent}
+.cat-search .search-box{background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:12px; height:42px; display:flex; align-items:center; padding:0 12px}
+.cat-search input{background:none; border:none; color:#fff; flex:1; font-size:14px; padding-left:8px}
+.cat-search input::placeholder{color:var(--muted)}
+.cat-search .material-icons{color:var(--primary); font-size:20px}
+</style>
+</head>
+<body class="page-anim">
+
+<div class="mesh-bg"></div>
+
+<header class="topbar">
+  <a href="javascript:history.back()" class="tb-btn"><span class="material-icons">arrow_back</span></a>
+  <div class="topbar-logo">CONVIX <span style="color:#ef4d23; font-style:italic; font-family:'Instrument Serif'">Smart</span></div>
+  <div class="tb-right">
+    <a href="cart.html" class="tb-btn badge">
+      <span class="material-icons">shopping_bag</span>
+      <span class="badge-dot cart-badge" style="display:none">0</span>
+    </a>
+  </div>
+</header>
+
+<!-- CATEGORY FILTER -->
+<div class="filter-bar" id="cat-filter"></div>
+
+<!-- SEARCH -->
+<div class="cat-search">
+  <div class="search-box">
+    <span class="material-icons">search</span>
+    <input id="cat-search" type="search" placeholder="Search in category..." data-i18n="search_in_cat"/>
+  </div>
+</div>
+
+<!-- SORT -->
+<div class="sort-bar">
+  <button class="sort-btn active" id="sort-pop" onclick="setSort('popular')" data-i18n="sort_popular">🔥 Popular</button>
+  <button class="sort-btn" id="sort-lo" onclick="setSort('low')" data-i18n="sort_low">💲 Price: Low to High</button>
+  <button class="sort-btn" id="sort-hi" onclick="setSort('high')" data-i18n="sort_high">📈 Price: High to Low</button>
+</div>
+
+  <div id="product-count" style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:10px"></div>
+  <div class="prod-grid" id="prod-grid"></div>
+</div>
+
+<!-- WEIGHT MODAL -->
+<div class="success-overlay" id="weight-modal" style="display:none;background:rgba(0,0,0,0.8)">
+  <div class="success-card" style="text-align:left;width:90%">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 id="wm-name" style="font-size:18px;font-weight:900">Select Weight</h3>
+      <span class="material-icons" onclick="closeWeightModal()" style="cursor:pointer">close</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;background:var(--green-l);padding:14px;border-radius:14px;margin-bottom:16px">
+      <div id="wm-emoji" style="font-size:36px">🍌</div>
+      <div style="flex:1">
+        <div id="wm-price" style="font-size:16px;font-weight:800;color:var(--green)">₹0.00</div>
+        <div style="font-size:12px;color:var(--muted)">Price per kg</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Enter Weight (kg)</label>
+      <input type="number" id="wm-input" class="form-input" value="1" step="0.1" min="0.1" oninput="updateWeightTotal()"/>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+      <div>
+        <div style="font-size:12px;color:var(--muted)">Total Price</div>
+        <div id="wm-total" style="font-size:20px;font-weight:900;color:var(--text)">₹0.00</div>
+      </div>
+      <button class="btn btn-primary" style="width:auto;padding:0 24px" onclick="confirmWeightAdd()">Add to Cart</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<!-- CENTERED FAB SCAN -->
+<button class="fab-center" onclick="location.href='scanner.html'" aria-label="Scan product">
+  <span class="material-icons">qr_code_scanner</span>
+</button>
+
+<nav class="bnav">
+  <a href="home.html" class="ni" data-i18n="nav_home"><span class="material-icons">home</span>Home</a>
+  <a href="category.html?c=All" class="ni active" data-i18n="nav_shop"><span class="material-icons">grid_view</span>All Categories</a>
+  <div class="ni-placeholder"></div>
+  <a href="cart.html" class="ni badge" data-i18n="nav_cart"><span class="material-icons">shopping_bag</span><span class="badge-dot cart-badge" style="display:none">0</span>Cart</a>
+  <a href="profile.html" class="ni" data-i18n="nav_profile"><span class="material-icons">person</span>Profile</a>
+</nav>
+
+<script src="js/config.js"></script>
+<script src="js/products.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/shapegrid.js"></script>
+<script src="js/agent.js"></script>
+<script>
+let allProds=[], currentCat='All', currentSort='popular', searchQ='';
+
+function toast(msg,type='green'){
+  const el=document.createElement('div'); el.className=`toast ${type}`;
+  el.innerHTML=`<span class="material-icons" style="font-size:18px">check_circle</span>${msg}`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>{el.classList.add('hide');setTimeout(()=>el.remove(),300);},2500);
+}
+
+function productCard(p){
+  const off=discount(p.mrp,p.price);
+  const isProduce = p.category === 'Produce';
+  return `<div class="prod-card" onclick="${isProduce?`openWeightModal('${p.id}')`:`location.href='product.html?id=${p.id}'`}">
+    ${off>0?`<div style="position:absolute;top:8px;left:8px;background:var(--red);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px">${off}% OFF</div>`:''}
+    <div class="prod-img-ph">
+      ${p.img ? `<img src="${p.img}" class="prod-img" alt="${p.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='${p.emoji}'"/>` : p.emoji}
+    </div>
+    <div class="prod-name">${p.name}</div>
+    <div class="prod-brand">${p.brand}</div>
+    ${isProduce?`<div style="font-size:11px;color:var(--green);font-weight:700;margin-top:4px">Weight based price</div>`:''}
+    <div class="prod-footer">
+      <div><span class="prod-price">${formatPrice(p.price)}${p.unit?`/${p.unit}`:''}</span></div>
+      <span class="material-icons" style="color:var(--muted);font-size:20px">chevron_right</span>
+    </div>
+  </div>`;
+}
+
+let activeP = null;
+function openWeightModal(id){
+  activeP = getProductById(id);
+  document.getElementById('wm-name').textContent = activeP.name;
+  document.getElementById('wm-emoji').textContent = activeP.emoji;
+  document.getElementById('wm-price').textContent = formatPrice(activeP.price);
+  document.getElementById('wm-input').value = 1;
+  updateWeightTotal();
+  document.getElementById('weight-modal').style.display = 'flex';
+}
+function closeWeightModal(){ document.getElementById('weight-modal').style.display='none'; }
+function updateWeightTotal(){
+  const w = parseFloat(document.getElementById('wm-input').value) || 0;
+  document.getElementById('wm-total').textContent = formatPrice(activeP.price * w);
+}
+function confirmWeightAdd(){
+  const w = parseFloat(document.getElementById('wm-input').value) || 0;
+  if(w <= 0) return;
+  // Create a specialized product instance for the cart
+  const weightedP = { ...activeP, price: activeP.price * w, name: `${activeP.name} (${w}kg)`, qty: 1 };
+  addToCart(weightedP);
+  closeWeightModal();
+  toast(`${activeP.name} added to cart`);
+}
+
+function doAdd(id,btn){
+  const p=getProductById(id); if(!p) return;
+  addToCart(p); toast(`${p.name} added!`);
+  btn.textContent='✓'; setTimeout(()=>btn.textContent='+',1000);
+}
+
+function render(){
+  let list = currentCat==='All' ? [...allProds] : allProds.filter(p=>p.category===currentCat);
+  if(searchQ) list=list.filter(p=>p.name.toLowerCase().includes(searchQ)||p.brand.toLowerCase().includes(searchQ));
+  if(currentSort==='popular') list.sort((a,b)=>b.rating-a.rating);
+  else if(currentSort==='low') list.sort((a,b)=>a.price-b.price);
+  else list.sort((a,b)=>b.price-a.price);
+  document.getElementById('product-count').textContent=`${list.length} products`;
+  document.getElementById('prod-grid').innerHTML = list.length ? list.map(productCard).join('') : '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><h3>No products</h3></div>';
+  const catTitle = currentCat==='All' ? window.t('app_title') : (window.t('cat_'+currentCat.toLowerCase().replace(' ','_')) || currentCat);
+  document.getElementById('cat-title').textContent = catTitle;
+}
+
+function setSort(s){
+  currentSort=s;
+  ['pop','lo','hi'].forEach(x=>document.getElementById('sort-'+x).classList.remove('active'));
+  document.getElementById('sort-'+{popular:'pop',low:'lo',high:'hi'}[s]).classList.add('active');
+  render();
+}
+
+function setCat(c){
+  currentCat=c;
+  document.querySelectorAll('.filter-pill').forEach(el=>el.classList.toggle('active',el.dataset.cat===c));
+  render();
+}
+
+async function init(){
+  updateCartBadge();
+  allProds = await fetchProducts();
+  const params=new URLSearchParams(location.search);
+  currentCat=params.get('c')||'All';
+  // Render filter pills
+  const pills=[{cat:'All',label:'🛍️ All'},...Object.entries(CAT_ICONS).filter(([k])=>k!=='All').map(([k,v])=>({cat:k,label:v+' '+k}))];
+  document.getElementById('cat-filter').innerHTML=pills.map(p=>`<button class="filter-pill ${p.cat===currentCat?'active':''}" data-cat="${p.cat}" onclick="setCat('${p.cat}')">${p.label}</button>`).join('');
+  document.getElementById('cat-search').addEventListener('input',function(){ searchQ=this.value.toLowerCase().trim(); render(); });
+  render();
+
+  // Initialize Background Grid
+  window.initShapeGrid('cat-grid', {
+    speed: 0.3,
+    squareSize: 35,
+    direction: 'diagonal',
+    borderColor: 'rgba(255,255,255,0.1)',
+    hoverFillColor: 'rgba(255,255,255,0.15)',
+    shape: 'circle',
+    hoverTrailAmount: 2
+  });
+}
+init();
+</script>
+</body>
+</html>

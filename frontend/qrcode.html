@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>QR Receipt — SmartCheckout</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
+<link rel="stylesheet" href="css/style.css"/>
+<style>
+.qr-page{min-height:calc(100vh - 56px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 14px 120px}
+.qr-card{background:#fff;border-radius:24px;box-shadow:0 8px 40px rgba(0,0,0,.12);padding:28px 20px;width:100%;max-width:340px;text-align:center}
+.qr-icon{font-size:48px;margin-bottom:4px}
+.qr-title{font-size:20px;font-weight:900;color:var(--text);margin-bottom:4px}
+#qr-canvas{margin:0 auto 16px;display:flex;align-items:center;justify-content:center;position:relative}
+.qr-expired-overlay{position:absolute;inset:0;background:rgba(255,255,255,0.9);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:2;border-radius:12px}
+.qr-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+#qr-canvas{margin:0 auto 16px;display:flex;align-items:center;justify-content:center}
+.qr-hint{background:var(--green-l);border:1.5px solid var(--green-m);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--green);font-weight:600;margin-bottom:16px}
+.order-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border)}
+.order-row:last-child{border-bottom:none}
+</style>
+</head>
+<body class="page-anim">
+
+<header class="topbar">
+  <div class="topbar-logo">QR Receipt</div>
+  <div class="tb-right">
+    <a href="home.html" class="tb-btn"><span class="material-icons">home</span></a>
+  </div>
+</header>
+
+<div class="qr-page">
+  <div class="qr-card">
+    <div class="qr-icon">🎫</div>
+    <div class="qr-title">Your Receipt QR</div>
+    <div class="qr-sub">Show this at the exit gate</div>
+
+    <div id="qr-canvas">
+      <div id="expiry-overlay" class="qr-expired-overlay">
+        <span class="material-icons" style="font-size:48px;color:var(--red)">history</span>
+        <div style="font-weight:900;color:var(--red);margin-top:8px">QR EXPIRED</div>
+        <button onclick="location.reload()" style="margin-top:10px;font-size:11px;color:var(--blue);background:none;text-decoration:underline">Refresh</button>
+      </div>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:12px" id="timer-text">
+      Valid for: <span id="timer" style="color:var(--red)">10:00</span>
+    </div>
+
+    <div class="qr-hint">
+      <span class="material-icons" style="font-size:18px;vertical-align:middle;margin-right:4px">exit_to_app</span>
+      Show this QR code at the exit for verification
+    </div>
+
+    <div id="order-summary"></div>
+
+    <div style="margin-top:16px;display:flex;gap:8px;flex-direction:column">
+      <button onclick="simulateVerification()" class="btn btn-primary" id="verify-btn">
+        <span class="material-icons">verified_user</span> Verify at Exit (Sim)
+      </button>
+      <a href="home.html" class="btn btn-outline" style="text-decoration:none">
+        <span class="material-icons">shopping_cart</span> Shop More
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- CENTERED FAB SCAN -->
+<button class="fab-center" onclick="location.href='scanner.html'" aria-label="Scan product">
+  <span class="material-icons">qr_code_scanner</span>
+</button>
+
+<nav class="bnav">
+  <a href="home.html" class="ni" data-i18n="nav_home"><span class="material-icons">home</span>Home</a>
+  <a href="category.html?c=All" class="ni" data-i18n="cat_all"><span class="material-icons">grid_view</span>Categories</a>
+  <div class="ni-placeholder"></div>
+  <a href="cart.html" class="ni badge" data-i18n="nav_cart"><span class="material-icons">shopping_bag</span><span class="badge-dot cart-badge" style="display:none">0</span>Cart</a>
+  <a href="profile.html" class="ni" data-i18n="nav_profile"><span class="material-icons">person</span>Profile</a>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/products.js"></script>
+<script src="js/cart.js"></script>
+<script>
+function init(){
+  let order;
+  try{ order = JSON.parse(localStorage.getItem('ssc_last_order')); }catch(e){}
+  if(!order){
+    // Demo order fallback
+    order={ id:'ORD_DEMO', items:[{name:'Amul Ghee',emoji:'🥛',qty:1,price:295},{name:"Lay's Chips",emoji:'🥔',qty:2,price:20}], total:337, status:'Paid', time:new Date().toISOString(), method:'upi' };
+  }
+
+  const qrData = JSON.stringify({
+    id: order.id,
+    items: order.items.map(i=>({ name:i.name, qty:i.qty, price:i.price })),
+    total: order.total,
+    status: order.status,
+    time: order.time
+  });
+
+  // Store QR data for exit verification
+  localStorage.setItem('ssc_qr_data', qrData);
+  localStorage.setItem('ssc_qr_used', 'false');
+
+  // Generate QR
+  new QRCode(document.getElementById('qr-canvas'), {
+    text: qrData,
+    width: 200,
+    height: 200,
+    colorDark:'#0f172a',
+    colorLight:'#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+
+  // Expiry Timer Logic (10 Minutes)
+  const expiryTime = new Date(order.time).getTime() + (10 * 60 * 1000);
+  const timerInt = setInterval(() => {
+    const now = new Date().getTime();
+    const diff = expiryTime - now;
+    if(diff <= 0){
+      clearInterval(timerInt);
+      document.getElementById('timer-text').innerHTML = '<span style="color:var(--red)">QR EXPIRED</span>';
+      document.getElementById('expiry-overlay').style.display = 'flex';
+      return;
+    }
+    const mins = Math.floor(diff / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+    document.getElementById('timer').textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  }, 1000);
+
+  // Render summary
+  document.getElementById('order-summary').innerHTML=`
+    <div style="border-top:1px dashed var(--border);padding-top:12px;margin-top:4px">
+      <div style="font-size:12px;font-weight:800;color:var(--muted);margin-bottom:8px;text-align:left">EXIT PASS - ORDER: ${order.id.slice(-8)}</div>
+      ${order.items.map(i=>`<div class="order-row"><span>${i.emoji} ${i.name}</span><span style="font-weight:700">Qty: ${i.qty}</span></div>`).join('')}
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;justify-content:center">
+      <span class="pill pill-green" id="verify-pill">✅ Security Ready</span>
+      <span class="pill" style="background:#eff6ff;color:#1d4ed8">👜 ${order.items.reduce((s,i)=>s+i.qty,0)} Items Total</span>
+    </div>
+  `;
+}
+
+window.simulateVerification = function(){
+  if(localStorage.getItem('ssc_qr_used') === 'true'){
+    alert('This QR has already been used!');
+    return;
+  }
+  const btn = document.getElementById('verify-btn');
+  btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite">refresh</span> Verifying...';
+  
+  setTimeout(() => {
+    localStorage.setItem('ssc_qr_used', 'true');
+    btn.innerHTML = '<span class="material-icons">check_circle</span> VERIFIED';
+    btn.style.background = 'var(--green)';
+    btn.disabled = true;
+    document.getElementById('verify-pill').innerHTML = '✅ VERIFIED & USED';
+    document.getElementById('verify-pill').className = 'pill pill-amber';
+    alert('QR Verified! You can now exit the store.');
+  }, 1500);
+}
+init();
+</script>
+</body>
+</html>

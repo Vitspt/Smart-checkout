@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Convix Software — Next-Gen Retail Automation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
+<link rel="stylesheet" href="css/style.css"/>
+<style>
+  body { background: #0b0f1a; color: #fff; overflow-x: hidden; }
+  .hero-wrapper { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; position: relative; }
+  .nav-pill { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); padding: 8px 24px; border-radius: 999px; display: flex; align-items: center; gap: 32px; margin-bottom: 80px; z-index: 10; }
+  .nav-link { color: rgba(255,255,255,0.6); font-size: 14px; font-weight: 500; text-decoration: none; transition: color 0.2s; }
+  .nav-link:hover { color: #fff; }
+  .hero-content { text-align: center; max-width: 900px; position: relative; z-index: 5; }
+  .hero-title { font-size: clamp(48px, 10vw, 96px); font-weight: 800; letter-spacing: -0.05em; line-height: 0.95; margin-bottom: 24px; }
+  .hero-sub { color: rgba(255,255,255,0.5); font-size: 18px; max-width: 600px; margin: 0 auto 40px; line-height: 1.6; }
+  .cta-group { display: flex; gap: 16px; justify-content: center; margin-bottom: 80px; }
+  .btn-premium { background: #ef4d23; color: #fff; padding: 16px 32px; border-radius: 12px; font-weight: 700; text-decoration: none; transition: transform 0.2s; box-shadow: 0 8px 32px rgba(239, 77, 35, 0.3); }
+  .btn-premium:hover { transform: translateY(-2px); }
+  .btn-outline { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 16px 32px; border-radius: 12px; font-weight: 700; text-decoration: none; }
+  .dashboard-mockup { width: 100%; max-width: 1100px; padding: 20px; position: relative; }
+  .gauge-svg { width: 100%; height: auto; }
+  .gauge-tick { fill: rgba(255,255,255,0.1); }
+  .gauge-tick.active { fill: #ef4d23; }
+  .gauge-text { font-size: 32px; font-weight: 800; fill: #fff; font-family: 'Inter', sans-serif; }
+</style>
+</head>
+<body class="page-anim">
+
+<div class="mesh-bg"></div>
+
+<div class="hero-wrapper">
+  <!-- NAV -->
+  <nav class="nav-pill">
+    <div style="display:flex; align-items:center; gap:8px">
+      <svg width="24" height="24" viewBox="0 0 40 40">
+        <path d="M20 0 L40 20 L20 40 L0 20 Z" fill="#ef4d23" />
+      </svg>
+      <span style="font-weight:900; letter-spacing:1px">CONVIX</span>
+    </div>
+    <div style="display:flex; gap:24px">
+      <a href="#" class="nav-link">Product</a>
+      <a href="#" class="nav-link">Solutions</a>
+      <a href="#" class="nav-link">Pricing</a>
+    </div>
+    <a href="home.html" class="btn-premium" style="padding: 8px 20px; font-size: 13px">Launch App</a>
+  </nav>
+
+  <!-- CONTENT -->
+  <div class="hero-content">
+    <div style="display:inline-block; padding:6px 16px; border-radius:99px; background:rgba(239, 77, 35, 0.1); color:#ef4d23; font-size:12px; font-weight:800; margin-bottom:24px; border:1px solid rgba(239, 77, 35, 0.2)">
+      v2.0 IS NOW LIVE
+    </div>
+    <h1 class="hero-title text-gradient">
+      Automate The<br>
+      <span style="font-family:'Instrument Serif', serif; font-style:italic; font-weight:400; opacity:0.8">Next Generation</span>
+    </h1>
+    <p class="hero-sub">
+      Experience the future of retail automation. A unified engine designed for scale, speed, and absolute reliability.
+    </p>
+    
+    <div class="cta-group">
+      <a href="home.html" class="btn-premium">Get Started Free</a>
+      <a href="#" class="btn-outline">Watch Demo</a>
+    </div>
+  </div>
+
+  <!-- DASHBOARD PREVIEW -->
+  <div class="dashboard-mockup">
+    <div class="dash-grid">
+      <!-- CARD 1 -->
+      <div class="glass-card" style="padding: 32px">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px">
+          <span style="font-size:12px; font-weight:800; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.1em">System Revenue</span>
+          <span class="material-icons" style="color:#ef4d23">payments</span>
+        </div>
+        <div style="font-size:42px; font-weight:800; color:#fff">$1.2M</div>
+        <div style="margin-top:12px; font-size:14px; color:#10b981; font-weight:600; display:flex; align-items:center; gap:6px">
+          <span class="material-icons" style="font-size:16px">north_east</span> 42% increased efficiency
+        </div>
+      </div>
+
+      <!-- CARD 2 -->
+      <div class="glass-card" style="padding: 32px">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+          <span style="font-size:12px; font-weight:800; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.1em">Real-time Load</span>
+        </div>
+        <div class="dash-gauge-container">
+          <div id="gauge-1"></div>
+          <span style="font-size:14px; font-weight:700; color:#fff">98.4% Uptime</span>
+        </div>
+      </div>
+
+      <!-- CARD 3 -->
+      <div class="glass-card" style="padding: 32px">
+        <div style="font-size:12px; font-weight:800; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:24px">Active Sessions</div>
+        <div style="display:flex; align-items:flex-end; gap:12px">
+          <div style="font-size:42px; font-weight:800; color:#fff">12.5k</div>
+          <div style="margin-bottom:8px; height:16px; width:60px; background:rgba(255,255,255,0.05); border-radius:4px; overflow:hidden">
+            <div style="width:85%; height:100%; background:#ef4d23"></div>
+          </div>
+        </div>
+        <div style="margin-top:32px; border-top:1px solid rgba(255,255,255,0.05); padding-top:24px; display:flex; gap:12px">
+          <div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(45deg, #6366f1, #8b5cf6); border:2px solid rgba(255,255,255,0.1)"></div>
+          <div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(45deg, #ec4899, #ef4444); border:2px solid rgba(255,255,255,0.1)"></div>
+          <div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(45deg, #10b981, #3b82f6); border:2px solid rgba(255,255,255,0.1)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function createGauge(containerId, value) {
+  const container = document.getElementById(containerId);
+  const activeTicks = Math.round((value / 100) * 40);
+  let ticks = '';
+  for (let i = 0; i < 40; i++) {
+    const angle = Math.PI + (i / 39) * Math.PI;
+    const x1 = 100 + 70 * Math.cos(angle);
+    const y1 = 100 + 70 * Math.sin(angle);
+    const x2 = 100 + 80 * Math.cos(angle);
+    const y2 = 100 + 80 * Math.sin(angle);
+    ticks += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="gauge-tick ${i < activeTicks ? 'active' : ''}" stroke-width="3" stroke-linecap="round"/>`;
+  }
+  container.innerHTML = `<svg viewBox="0 0 200 120" class="gauge-svg">${ticks}<text x="100" y="105" text-anchor="middle" class="gauge-text">${value}%</text></svg>`;
+}
+createGauge('gauge-1', 98);
+</script>
+</body>
+</html>

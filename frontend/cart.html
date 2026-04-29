@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>My Cart — SmartCheckout</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body class="page-anim" style="background: #0b0f1a;">
+<div class="mesh-bg"></div>
+
+<header class="topbar">
+  <div class="tb-left">
+    <button class="tb-btn" onclick="history.back()"><span class="material-icons">arrow_back</span></button>
+    <div class="topbar-logo">CONVIX <span style="color:#ef4d23; font-style:italic; font-family:'Instrument Serif'">Smart</span></div>
+  </div>
+  <div class="tb-right">
+    <button class="tb-btn" onclick="if(confirm('Clear cart?')){clearCart();renderCart();}" title="Clear cart">
+      <span class="material-icons">delete_outline</span>
+    </button>
+  </div>
+</header>
+
+<div class="page" style="padding-top:14px; background: #0b0f1a; min-height: 100vh;" id="cart-page">
+  <!-- Filled by JS -->
+</div>
+
+<div id="toasts"></div>
+
+<!-- CENTERED FAB SCAN -->
+<button class="fab-center" onclick="location.href='scanner.html'" aria-label="Scan product">
+  <span class="material-icons">qr_code_scanner</span>
+</button>
+
+<nav class="bnav">
+  <a href="home.html" class="ni" data-i18n="nav_home"><span class="material-icons">home</span>Home</a>
+  <a href="category.html?c=All" class="ni" data-i18n="nav_shop"><span class="material-icons">grid_view</span>All Categories</a>
+  <div class="ni-placeholder"></div>
+  <a href="cart.html" class="ni active badge" data-i18n="nav_cart"><span class="material-icons">shopping_bag</span><span class="badge-dot cart-badge" style="display:none">0</span>Cart</a>
+  <a href="profile.html" class="ni" data-i18n="nav_profile"><span class="material-icons">person</span>Profile</a>
+</nav>
+
+<script src="js/config.js"></script>
+<script src="js/products.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/agent.js"></script>
+<script>
+function toast(msg,type='green'){
+  const el=document.createElement('div'); el.className=`toast ${type}`;
+  el.innerHTML=`<span class="material-icons" style="font-size:18px">check_circle</span>${msg}`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>{el.classList.add('hide');setTimeout(()=>el.remove(),300);},2500);
+}
+
+function renderCart(){
+  updateCartBadge();
+  const cart=getCart();
+  const page=document.getElementById('cart-page');
+  if(!cart.length){
+    page.innerHTML=`<div class="empty">
+      <div class="empty-icon">🛒</div>
+      <h3 data-i18n="empty_cart">${window.t('empty_cart')}</h3>
+      <p data-i18n="empty_cart_msg">${window.t('empty_cart_msg')}</p>
+      <a href="home.html" class="btn btn-primary" style="margin-top:8px;text-decoration:none" data-i18n="browse_products">${window.t('browse_products')}</a>
+    </div>`; return;
+  }
+  const subtotal=getCartSubtotal(), mrpTotal=getCartMRP();
+  const disc=mrpTotal-subtotal, tax=Math.round(subtotal*TAX_RATE), total=subtotal+tax;
+  page.innerHTML=`
+    <div style="font-size:13px;color:var(--muted);font-weight:600;margin-bottom:10px">${cart.reduce((s,i)=>s+i.qty,0)} ${window.t('items_in_cart')}</div>
+    <div id="cart-list">
+      ${cart.map(item=>`
+        <div class="cart-item" id="item-${item.id}">
+          <div class="cart-img-ph">${item.emoji}</div>
+          <div class="cart-info">
+            <div class="cart-name">${item.name}</div>
+            <div class="cart-brand">${item.brand}</div>
+            <div class="cart-price">${formatPrice(item.price * item.qty)}</div>
+            <div class="qty-ctrl">
+              <button class="qty-btn" onclick="doQty('${item.id}',-1)">−</button>
+              <span class="qty-val">${item.qty}</span>
+              <button class="qty-btn" onclick="doQty('${item.id}',1)">+</button>
+              <span style="font-size:11px;color:var(--muted);margin-left:4px">× ${formatPrice(item.price)}</span>
+            </div>
+          </div>
+          <button onclick="doRemove('${item.id}')" style="background:none;color:var(--muted);padding:4px;align-self:flex-start">
+            <span class="material-icons" style="font-size:18px">close</span>
+          </button>
+        </div>`).join('')}
+    </div>
+
+    <!-- COUPON -->
+    <div class="card">
+      <div style="font-size:13px;font-weight:800;margin-bottom:10px">🏷️ <span data-i18n="apply_coupon">${window.t('apply_coupon')}</span></div>
+      <div class="coupon-row">
+        <input class="form-input" id="coupon-inp" type="text" placeholder="${window.t('coupon_placeholder')}" data-i18n="coupon_placeholder"/>
+        <button onclick="applyCoupon()" data-i18n="apply">${window.t('apply')}</button>
+      </div>
+      <div id="coupon-msg" style="font-size:12px;margin-top:4px"></div>
+    </div>
+
+    <!-- RECOMMENDATIONS -->
+    <div id="cart-recommendations"></div>
+
+    <!-- SUMMARY -->
+    <div class="card">
+      <div style="font-size:14px;font-weight:800;margin-bottom:8px;color:#fff" data-i18n="price_breakdown">${window.t('price_breakdown')}</div>
+      <div class="price-row" style="display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-bottom:8px"><span data-i18n="mrp_total">${window.t('mrp_total')}</span><span>${formatPrice(mrpTotal)}</span></div>
+      ${disc>0?`<div class="price-row" style="display:flex;justify-content:space-between;font-size:14px;color:#10b981;margin-bottom:8px"><span data-i18n="discount">${window.t('discount')}</span><span>− ${formatPrice(disc)}</span></div>`:''}
+      <div class="price-row" style="display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-bottom:8px"><span data-i18n="gst">${window.t('gst')}</span><span>+ ${formatPrice(tax)}</span></div>
+      <div class="price-row total" style="display:flex;justify-content:space-between;font-size:18px;font-weight:900;color:#fff;margin-top:12px;border-top:1px solid var(--border);padding-top:12px"><span data-i18n="total_amount">${window.t('total_amount')}</span><span style="color:var(--primary)">${formatPrice(total)}</span></div>
+      ${disc>0?`<div style="background:rgba(16,185,129,0.1);color:#10b981;font-size:12px;font-weight:700;padding:8px 10px;border-radius:8px;margin-top:8px">🎉 ${window.t('save_msg')} ${formatPrice(disc)} on this order!</div>`:''}
+    </div>
+
+    <!-- CTA -->
+    <div style="margin-bottom:24px;text-align:center">
+      <a href="home.html" style="font-size:14px;font-weight:800;color:var(--primary);text-decoration:none" data-i18n="add_more">${window.t('add_more')}</a>
+    </div>
+    <div class="sticky-cta" style="bottom:calc(var(--nav) + 12px); padding:0 14px">
+      <button class="btn" onclick="location.href='payment.html'" style="width:100%; height:56px; border-radius:16px; background:var(--primary); color:#fff; font-weight:800; font-size:16px; border:none; box-shadow:0 8px 32px rgba(239,77,35,0.4); display:flex; align-items:center; justify-content:center; gap:12px">
+        <span class="material-icons">payments</span> <span data-i18n="proceed_payment">${window.t('proceed_payment')}</span> — ${formatPrice(total)}
+      </button>
+    </div>
+  `;
+  renderRecs();
+}
+
+function renderRecs(){
+  const cart = getCart();
+  const recs = getRecommendations(cart);
+  const wrap = document.getElementById('cart-recommendations');
+  if(!recs.length){ wrap.style.display='none'; return; }
+  
+  wrap.innerHTML = `
+    <div class="sh" style="margin:16px 0 10px;font-size:14px">💡 Frequently Bought Together</div>
+    <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none">
+      ${recs.map(p => `
+        <div class="card" style="min-width:140px;padding:12px;flex-shrink:0;text-align:center" onclick="location.href='product.html?id=${p.id}'">
+          <div style="font-size:32px;margin-bottom:8px">${p.emoji}</div>
+          <div style="font-size:12px;font-weight:700;margin-bottom:4px;height:32px;overflow:hidden">${p.name}</div>
+          <div style="font-size:13px;font-weight:800;color:var(--green);margin-bottom:8px">${formatPrice(p.price)}</div>
+          <button class="btn btn-primary" onclick="event.stopPropagation();addToCart(${JSON.stringify(p).replace(/"/g, '&quot;')});toast('${p.name} added');renderCart();" style="height:28px;font-size:11px;padding:0 10px">Add</button>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function doQty(id, delta){
+  updateQty(id, delta);
+  renderCart();
+}
+
+function doRemove(id){
+  removeFromCart(id);
+  toast('Item removed');
+  renderCart();
+}
+
+function applyCoupon(){
+  const code=document.getElementById('coupon-inp').value.trim().toUpperCase();
+  const msg=document.getElementById('coupon-msg');
+  if(code==='SMART10'){ msg.style.color='var(--green)'; msg.textContent='✅ Coupon applied! 10% discount added.'; }
+  else if(code==='FIRST'){ msg.style.color='var(--green)'; msg.textContent='✅ First order discount applied!'; }
+  else { msg.style.color='var(--red)'; msg.textContent='❌ Invalid coupon code.'; }
+}
+
+renderCart();
+</script>
+</body>
+</html>

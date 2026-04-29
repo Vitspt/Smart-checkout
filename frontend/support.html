@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Help & Support — SmartCheckout</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body class="page-anim">
+
+<header class="topbar">
+  <a href="javascript:history.back()" class="tb-btn"><span class="material-icons">arrow_back</span></a>
+  <div class="topbar-logo" data-i18n="support_title">Help & Support</div>
+  <div class="tb-right"></div>
+</header>
+
+<div class="page" style="padding-top:14px">
+
+  <!-- USAGE GUIDE -->
+  <div class="card" style="background:linear-gradient(135deg,var(--green),var(--green-d));color:#fff;margin-bottom:16px">
+    <div style="font-size:16px;font-weight:900;margin-bottom:12px" data-i18n="support_how_use">📖 How to Use SmartCheckout</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="background:rgba(255,255,255,.2);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">1</div>
+        <div><div style="font-weight:700;font-size:13px">Browse & Search</div><div style="font-size:12px;opacity:.85">Find products from Home or Category pages</div></div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="background:rgba(255,255,255,.2);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">2</div>
+        <div><div style="font-weight:700;font-size:13px">Scan Product</div><div style="font-size:12px;opacity:.85">Use camera or enter barcode ID manually</div></div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="background:rgba(255,255,255,.2);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">3</div>
+        <div><div style="font-weight:700;font-size:13px">Review Cart</div><div style="font-size:12px;opacity:.85">Check items, adjust quantities and apply coupons</div></div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="background:rgba(255,255,255,.2);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">4</div>
+        <div><div style="font-weight:700;font-size:13px">Pay & Get QR</div><div style="font-size:12px;opacity:.85">Pay using UPI, Card or Wallet — get your QR receipt</div></div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="background:rgba(255,255,255,.2);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">5</div>
+        <div><div style="font-weight:700;font-size:13px">Exit Verification</div><div style="font-size:12px;opacity:.85">Show QR code at the exit gate for verification</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK LINKS -->
+  <div class="menu-group" style="margin-bottom:16px">
+    <div class="menu-section-title">Quick Actions</div>
+    <div class="menu-item" onclick="location.href='scanner.html'">
+      <span class="material-icons">qr_code_scanner</span><span class="label">Go to Scanner</span><span class="material-icons arrow">chevron_right</span>
+    </div>
+
+    <div class="menu-item" onclick="location.href='cart.html'">
+      <span class="material-icons">shopping_bag</span><span class="label">View My Cart</span><span class="material-icons arrow">chevron_right</span>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="card">
+    <div style="font-size:15px;font-weight:800;margin-bottom:12px" data-i18n="support_faq_title">❓ Frequently Asked Questions</div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">How do I scan a product? <span class="material-icons faq-arrow">expand_more</span></div>
+      <div class="faq-a">Go to the Scanner page using the bottom navigation or the floating scan button. You can either use your camera to scan a barcode or enter the barcode ID manually (e.g., 1001, 2003). The product will be automatically added to your cart.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">What barcodes can I use? <span class="material-icons faq-arrow">expand_more</span></div>
+      <div class="faq-a">For testing, use these barcode IDs: 1001 (Rice), 1005 (Amul Ghee), 2003 (Cadbury Dairy Milk), 3001 (Bisleri Water), 3003 (Coca-Cola), 4001 (Dove Soap), 4003 (Colgate), 4005 (Dettol Handwash).</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">How does payment work? <span class="material-icons faq-arrow">expand_more</span></div>
+      <div class="faq-a">After reviewing your cart, proceed to Payment. Select your preferred method (UPI, Card, or Wallet) and click "Pay Now". The payment is simulated — a success screen will appear and a QR receipt will be generated.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">What is the QR code for? <span class="material-icons faq-arrow">expand_more</span></div>
+      <div class="faq-a">After successful payment, a QR code is generated containing your order details. Show this QR at the exit gate for verification. The security staff will scan it to confirm your payment status.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Can I add items from multiple categories? <span class="material-icons faq-arrow">expand_more</span></div>
+      <div class="faq-a">Yes! You can add items from Grocery, Snacks, Drinks, and Personal Care to the same cart. All items are stored in your device and the total is calculated automatically.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Is there delivery or shipping? <span class="material-icons faq-arrow">expand_more</span></div>
+      <div class="faq-a">No. SmartCheckout is an IN-STORE system only. You physically pick items from the shelves, scan them, pay digitally, and exit after verification. There is no delivery or shipping.</div>
+    </div>
+  </div>
+
+  <!-- CONTACT -->
+  <div class="card" style="margin-top:12px">
+    <div style="font-size:15px;font-weight:800;margin-bottom:12px" data-i18n="support_contact_title">📬 Contact Support</div>
+    <div class="form-group">
+      <label class="form-label" data-i18n="support_form_name">Your Name</label>
+      <input class="form-input" id="c-name" type="text" placeholder="Full name"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label" data-i18n="support_form_email">Email</label>
+      <input class="form-input" id="c-email" type="email" placeholder="you@email.com"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label" data-i18n="support_form_msg">Issue Description</label>
+      <textarea class="form-input" id="c-msg" rows="4" placeholder="Describe your issue..." style="resize:vertical"></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="submitContact()">
+      <span class="material-icons">send</span> <span data-i18n="support_form_submit">Submit Request</span>
+    </button>
+  </div>
+
+</div>
+
+<!-- CENTERED FAB SCAN -->
+<button class="fab-center" onclick="location.href='scanner.html'" aria-label="Scan product">
+  <span class="material-icons">qr_code_scanner</span>
+</button>
+
+<nav class="bnav">
+  <a href="home.html" class="ni" data-i18n="nav_home"><span class="material-icons">home</span>Home</a>
+  <a href="category.html?c=All" class="ni" data-i18n="cat_all"><span class="material-icons">grid_view</span>Categories</a>
+  <div class="ni-placeholder"></div>
+  <a href="cart.html" class="ni badge" data-i18n="nav_cart"><span class="material-icons">shopping_bag</span><span class="badge-dot cart-badge" style="display:none">0</span>Cart</a>
+  <a href="profile.html" class="ni" data-i18n="nav_profile"><span class="material-icons">person</span>Profile</a>
+</nav>
+
+<div id="toasts"></div>
+
+<script src="js/config.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/agent.js"></script>
+<script>
+updateCartBadge();
+function toggleFaq(el){
+  el.parentElement.classList.toggle('open');
+}
+function submitContact(){
+  const n=document.getElementById('c-name').value.trim();
+  const e=document.getElementById('c-email').value.trim();
+  const m=document.getElementById('c-msg').value.trim();
+  if(!n||!e||!m){ alert('Please fill all fields'); return; }
+  const toast=document.createElement('div');
+  toast.className='toast green';
+  toast.innerHTML='<span class="material-icons" style="font-size:18px">check_circle</span>Support request submitted! We\'ll respond within 24h.';
+  document.getElementById('toasts').appendChild(toast);
+  setTimeout(()=>{toast.classList.add('hide');setTimeout(()=>toast.remove(),300);},3000);
+  document.getElementById('c-name').value='';
+  document.getElementById('c-email').value='';
+  document.getElementById('c-msg').value='';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Product — SmartCheckout</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
+<link rel="stylesheet" href="css/style.css"/>
+<style>
+.prod-hero{
+  background: rgba(255,255,255,0.01);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  border-bottom: 1px solid var(--border);
+  padding: 24px;
+}
+.prod-hero-img{
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  margin: auto;
+  display: block;
+}
+.prod-body{padding:24px 18px;background:transparent}
+.prod-detail-name{font-size:24px;font-weight:800;line-height:1.2;color:#fff}
+.prod-detail-brand{font-size:14px;color:var(--muted);margin:6px 0 12px}
+.prod-detail-price{font-size:32px;font-weight:900;color:var(--primary)}
+.prod-detail-mrp{font-size:16px;color:var(--muted);text-decoration:line-through;margin-left:10px}
+.prod-detail-off{background:var(--primary);color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:8px;margin-left:10px}
+.spec-table{width:100%;border-collapse:collapse}
+.spec-table td{padding:12px;font-size:14px;border-bottom:1px solid var(--border);color:#fff}
+.spec-table td:first-child{color:var(--muted);font-weight:600;width:40%}
+.spec-table td:last-child{font-weight:700}
+.card{margin:0 14px 16px;border-radius:24px;padding:20px}
+</style>
+</head>
+<body class="page-anim">
+<div class="mesh-bg"></div>
+
+<header class="topbar">
+  <a href="javascript:history.back()" class="tb-btn"><span class="material-icons">arrow_back</span></a>
+  <div class="topbar-logo">CONVIX <span style="color:#ef4d23; font-style:italic; font-family:'Instrument Serif'">Smart</span></div>
+  <div class="tb-right">
+    <a href="cart.html" class="tb-btn badge">
+      <span class="material-icons">shopping_bag</span>
+      <span class="badge-dot cart-badge" style="display:none">0</span>
+    </a>
+  </div>
+</header>
+
+<div id="prod-content" style="padding-bottom:180px">
+  <div style="display:flex;align-items:center;justify-content:center;height:60vh;font-size:32px;color:var(--muted)">Loading...</div>
+</div>
+
+<div class="sticky-cta" id="sticky-cta" style="display:none;bottom:var(--nav)">
+  <button class="btn btn-primary" onclick="location.href='scanner.html'" style="height:56px; border-radius:16px; font-weight:800; background:linear-gradient(135deg, #ef4d23, #f97316); border:none; box-shadow:0 8px 24px rgba(239,77,35,0.4)">
+    <span class="material-icons">qr_code_scanner</span> <span data-i18n="scan_buy">Scan Barcode to Buy</span>
+  </button>
+</div>
+
+<div id="toasts"></div>
+
+
+<nav class="bnav">
+  <a href="home.html" class="ni" data-i18n="nav_home"><span class="material-icons">home</span>Home</a>
+  <a href="category.html?c=All" class="ni" data-i18n="nav_shop"><span class="material-icons">grid_view</span>All Categories</a>
+  <div class="ni-placeholder"></div>
+  <a href="cart.html" class="ni badge" data-i18n="nav_cart"><span class="material-icons">shopping_bag</span><span class="badge-dot cart-badge" style="display:none">0</span>Cart</a>
+  <a href="profile.html" class="ni" data-i18n="nav_profile"><span class="material-icons">person</span>Profile</a>
+</nav>
+
+<script src="js/config.js"></script>
+<script src="js/products.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/agent.js"></script>
+<script>
+let currentProd=null, qty=1;
+updateCartBadge();
+
+function toast(msg,type='green'){
+  const el=document.createElement('div'); el.className=`toast ${type}`;
+  el.innerHTML=`<span class="material-icons" style="font-size:18px">check_circle</span>${msg}`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>{el.classList.add('hide');setTimeout(()=>el.remove(),300);},2500);
+}
+
+function changeQty(d){ qty=Math.max(1,qty+d); document.getElementById('qty-display').textContent=qty; }
+
+function doAdd(){
+  if(!currentProd) return;
+  addToCart(currentProd, qty);
+  toast(`${currentProd.emoji} ${currentProd.name} ×${qty} added to cart`);
+}
+
+async function init(){
+  const id=new URLSearchParams(location.search).get('id');
+  if(!id){ document.getElementById('prod-content').innerHTML=`<div class="empty"><div class="empty-icon">❌</div><h3 data-i18n="product_not_found">${window.t('product_not_found')}</h3><p><a href="home.html" data-i18n="go_home">${window.t('go_home')}</a></p></div>`; return; }
+  currentProd = getProductById(id);
+  if(!currentProd){ document.getElementById('prod-content').innerHTML=`<div class="empty"><div class="empty-icon">❌</div><h3 data-i18n="product_not_found">${window.t('product_not_found')}</h3></div>`; return; }
+  const p=currentProd, off=discount(p.mrp,p.price);
+  document.title = p.name+' — SmartCheckout';
+  document.getElementById('prod-content').innerHTML=`
+    <div class="prod-hero">
+      ${p.img ? `<img src="${p.img}" alt="${p.name}" class="prod-hero-img" onerror="this.style.display='none'; this.parentElement.innerHTML='${p.emoji}'"/>` : p.emoji}
+    </div>
+    <div class="prod-body">
+      <div style="display:inline-flex;gap:6px;margin-bottom:8px">
+        <span class="pill pill-green">${p.category}</span>
+        ${off>0?`<span class="pill pill-red">${off}% OFF</span>`:''}
+      </div>
+      <div class="prod-detail-name">${p.name}</div>
+      <div class="prod-detail-brand">${p.brand}</div>
+      <div style="display:flex;align-items:center;margin:8px 0">
+        <span class="prod-detail-price">${formatPrice(p.price)}</span>
+        ${p.mrp>p.price?`<span class="prod-detail-mrp">${formatPrice(p.mrp)}</span><span class="prod-detail-off">SAVE ${formatPrice(p.mrp-p.price)}</span>`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:16px">
+        <span style="color:var(--amber);font-size:16px">${renderStars(p.rating)}</span>
+        <span style="font-size:13px;font-weight:700">${p.rating}/5</span>
+      </div>
+    </div>
+    <div class="card" style="margin:0 14px 12px;border-radius:14px">
+      <div style="font-size:14px;font-weight:800;margin-bottom:8px" data-i18n="about_product">${window.t('about_product')}</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.7">${p.desc}</p>
+    </div>
+    <div class="card" style="margin:0 14px 12px;border-radius:14px; background: rgba(239, 77, 35, 0.05); border: 1px solid rgba(239, 77, 35, 0.1)">
+      <div style="font-size:14px;font-weight:800;margin-bottom:12px;color:var(--primary);display:flex;align-items:center;gap:8px">
+        <span class="material-icons" style="font-size:18px">location_on</span>
+        <span data-i18n="store_location">Store Location</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:12px">
+        <div style="background:rgba(255,255,255,0.03);padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,0.05)">
+          <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase" data-i18n="floor_label">${window.t('floor_label')}</div>
+          <div style="font-size:14px;font-weight:800;color:#fff">${p.location?.floor || 'G'}</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,0.05)">
+          <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase" data-i18n="hall_label">${window.t('hall_label')}</div>
+          <div style="font-size:14px;font-weight:800;color:#fff">${p.location?.hall || 'Main'}</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,0.05)">
+          <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase" data-i18n="section_label">${window.t('section_label')}</div>
+          <div style="font-size:14px;font-weight:800;color:#fff">${p.location?.section || 'General'}</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,0.05)">
+          <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase" data-i18n="tab_label">${window.t('tab_label')}</div>
+          <div style="font-size:14px;font-weight:800;color:#fff">${p.location?.tab || '—'}</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,0.05);grid-column:span 2">
+          <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase" data-i18n="row_label">${window.t('row_label')}</div>
+          <div style="font-size:14px;font-weight:800;color:#fff">${p.location?.row || '—'}</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin:0 14px 12px;border-radius:14px">
+      <div style="font-size:14px;font-weight:800;margin-bottom:12px" data-i18n="product_details">${window.t('product_details')}</div>
+      <table class="spec-table">
+        <tr><td data-i18n="brand_label">${window.t('brand_label')}</td><td>${p.brand}</td></tr>
+        <tr><td data-i18n="category_label">${window.t('category_label')}</td><td>${p.category}</td></tr>
+        <tr><td data-i18n="barcode_id">${window.t('barcode_id')}</td><td>${p.barcode}</td></tr>
+        <tr><td data-i18n="price_label">${window.t('price_label')}</td><td>${formatPrice(p.price)}</td></tr>
+        <tr><td data-i18n="mrp_label">${window.t('mrp_label')}</td><td>${formatPrice(p.mrp)}</td></tr>
+        <tr><td data-i18n="rating_label">${window.t('rating_label')}</td><td>${p.rating} ⭐</td></tr>
+      </table>
+    </div>
+  `;
+  document.getElementById('sticky-cta').style.display='flex';
+}
+init();
+</script>
+</body>
+</html>
