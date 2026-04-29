@@ -211,17 +211,23 @@ function manualScan(){
 document.getElementById('barcode-inp').addEventListener('keydown', e => { if(e.key==='Enter') manualScan(); });
 
 async function captureLiveFrame() {
-  const video = document.querySelector('#reader video');
-  if(!cameraOn || !video) {
-    document.getElementById('image-upload').click();
-    return;
+  if(!cameraOn) {
+    await toggleCamera();
+    if(!cameraOn) {
+      document.getElementById('image-upload').click();
+      return;
+    }
+    // Wait a bit for camera to warm up
+    await new Promise(r => setTimeout(r, 1000));
   }
+
   const overlay = document.getElementById('ai-processing');
   overlay.style.display = 'flex';
   
   setTimeout(async () => {
     overlay.style.display = 'none';
     const all = await fetchProducts();
+    // Simulate "matching" - pick a product based on current category or random
     const randomProduct = all[Math.floor(Math.random() * all.length)];
     
     const el = document.createElement('div');
