@@ -65,7 +65,9 @@ const DICT = {
     'support_contact_title': '📬 Contact Support', 'support_form_name': 'Your Name', 'support_form_email': 'Email',
     'support_form_msg': 'Issue Description', 'support_form_submit': 'Submit Request',
     'status_active': 'Shop Active', 'status_inactive': 'Shop Closed',
-    'floor_label': 'Floor', 'section_label': 'Section', 'hall_label': 'Hall', 'tab_label': 'Tab', 'row_label': 'Row'
+    'floor_label': 'Floor', 'section_label': 'Section', 'hall_label': 'Hall', 'tab_label': 'Tab', 'row_label': 'Row',
+    'ai_analyzing': 'AI Visual Recognition', 'ai_step_1': 'Capturing frame...', 'ai_step_2': 'Extracting features...', 'ai_step_3': 'Matching with database...', 'ai_step_4': 'Product identified!',
+    'ai_badge': 'AI RECOGNIZED'
   },
   'es': {
     'nav_home': 'Inicio', 'nav_shop': 'Todas las categorías', 'nav_cart': 'Carrito', 'nav_profile': 'Perfil',
@@ -100,7 +102,9 @@ const DICT = {
     'support_contact_title': '📬 Contactar Soporte', 'support_form_name': 'Tu Nombre', 'support_form_email': 'Correo',
     'support_form_msg': 'Descripción del Problema', 'support_form_submit': 'Enviar Solicitud',
     'status_active': 'Tienda Activa', 'status_inactive': 'Tienda Cerrada',
-    'floor_label': 'Piso', 'section_label': 'Sección', 'hall_label': 'Pasillo', 'tab_label': 'Mesa/Pestaña', 'row_label': 'Fila'
+    'floor_label': 'Piso', 'section_label': 'Sección', 'hall_label': 'Pasillo', 'tab_label': 'Mesa/Pestaña', 'row_label': 'Fila',
+    'ai_analyzing': 'Reconocimiento Visual IA', 'ai_step_1': 'Capturando imagen...', 'ai_step_2': 'Extrayendo características...', 'ai_step_3': 'Buscando en base de datos...', 'ai_step_4': '¡Producto identificado!',
+    'ai_badge': 'IDENTIFICADO POR IA'
   },
   'hi': {
     'nav_home': 'होम', 'nav_shop': 'सभी श्रेणियां', 'nav_cart': 'कार्ट', 'nav_profile': 'प्रोफ़ाइल',
@@ -135,7 +139,9 @@ const DICT = {
     'support_contact_title': '📬 समर्थन से संपर्क करें', 'support_form_name': 'आपका नाम', 'support_form_email': 'ईमेल',
     'support_form_msg': 'समस्या का विवरण', 'support_form_submit': 'अनुरोध सबमिट करें',
     'status_active': 'दुकान चालू है', 'status_inactive': 'दुकान बंद है',
-    'floor_label': 'मंजिल', 'section_label': 'अनुभाग', 'hall_label': 'हॉल', 'tab_label': 'टैब', 'row_label': 'पंक्ति'
+    'floor_label': 'मंजिल', 'section_label': 'अनुभाग', 'hall_label': 'हॉल', 'tab_label': 'टैब', 'row_label': 'पंक्ति',
+    'ai_analyzing': 'एआई विज़ुअल रिकग्निशन', 'ai_step_1': 'फ्रेम कैप्चर कर रहा है...', 'ai_step_2': 'विशेषताएँ निकाल रहा है...', 'ai_step_3': 'डेटाबेस से मिलान कर रहा है...', 'ai_step_4': 'उत्पाद की पहचान हो गई!',
+    'ai_badge': 'AI द्वारा पहचाना गया'
   }
 };
 

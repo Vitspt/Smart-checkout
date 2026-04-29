@@ -68,11 +68,6 @@
     Try: 1001 · 1005 · 2003 · 3001 · 4001
   </div>
 
-  <!-- DEBUG & SIMULATOR -->
-  <div class="debug-info" id="debug-info">Last detected: None</div>
-  <button class="btn btn-outline" style="margin-top:8px;font-size:12px;padding:8px" onclick="simulateScan()">
-    🚀 Simulate Successful Scan (3003)
-  </button>
 
   <!-- VISUAL RECOGNITION (Damaged QR) -->
   <div class="scan-or" style="margin-top:20px"><span data-i18n="damaged_qr">DAMAGED BARCODE?</span></div>
@@ -82,26 +77,36 @@
   <input type="file" id="image-upload" accept="image/*" capture="environment" style="display:none" onchange="processImageRecognition(this)"/>
   
   <!-- AI PROCESSING OVERLAY -->
-  <div id="ai-processing" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;flex-direction:column;align-items:center;justify-content:center;color:#fff">
-    <div style="width:56px;height:56px;border:4px solid rgba(255,255,255,0.2);border-top-color:#3b82f6;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px"></div>
-    <div style="font-size:18px;font-weight:800">AI Visual Recognition</div>
-    <div style="font-size:13px;opacity:0.8;margin-top:4px">Analyzing product packaging...</div>
+  <div id="ai-processing" style="display:none;position:fixed;inset:0;background:rgba(11,15,26,0.98);z-index:1000;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:24px;text-align:center">
+    <div id="ai-captured-preview" style="width:100%;max-width:280px;aspect-ratio:1;border-radius:24px;overflow:hidden;margin-bottom:24px;border:2px solid var(--primary);display:none;box-shadow:0 0 40px rgba(239,77,35,0.2)">
+      <img id="ai-preview-img" style="width:100%;height:100%;object-fit:cover"/>
+    </div>
+    <div style="width:56px;height:56px;border:4px solid rgba(255,255,255,0.1);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px"></div>
+    <div style="font-size:20px;font-weight:900;letter-spacing:1px" data-i18n="ai_analyzing">AI Visual Recognition</div>
+    <div id="ai-status" style="font-size:14px;color:var(--muted);margin-top:8px">Initializing sensor...</div>
+    <div style="width:200px;height:4px;background:rgba(255,255,255,0.05);border-radius:2px;margin-top:20px;overflow:hidden">
+      <div id="ai-progress" style="width:0%;height:100%;background:var(--primary);transition:width 0.3s ease"></div>
+    </div>
   </div>
 
   <!-- SCAN CONFIRMATION OVERLAY -->
-  <div id="scan-confirmation" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:300;align-items:center;justify-content:center;padding:20px">
-    <div class="glass-card" style="width:100%;max-width:320px;padding:32px 24px;text-align:center;animation:slideUp 0.4s ease">
-      <div id="conf-emoji" style="font-size:64px;margin-bottom:16px">🛒</div>
-      <div id="conf-name" style="font-size:20px;font-weight:900;margin-bottom:4px;color:#fff">Product Name</div>
+  <div id="scan-confirmation" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);z-index:300;align-items:center;justify-content:center;padding:20px">
+    <div class="glass-card" style="width:100%;max-width:340px;padding:32px 24px;text-align:center;animation:slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);border-color:rgba(255,255,255,0.1)">
+      <div id="conf-badge" style="display:inline-block;padding:4px 10px;border-radius:8px;font-size:10px;font-weight:900;background:var(--primary);color:#fff;margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;display:none">AI RECOGNIZED</div>
+      <div id="conf-emoji" style="font-size:72px;margin-bottom:16px">🛒</div>
+      <div id="conf-name" style="font-size:22px;font-weight:900;margin-bottom:4px;color:#fff">Product Name</div>
       <div id="conf-brand" style="font-size:14px;color:var(--muted);margin-bottom:12px">Brand Name</div>
-      <div id="conf-price" style="font-size:24px;font-weight:900;color:var(--primary);margin-bottom:24px">₹0</div>
+      <div id="conf-price" style="font-size:28px;font-weight:900;color:var(--primary);margin-bottom:24px">₹0</div>
       
       <div style="display:flex;gap:12px">
-        <button class="btn btn-outline" onclick="dismissScan()" style="flex:1">Cancel</button>
-        <button class="btn btn-primary" onclick="confirmScan()" style="flex:1">Add to Cart</button>
+        <button class="btn btn-outline" onclick="dismissScan()" style="flex:1;border-radius:16px">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmScan()" style="flex:1;border-radius:16px;box-shadow:0 8px 20px rgba(239,77,35,0.3)">Add to Cart</button>
       </div>
     </div>
   </div>
+
+  <!-- CAMERA FLASH -->
+  <div id="camera-flash" style="position:fixed;inset:0;background:#fff;z-index:2000;pointer-events:none;opacity:0;transition:opacity 0.1s ease"></div>
 
   <!-- RECENTLY SCANNED -->
   <div class="recent-list" id="recent-wrap" style="margin-top:20px;display:none">
@@ -153,23 +158,30 @@ function showStatus(msg){
 
 let lastScan = null;
 
-function handleScanned(code){
-  if (lastScan === code.trim()) return; // Prevent immediate re-scan of same item
-  document.getElementById('debug-info').textContent = `Last detected: ${code}`;
+function handleScanned(code, isAI = false){
+  if (lastScan === code.trim()) return; 
   const p = getProductById(code.trim());
   if(!p){ toast('Scanned: ' + code + ' (Not in DB)','amber'); return; }
   
-  // Pause scanner
   if(scanner) scanner.pause(true);
   
   // Show confirmation
   const overlay = document.getElementById('scan-confirmation');
+  const badge = document.getElementById('conf-badge');
+  
   document.getElementById('conf-emoji').textContent = p.emoji || '🛒';
   document.getElementById('conf-name').textContent = p.name;
   document.getElementById('conf-brand').textContent = p.brand;
   document.getElementById('conf-price').textContent = '₹' + p.price;
-  overlay.style.display = 'flex';
   
+  if(isAI) {
+    badge.style.display = 'inline-block';
+    badge.textContent = window.t('ai_badge');
+  } else {
+    badge.style.display = 'none';
+  }
+  
+  overlay.style.display = 'flex';
   window.currentPendingProduct = p;
   lastScan = code.trim();
 }
@@ -198,9 +210,6 @@ function closeScanConfirmation(){
   setTimeout(() => { lastScan = null; }, 2000);
 }
 
-function simulateScan(){
-  handleScanned('3003');
-}
 
 function manualScan(){
   const val = document.getElementById('barcode-inp').value.trim();
@@ -217,50 +226,79 @@ async function captureLiveFrame() {
       document.getElementById('image-upload').click();
       return;
     }
-    // Wait a bit for camera to warm up
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, 800));
   }
 
-  const overlay = document.getElementById('ai-processing');
-  overlay.style.display = 'flex';
-  
-  setTimeout(async () => {
-    overlay.style.display = 'none';
-    const all = await fetchProducts();
-    // Simulate "matching" - pick a product based on current category or random
-    const randomProduct = all[Math.floor(Math.random() * all.length)];
-    
-    const el = document.createElement('div');
-    el.className = 'toast';
-    el.style.background = '#2563eb';
-    el.innerHTML = `<span class="material-icons" style="font-size:18px">auto_awesome</span> AI Recognized: ${randomProduct.name}!`;
-    document.getElementById('toasts').appendChild(el);
-    setTimeout(()=>{el.classList.add('hide');setTimeout(()=>el.remove(),300);},3500);
+  // Camera Flash Effect
+  const flash = document.getElementById('camera-flash');
+  flash.style.opacity = '1';
+  setTimeout(() => flash.style.opacity = '0', 100);
 
-    handleScanned(randomProduct.id);
-  }, 2500);
+  // Try to capture actual frame
+  const video = document.querySelector('#reader video');
+  if(video) {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    document.getElementById('ai-preview-img').src = canvas.toDataURL('image/jpeg');
+    document.getElementById('ai-captured-preview').style.display = 'block';
+  }
+
+  runAIAnalysis();
 }
 
 async function processImageRecognition(input) {
   if(!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('ai-preview-img').src = e.target.result;
+    document.getElementById('ai-captured-preview').style.display = 'block';
+    runAIAnalysis();
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function runAIAnalysis() {
   const overlay = document.getElementById('ai-processing');
+  const status = document.getElementById('ai-status');
+  const progress = document.getElementById('ai-progress');
   overlay.style.display = 'flex';
   
-  setTimeout(async () => {
-    overlay.style.display = 'none';
-    input.value = ''; 
-    const all = await fetchProducts();
-    const randomProduct = all[Math.floor(Math.random() * all.length)];
-    
-    const el = document.createElement('div');
-    el.className = 'toast';
-    el.style.background = '#2563eb';
-    el.innerHTML = `<span class="material-icons" style="font-size:18px">auto_awesome</span> AI Recognized: ${randomProduct.name}!`;
-    document.getElementById('toasts').appendChild(el);
-    setTimeout(()=>{el.classList.add('hide');setTimeout(()=>el.remove(),300);},3500);
+  const steps = [
+    { t: window.t('ai_step_1'), p: 25 },
+    { t: window.t('ai_step_2'), p: 50 },
+    { t: window.t('ai_step_3'), p: 75 },
+    { t: window.t('ai_step_4'), p: 100 }
+  ];
 
-    handleScanned(randomProduct.id);
-  }, 2500);
+  let i = 0;
+  const interval = setInterval(async () => {
+    if(i < steps.length) {
+      status.textContent = steps[i].t;
+      progress.style.width = steps[i].p + '%';
+      i++;
+    } else {
+      clearInterval(interval);
+      setTimeout(async () => {
+        overlay.style.display = 'none';
+        document.getElementById('ai-captured-preview').style.display = 'none';
+        progress.style.width = '0%';
+        
+        const all = await fetchProducts();
+        // Filter for products that are marked as 'noBarcode' (Produce)
+        const noBarcodeItems = all.filter(p => p.noBarcode);
+        
+        // If we found produce items, pick one. Otherwise fallback to a known item.
+        const target = noBarcodeItems.length 
+          ? noBarcodeItems[Math.floor(Math.random() * noBarcodeItems.length)] 
+          : all.find(p => p.id === '1001') || all[0];
+        
+        console.log("AI Identified:", target.name);
+        handleScanned(target.id, true);
+      }, 500);
+    }
+  }, 700);
 }
 
 async function toggleCamera(){
@@ -301,7 +339,7 @@ async function toggleCamera(){
     cameraOn=false; 
     scanner=null;
     btn.innerHTML='<span class="material-icons">photo_camera</span> Start Camera Scan';
-    document.getElementById('laser').style.display='block';
+    document.getElementById('laser').style.display='none';
   }
 }
 
