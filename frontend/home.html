@@ -208,6 +208,64 @@
       border: 4px solid #0b0f1a;
       box-shadow: 0 8px 32px rgba(239, 77, 35, 0.4);
     }
+    .list-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .list-item:last-child {
+      border-bottom: none;
+    }
+
+    .list-item.found .item-name {
+      text-decoration: line-through;
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    .item-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .list-input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .list-input-row input {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 0 14px;
+      color: #fff;
+      font-size: 14px;
+      height: 44px;
+    }
+
+    .list-input-row button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   </style>
 </head>
 
@@ -234,6 +292,23 @@
         <input id="search-input" type="search" data-i18n="search_placeholder" placeholder="Search products, brands..." oninput="uiSearch(this.value)"
           style="flex:1; background:none; border:none; color:#fff; font-size:15px; font-weight:500; height:100%" />
         <span class="material-icons" id="voice-btn" style="cursor:pointer; color:#ef4d23">mic</span>
+      </div>
+    </div>
+
+    <!-- SHOPPING LIST -->
+    <div class="section">
+      <div class="section-title">
+        <span data-i18n="shopping_list">My Shopping List</span>
+        <span id="list-count" style="font-size:12px; font-weight:500; color:var(--muted)">0 items</span>
+      </div>
+      <div class="list-card">
+        <div class="list-input-row">
+          <input id="list-inp" type="text" placeholder="Add milk, eggs, rice..." />
+          <button onclick="uiAddToList()"><span class="material-icons">add</span></button>
+        </div>
+        <div id="shopping-list-items">
+          <!-- Items here -->
+        </div>
       </div>
     </div>
 
@@ -286,9 +361,53 @@
 
   <script src="js/products.js"></script>
   <script src="js/cart.js"></script>
+  <script src="js/list.js"></script>
   <script src="js/config.js"></script>
   <script src="js/agent.js"></script>
   <script>
+    function uiAddToList() {
+      const inp = document.getElementById('list-inp');
+      const val = inp.value.trim();
+      if (!val) return;
+      addToList(val);
+      inp.value = '';
+      uiRenderList();
+    }
+
+    function uiRemoveFromList(id) {
+      removeFromList(id);
+      uiRenderList();
+    }
+
+    function uiToggleList(id, found) {
+      toggleListFound(id, found);
+      uiRenderList();
+    }
+
+    function uiRenderList() {
+      const list = getShoppingList();
+      const wrap = document.getElementById('shopping-list-items');
+      const count = document.getElementById('list-count');
+      
+      count.textContent = `${list.length} items`;
+      
+      if (!list.length) {
+        wrap.innerHTML = `<div style="text-align:center; padding:10px; color:rgba(255,255,255,0.2); font-size:13px">Your list is empty. Add items to remember!</div>`;
+        return;
+      }
+      
+      wrap.innerHTML = list.map(item => `
+        <div class="list-item ${item.found ? 'found' : ''}">
+          <div style="display:flex; align-items:center; gap:10px">
+            <span class="material-icons" style="font-size:20px; color:${item.found ? '#10b981' : 'rgba(255,255,255,0.2)'}; cursor:pointer" onclick="uiToggleList(${item.id}, ${!item.found})">
+              ${item.found ? 'check_circle' : 'radio_button_unchecked'}
+            </span>
+            <span class="item-name">${item.name}</span>
+          </div>
+          <span class="material-icons" style="font-size:18px; color:rgba(255,255,255,0.2); cursor:pointer" onclick="uiRemoveFromList(${item.id})">close</span>
+        </div>
+      `).reverse().join('');
+    }
     async function uiSearch(q) {
       const results = searchProducts(q);
       renderGrid(results, 'featured-grid');
@@ -334,6 +453,7 @@
   `).join('');
 
       updateCartBadge();
+      uiRenderList();
     }
 
     // Voice Search
@@ -347,6 +467,9 @@
       };
       document.getElementById('voice-btn').onclick = () => recognition.start();
     }
+
+    // Enter to add to list
+    document.getElementById('list-inp').addEventListener('keydown', e => { if (e.key === 'Enter') uiAddToList(); });
 
     init();
   </script>
