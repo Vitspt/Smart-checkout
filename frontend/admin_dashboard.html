@@ -7,26 +7,34 @@
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
   <style>
-    body { background: #0b0f1a; color: #fff; margin: 0; padding: 0; display: flex; }
-    .sidebar { width: 280px; height: 100vh; background: rgba(255, 255, 255, 0.02); border-right: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); position: fixed; padding: 32px 20px; box-sizing: border-box; z-index: 100; transition: 0.3s; }
-    .main { margin-left: 280px; flex: 1; padding: 40px; min-height: 100vh; }
-    .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; height: 72px; background: rgba(11, 15, 26, 0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 1000; display: none; justify-content: space-around; align-items: center; }
-    .m-ni { display: flex; flex-direction: column; align-items: center; color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 700; gap: 4px; text-decoration: none; }
-    .m-ni.active { color: #ef4d23; }
+    body { background: #0b0f1a; color: #fff; margin: 0; padding: 0; display: flex; font-family: 'Inter', sans-serif; }
     
-    .nav-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px; cursor: pointer; color: rgba(255,255,255,0.5); font-weight: 700; font-size: 14px; margin-bottom: 8px; transition: 0.2s; }
+    /* SIDEBAR (Desktop Only) */
+    .sidebar { width: 280px; height: 100vh; background: rgba(255, 255, 255, 0.02); border-right: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); position: fixed; padding: 32px 20px; box-sizing: border-box; z-index: 100; }
+    .main { margin-left: 280px; flex: 1; padding: 40px; min-height: 100vh; box-sizing: border-box; }
+    
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px; cursor: pointer; color: rgba(255,255,255,0.5); font-weight: 700; font-size: 14px; margin-bottom: 8px; transition: 0.2s; text-decoration: none; }
     .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
     .nav-item.active { background: #ef4d23; color: #fff; box-shadow: 0 8px 24px rgba(239, 77, 35, 0.3); }
     .nav-item .material-icons { font-size: 22px; }
 
+    /* MOBILE NAV (Bottom Bar) */
+    .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; height: 72px; background: rgba(11, 15, 26, 0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 1000; justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom); }
+    .m-ni { display: flex; flex-direction: column; align-items: center; color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 700; gap: 4px; text-decoration: none; flex: 1; }
+    .m-ni.active { color: #ef4d23; }
+    .m-ni .material-icons { font-size: 24px; }
+
+    /* RESPONSIVE BREAKPOINT */
     @media (max-width: 900px) {
-      .sidebar { display: none; }
-      .main { margin-left: 0; padding: 24px 20px 100px; }
-      .mobile-nav { display: flex; }
-      .header { flex-direction: column; align-items: flex-start; gap: 10px; }
-      .grid { grid-template-columns: 1fr; }
-      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .sidebar { display: none !important; }
+      .main { margin-left: 0 !important; padding: 24px 16px 100px !important; }
+      .mobile-nav { display: flex !important; }
+      .header { flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 24px; }
+      .grid { grid-template-columns: 1fr !important; gap: 16px; }
+      .card-dash { padding: 20px; border-radius: 20px; }
       .stat-val { font-size: 28px; }
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -10px; padding: 0 10px; }
+      table th, table td { white-space: nowrap; padding: 12px 8px; }
     }
 
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
@@ -36,67 +44,70 @@
     .stat-val { font-size: 36px; font-weight: 900; color: #ef4d23; margin: 10px 0; }
     .stat-label { font-size: 12px; font-weight: 800; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
 
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th { text-align: left; font-size: 12px; color: rgba(255,255,255,0.4); padding: 16px 12px; border-bottom: 1px solid rgba(255,255,255,0.1); text-transform: uppercase; letter-spacing: 0.5px; }
-    td { padding: 20px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; color: rgba(255,255,255,0.8); }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th { text-align: left; font-size: 11px; color: rgba(255,255,255,0.4); padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); text-transform: uppercase; letter-spacing: 1px; }
+    td { padding: 16px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; color: rgba(255,255,255,0.8); }
     
-    .stock-tag { padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 800; }
+    .stock-tag { padding: 4px 10px; border-radius: 99px; font-size: 10px; font-weight: 800; }
     .low { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
     .ok { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); }
 
-    #verify-scanner { width: 100%; max-width: 440px; aspect-ratio: 1; border-radius: 32px; overflow: hidden; background: #000; margin: 32px auto; display: none; border: 4px solid rgba(255,255,255,0.1); }
+    #verify-scanner { width: 100%; max-width: 440px; aspect-ratio: 1; border-radius: 32px; overflow: hidden; background: #000; margin: 24px auto; display: none; border: 4px solid rgba(255,255,255,0.1); }
   </style>
 </head>
 <body>
+  <!-- DESKTOP SIDEBAR -->
   <div class="sidebar">
-    <div style="font-size:28px;font-weight:900;color:#ef4d23;margin-bottom:48px;display:flex;align-items:center;gap:12px">
-      <span style="font-size:32px">🛒</span> CONVIX
+    <div style="font-size:24px;font-weight:900;color:#ef4d23;margin-bottom:48px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:28px">🛒</span> CONVIX
     </div>
-    
     <div class="nav-item active" onclick="showTab('dashboard', this)"><span class="material-icons">dashboard</span> Dashboard</div>
     <div class="nav-item" onclick="showTab('users', this)"><span class="material-icons">people</span> User Manager</div>
     <div class="nav-item" onclick="showTab('activity', this)"><span class="material-icons">history</span> Activity Log</div>
     <div class="nav-item" onclick="showTab('inventory', this)"><span class="material-icons">inventory_2</span> Inventory</div>
     <div class="nav-item" onclick="showTab('verify', this)"><span class="material-icons">qr_code_scanner</span> QR Verify</div>
     <div class="nav-item" onclick="showTab('sales', this)"><span class="material-icons">receipt_long</span> Sales History</div>
-    
     <div style="position:absolute;bottom:32px;left:20px;right:20px">
       <div class="nav-item" onclick="location.href='admin_login.html'" style="color:#ef4444;background:rgba(239,68,68,0.05)"><span class="material-icons">logout</span> Logout</div>
     </div>
   </div>
 
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="mobile-nav">
+    <a href="#" class="m-ni active" onclick="showTab('dashboard', this)"><span class="material-icons">dashboard</span><span>Dash</span></a>
+    <a href="#" class="m-ni" onclick="showTab('inventory', this)"><span class="material-icons">inventory_2</span><span>Stock</span></a>
+    <a href="#" class="m-ni" onclick="showTab('verify', this)"><span class="material-icons">qr_code_scanner</span><span>Verify</span></a>
+    <a href="#" class="m-ni" onclick="showTab('activity', this)"><span class="material-icons">history</span><span>Logs</span></a>
+    <a href="admin_login.html" class="m-ni" style="color:#ef4444"><span class="material-icons">logout</span><span>Exit</span></a>
+  </nav>
+
   <div class="main">
     <!-- DASHBOARD -->
     <div id="tab-dashboard" class="tab-content">
       <div class="header">
-        <h1 style="font-size:32px;font-weight:900">Admin Dashboard</h1>
-        <div style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.3)" id="current-date">...</div>
+        <h1 style="font-size:28px;font-weight:900;margin:0">Dashboard</h1>
+        <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.3)" id="current-date">...</div>
       </div>
 
       <div class="grid">
         <div class="card-dash">
-          <div class="stat-label">Total Revenue</div>
+          <div class="stat-label">Revenue</div>
           <div class="stat-val" id="stat-rev">₹0</div>
-          <div style="font-size:12px;color:#22c55e;font-weight:700">↑ 12% Growth</div>
+          <div style="font-size:11px;color:#22c55e;font-weight:700">↑ 12% This Week</div>
         </div>
         <div class="card-dash">
-          <div class="stat-label">Transactions</div>
+          <div class="stat-label">Orders</div>
           <div class="stat-val" id="stat-orders">0</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.3)">Real-time orders</div>
-        </div>
-        <div class="card-dash">
-          <div class="stat-label">Items Sold</div>
-          <div class="stat-val" id="stat-items">0</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.3)">Unique units</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.3)">Total transactions</div>
         </div>
       </div>
 
       <div class="card-dash">
-        <h3 style="margin-top:0;font-size:20px">Recent Sales</h3>
+        <h3 style="margin-top:0;font-size:18px">Recent Sales</h3>
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Amount</th><th>Method</th></tr>
+              <tr><th>Order ID</th><th>Customer</th><th>Amount</th></tr>
             </thead>
             <tbody id="sales-tbody-dash"></tbody>
           </table>
@@ -104,86 +115,67 @@
       </div>
     </div>
 
-    <!-- ACTIVITY -->
-    <div id="tab-activity" class="tab-content" style="display:none">
-      <div class="header"><h1 style="font-size:32px;font-weight:900">System Activity</h1></div>
-      <div class="card-dash">
-        <div class="table-wrap">
-          <table id="activity-table">
-            <thead>
-              <tr><th>Time</th><th>User</th><th>Action</th><th>Message</th></tr>
-            </thead>
-            <tbody id="activity-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    <!-- USERS -->
     <div id="tab-users" class="tab-content" style="display:none">
-      <div class="header"><h1 style="font-size:32px;font-weight:900">User Management</h1></div>
+      <div class="header"><h1 style="font-size:28px;font-weight:900">Users</h1></div>
       <div class="card-dash">
         <div class="table-wrap">
           <table>
-            <thead>
-              <tr><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th></tr>
-            </thead>
+            <thead><tr><th>Name</th><th>Email</th><th>Phone</th></tr></thead>
             <tbody id="users-tbody"></tbody>
           </table>
         </div>
       </div>
     </div>
+
+    <!-- ACTIVITY -->
+    <div id="tab-activity" class="tab-content" style="display:none">
+      <div class="header"><h1 style="font-size:28px;font-weight:900">Activity</h1></div>
+      <div class="card-dash">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Time</th><th>User</th><th>Action</th></tr></thead>
+            <tbody id="activity-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
     <div id="tab-inventory" class="tab-content" style="display:none">
       <div class="header">
-        <h1 style="font-size:32px;font-weight:900">Inventory Control</h1>
-        <button class="btn btn-primary" style="width:auto;padding:12px 24px" onclick="alert('Add Product Module')">+ New Product</button>
+        <h1 style="font-size:28px;font-weight:900">Stock</h1>
+        <button class="btn btn-primary" style="width:auto;padding:10px 20px;font-size:13px" onclick="alert('Add Product')">+ Add</button>
       </div>
-      <div class="card-dash">
-        <div id="stock-list"></div>
-      </div>
+      <div class="card-dash" id="stock-list"></div>
     </div>
 
     <!-- QR VERIFY -->
     <div id="tab-verify" class="tab-content" style="display:none">
-      <div class="header"><h1 style="font-size:32px;font-weight:900">Exit Scanner</h1></div>
-      <div class="card-dash" style="text-align:center;max-width:700px;margin:0 auto">
-        <div style="background:rgba(239,77,35,0.1);width:80px;height:80px;border-radius:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px">
-          <span class="material-icons" style="font-size:40px;color:#ef4d23">qr_code_scanner</span>
-        </div>
-        <h2 style="font-size:24px;margin-bottom:12px">Verify Customer Receipt</h2>
-        <p style="color:rgba(255,255,255,0.4);max-width:400px;margin:0 auto 32px">Scan the QR code from the customer's phone to instantly verify their purchase history and exit clearance.</p>
-        
+      <div class="header"><h1 style="font-size:28px;font-weight:900">Verify</h1></div>
+      <div class="card-dash" style="text-align:center">
         <div id="verify-scanner"></div>
-        
-        <button id="scan-btn" class="btn btn-primary" style="max-width:300px;margin:0 auto" onclick="startVerification()">OPEN SCANNER</button>
-        
-        <div id="verify-result" style="margin-top:40px;display:none">
-          <div id="v-status" style="padding:28px;border-radius:24px;font-weight:900;font-size:24px"></div>
-          <div id="v-details" style="margin-top:20px;text-align:left;font-size:15px;color:rgba(255,255,255,0.6);background:rgba(255,255,255,0.02);padding:20px;border-radius:16px"></div>
+        <button id="scan-btn" class="btn btn-primary" onclick="startVerification()">OPEN SCANNER</button>
+        <div id="verify-result" style="margin-top:24px;display:none">
+          <div id="v-status" style="padding:20px;border-radius:16px;font-weight:900"></div>
+          <div id="v-details" style="margin-top:16px;font-size:13px;color:rgba(255,255,255,0.5)"></div>
         </div>
       </div>
     </div>
 
+    <!-- SALES HISTORY -->
     <div id="tab-sales" class="tab-content" style="display:none">
-      <div class="header"><h1 style="font-size:32px;font-weight:900">Transaction Logs</h1></div>
+      <div class="header"><h1 style="font-size:28px;font-weight:900">History</h1></div>
       <div class="card-dash">
         <div class="table-wrap">
           <table>
-            <thead>
-              <tr><th>Date</th><th>Order ID</th><th>Customer</th><th>Items</th><th>Total Amount</th><th>Method</th></tr>
-            </thead>
+            <thead><tr><th>Date</th><th>ID</th><th>Customer</th><th>Total</th></tr></thead>
             <tbody id="sales-tbody"></tbody>
           </table>
         </div>
       </div>
     </div>
   </div>
-
-  <nav class="mobile-nav">
-    <a href="#" class="m-ni active" onclick="showTab('dashboard', this)"><span class="material-icons">dashboard</span>Dash</a>
-    <a href="#" class="m-ni" onclick="showTab('inventory', this)"><span class="material-icons">inventory_2</span>Stock</a>
-    <a href="#" class="m-ni" onclick="showTab('verify', this)"><span class="material-icons">qr_code_scanner</span>Verify</a>
-    <a href="#" class="m-ni" onclick="showTab('users', this)"><span class="material-icons">people</span>Users</a>
-    <a href="admin_login.html" class="m-ni" style="color:#ef4444"><span class="material-icons">logout</span>Exit</a>
-  </nav>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="js/products.js"></script>
@@ -192,81 +184,56 @@
     if (!localStorage.getItem('ssc_admin_token')) location.href = 'admin_login.html';
 
     async function init() {
-      document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-      
+      document.getElementById('current-date').textContent = new Date().toLocaleDateString();
       const prods = await fetchProducts();
       const history = JSON.parse(localStorage.getItem('ssc_admin_sales') || '[]');
+      const users = JSON.parse(localStorage.getItem('ssc_users') || '[]');
+      const activity = JSON.parse(localStorage.getItem('ssc_global_activity') || '[]');
       
       // Stats
-      const rev = history.reduce((s,o)=>s+o.total,0);
-      const itemsCount = history.reduce((s,o)=>s+o.items.length,0);
-      document.getElementById('stat-rev').textContent = '₹' + rev;
+      document.getElementById('stat-rev').textContent = '₹' + history.reduce((s,o)=>s+o.total,0);
       document.getElementById('stat-orders').textContent = history.length;
-      document.getElementById('stat-items').textContent = itemsCount;
 
       // Tables
-      renderTable(history.slice(-8).reverse(), 'sales-tbody-dash');
-      renderTable(history.slice().reverse(), 'sales-tbody');
-
-      // Users
-      const users = JSON.parse(localStorage.getItem('ssc_users') || '[]');
-      document.getElementById('users-tbody').innerHTML = users.map(u => `
-        <tr>
-          <td style="font-weight:700">${u.name}</td>
-          <td style="color:rgba(255,255,255,0.5)">${u.email}</td>
-          <td>${u.phone || 'N/A'}</td>
-          <td style="font-size:12px">${u.joined || 'Unknown'}</td>
-        </tr>
-      `).join('');
-
-      // Activity Log
-      const activity = JSON.parse(localStorage.getItem('ssc_global_activity') || '[]');
-      document.getElementById('activity-tbody').innerHTML = activity.map(a => `
-        <tr>
-          <td style="font-size:12px;color:rgba(255,255,255,0.4)">${new Date(a.ts).toLocaleTimeString()}</td>
-          <td style="font-weight:700">${a.user}</td>
-          <td><span style="background:rgba(255,255,255,0.05);padding:4px 8px;border-radius:6px;font-size:11px;font-weight:800">${a.type}</span></td>
-          <td style="color:rgba(255,255,255,0.6)">${a.msg}</td>
-        </tr>
-      `).join('');
+      renderTable(history.slice(-10).reverse(), 'sales-tbody-dash', ['id','customer','total']);
+      renderTable(history.slice().reverse(), 'sales-tbody', ['time','id','customer','total']);
+      
+      document.getElementById('users-tbody').innerHTML = users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td>${u.phone||'N/A'}</td></tr>`).join('');
+      document.getElementById('activity-tbody').innerHTML = activity.map(a => `<tr><td>${new Date(a.ts).toLocaleTimeString()}</td><td>${a.user}</td><td>${a.type}</td></tr>`).join('');
 
       // Stock
       document.getElementById('stock-list').innerHTML = prods.map(p => `
-        <div style="display:flex;align-items:center;gap:16px;padding:20px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-          <div style="font-size:24px;width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center">${p.emoji}</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:16px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <div style="font-size:20px;width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center">${p.emoji}</div>
           <div style="flex:1">
-            <div style="font-size:16px;font-weight:700">${p.name}</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.4)">₹${p.price} • ${p.category}</div>
+            <div style="font-size:14px;font-weight:700">${p.name}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.3)">₹${p.price}</div>
           </div>
-          <div class="stock-tag ${p.stock < 10 ? 'low' : 'ok'}">${p.stock || 50} Units</div>
-          <button style="border:none;background:none;color:rgba(255,255,255,0.2);cursor:pointer" onclick="alert('Edit Product')"><span class="material-icons">more_vert</span></button>
+          <div class="stock-tag ${p.stock < 10 ? 'low' : 'ok'}">${p.stock || 0}</div>
         </div>
       `).join('');
     }
 
-    function renderTable(data, id) {
+    function renderTable(data, id, fields) {
       const wrap = document.getElementById(id);
-      if (!data.length) { wrap.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:60px;color:rgba(255,255,255,0.2)">No transactions recorded yet.</td></tr>'; return; }
-      
+      if(!data.length) { wrap.innerHTML='<tr><td colspan="5" style="text-align:center;padding:40px;opacity:0.3">No data</td></tr>'; return; }
       wrap.innerHTML = data.map(o => `
         <tr>
-          <td>${new Date(o.time).toLocaleDateString()}</td>
+          ${fields.includes('time') ? `<td>${new Date(o.time).toLocaleDateString()}</td>` : ''}
           <td><code style="color:#ef4d23;font-weight:800">#${o.id.slice(-6)}</code></td>
-          <td style="font-weight:700">${o.customer || 'Guest User'}</td>
-          <td>${o.items.length} items</td>
-          <td style="font-weight:900;color:#fff">₹${o.total}</td>
+          <td>${o.customer||'Guest'}</td>
+          ${fields.includes('total') ? `<td style="font-weight:900">₹${o.total}</td>` : ''}
         </tr>
       `).join('');
     }
 
     function showTab(tabId, el) {
       document.querySelectorAll('.nav-item, .m-ni').forEach(b => b.classList.remove('active'));
-      el.classList.add('active');
-      
-      // Also sync mobile nav if desktop nav clicked and vice versa
-      const targetId = el.textContent.trim().toLowerCase();
-      // ... (simplification for now)
-
+      // Sync mobile and desktop active state
+      const text = el.innerText || el.textContent;
+      document.querySelectorAll('.nav-item, .m-ni').forEach(b => {
+        if(b.innerText.includes(text) || b.textContent.includes(text)) b.classList.add('active');
+      });
       document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
       document.getElementById('tab-' + tabId).style.display = 'block';
       window.scrollTo(0,0);
@@ -276,9 +243,9 @@
       const s = document.getElementById('verify-scanner');
       s.style.display = 'block';
       document.getElementById('scan-btn').style.display = 'none';
-      const scanner = new Html5Qrcode("verify-scanner");
-      scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (data) => {
-        scanner.stop(); s.style.display = 'none'; document.getElementById('scan-btn').style.display = 'block';
+      const sc = new Html5Qrcode("verify-scanner");
+      sc.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (data) => {
+        sc.stop(); s.style.display = 'none'; document.getElementById('scan-btn').style.display = 'block';
         verifyQR(data);
       });
     }
@@ -286,19 +253,12 @@
     function verifyQR(data) {
       const res = document.getElementById('verify-result');
       const st = document.getElementById('v-status');
-      const dt = document.getElementById('v-details');
       res.style.display = 'block';
       try {
         const qr = JSON.parse(data);
-        if (qr.exp < Date.now()) {
-          st.textContent = '❌ EXPIRED RECEIPT'; st.style.color = '#ef4444'; st.style.background = 'rgba(239, 68, 68, 0.1)';
-        } else {
-          st.textContent = '✅ VERIFIED: PAID'; st.style.color = '#22c55e'; st.style.background = 'rgba(34, 197, 94, 0.1)';
-          dt.innerHTML = `<strong>Order ID:</strong> ${qr.id}<br><strong>Amount:</strong> ₹${qr.t}<br><strong>Verification Time:</strong> ${new Date().toLocaleTimeString()}`;
-        }
-      } catch (e) {
-        st.textContent = '⚠️ INVALID QR'; st.style.color = '#eab308'; st.style.background = 'rgba(234, 179, 8, 0.1)';
-      }
+        if (qr.exp < Date.now()) { st.textContent = '❌ EXPIRED'; st.style.color = '#ef4444'; }
+        else { st.textContent = '✅ PAID & VERIFIED'; st.style.color = '#22c55e'; }
+      } catch (e) { st.textContent = '⚠️ INVALID'; st.style.color = '#eab308'; }
     }
 
     init();
