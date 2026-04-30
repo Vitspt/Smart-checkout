@@ -3,7 +3,13 @@
 // ============================================
 function getShoppingList(){ 
   try{ 
-    return JSON.parse(localStorage.getItem(ukey('list'))) || [];
+    let l = JSON.parse(localStorage.getItem(ukey('list'))) || [];
+    // Clean up old default items if they exist (from previous session)
+    if(l.length === 5 && l.some(i => i.name === 'Dairy Milk Silk') && l.some(i => i.name === 'Coca-Cola 750ml')){
+      l = [];
+      saveShoppingList(l);
+    }
+    return l;
   } catch(e){ return []; } 
 }
 function saveShoppingList(l){ localStorage.setItem(ukey('list'), JSON.stringify(l)); }
