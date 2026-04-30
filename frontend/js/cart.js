@@ -103,3 +103,19 @@ function redeemPoints(pts){
   localStorage.setItem(ukey('points'), current - pts);
   return true;
 }
+
+// ============================================
+// CONVIX Digital Wallet System
+// ============================================
+function getWalletBalance(){ return parseFloat(localStorage.getItem(ukey('wallet_balance')) || '0'); }
+function topUpWallet(amt){ 
+  const current = getWalletBalance();
+  localStorage.setItem(ukey('wallet_balance'), (current + amt).toFixed(2));
+  logActivity('WALLET_TOPUP', `Topped up ₹${amt}`);
+}
+function payWithWallet(amt){
+  const current = getWalletBalance();
+  if(current < amt) return false;
+  localStorage.setItem(ukey('wallet_balance'), (current - amt).toFixed(2));
+  return true;
+}

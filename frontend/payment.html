@@ -116,9 +116,9 @@ async function init(){
         <div><h4>Debit / Credit Card</h4><p>Visa, Mastercard, RuPay</p></div>
         <div class="pay-radio"></div>
       </div>
-      <div class="pay-option" data-method="wallet" onclick="selectMethod('wallet')">
-        <span class="material-icons">account_balance_wallet</span>
-        <div><h4>Wallet</h4><p>Paytm Wallet, Amazon Pay</p></div>
+      <div class="pay-option" data-method="convix" onclick="selectMethod('convix')">
+        <span class="material-icons" style="color:#ef4d23">account_balance_wallet</span>
+        <div><h4>CONVIX Wallet</h4><p id="wallet-status">Balance: ₹0.00</p></div>
         <div class="pay-radio"></div>
       </div>
     </div>
@@ -130,9 +130,21 @@ async function init(){
       <div style="text-align:center;font-size:12px;color:var(--muted);opacity:0.8">🔒 256-bit secure payment simulation</div>
     </div>
   `;
+  
+  const bal = getWalletBalance();
+  const statusEl = document.getElementById('wallet-status');
+  if(statusEl) statusEl.textContent = `Balance: ₹${bal.toFixed(2)}`;
 }
 
 function processPayment(total){
+  if(selectedMethod === 'convix') {
+    if(!payWithWallet(total)) {
+      if(typeof showToast === 'function') showToast('Insufficient wallet balance! Please top up.', 'error');
+      else alert('Insufficient wallet balance!');
+      return;
+    }
+  }
+
   const btn=document.getElementById('pay-btn');
   btn.innerHTML='<span class="material-icons" style="animation:spin 1s linear infinite">refresh</span> Processing...';
   btn.disabled=true;
