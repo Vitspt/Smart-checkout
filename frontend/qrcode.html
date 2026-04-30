@@ -36,15 +36,11 @@
     <div class="qr-sub">Show this at the exit gate</div>
 
     <div id="qr-canvas">
-      <div id="expiry-overlay" class="qr-expired-overlay">
-        <span class="material-icons" style="font-size:48px;color:var(--red)">history</span>
-        <div style="font-weight:900;color:var(--red);margin-top:8px">QR EXPIRED</div>
-        <button onclick="location.reload()" style="margin-top:10px;font-size:11px;color:var(--blue);background:none;text-decoration:underline">Refresh</button>
-      </div>
+
     </div>
 
-    <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:12px" id="timer-text">
-      Valid for: <span id="timer" style="color:var(--red)">10:00</span>
+    <div style="font-size:12px;font-weight:800;color:var(--green);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px">
+      ✅ Payment Verified
     </div>
 
     <div class="qr-hint">
@@ -111,30 +107,31 @@ function init(){
     correctLevel: QRCode.CorrectLevel.M
   });
 
-  // Expiry Timer Logic (10 Minutes)
-  const expiryTime = new Date(order.time).getTime() + (10 * 60 * 1000);
-  const timerInt = setInterval(() => {
-    const now = new Date().getTime();
-    const diff = expiryTime - now;
-    if(diff <= 0){
-      clearInterval(timerInt);
-      document.getElementById('timer-text').innerHTML = '<span style="color:var(--red)">QR EXPIRED</span>';
-      document.getElementById('expiry-overlay').style.display = 'flex';
-      return;
-    }
-    const mins = Math.floor(diff / 60000);
-    const secs = Math.floor((diff % 60000) / 1000);
-    document.getElementById('timer').textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-  }, 1000);
+
+
+  // Format Time
+  const pDate = new Date(order.time);
+  const dateStr = pDate.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  const timeStr = pDate.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
 
   // Render summary
   document.getElementById('order-summary').innerHTML=`
-    <div style="border-top:1px dashed var(--border);padding-top:20px;margin-top:8px">
-      <div style="font-size:11px;font-weight:900;color:var(--primary);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;text-align:left">Exit Pass — Order ID: ${order.id.slice(-8)}</div>
+    <div style="border-top:1px dashed var(--border);padding-top:20px;margin-top:8px;text-align:left">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div>
+          <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase">Order ID</div>
+          <div style="font-size:14px;font-weight:900;color:#fff">#${order.id.slice(-8)}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase">Purchased At</div>
+          <div style="font-size:14px;font-weight:900;color:#fff">${dateStr}, ${timeStr}</div>
+        </div>
+      </div>
+      <div style="font-size:11px;font-weight:900;color:var(--primary);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Items Purchased</div>
       ${order.items.map(i=>`<div class="order-row"><span style="color:#fff">${i.emoji} ${i.name}</span><span style="font-weight:800;color:var(--muted)">x${i.qty}</span></div>`).join('')}
     </div>
     <div style="margin-top:20px;display:flex;gap:10px;justify-content:center">
-      <span class="pill pill-green" id="verify-pill" style="padding:6px 12px;border-radius:12px">✅ Exit Ready</span>
+      <span class="pill pill-green" style="padding:6px 12px;border-radius:12px">✅ Exit Ready</span>
       <span class="pill" style="background:rgba(59,130,246,0.1);color:#60a5fa;padding:6px 12px;border-radius:12px">👜 ${order.items.reduce((s,i)=>s+i.qty,0)} Items</span>
     </div>
   `;
