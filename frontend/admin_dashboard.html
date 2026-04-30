@@ -117,9 +117,82 @@
   <script src="js/auth.js"></script>
   <script>
     if (!localStorage.getItem('ssc_admin_token')) location.href = 'admin_login.html';
+    
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
     function openModal() { document.getElementById('prodModal').style.display='flex'; }
     function closeModal() { document.getElementById('prodModal').style.display='none'; }
+    
+    let html5QrCode = null;
+
+    async function startVerification() {
+      const s = document.getElementById('verify-scanner');
+      const btn = document.getElementById('scan-btn');
+      const res = document.getElementById('verify-result');
+      
+      s.style.display = 'block';
+      btn.style.display = 'none';
+      res.style.display = 'none';
+
+      if(!html5QrCode) html5QrCode = new Html5Qrcode("verify-scanner");
+
+      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+      try {
+        await html5QrCode.start(
+          { facingMode: "environment" }, 
+          config, 
+          (decodedText) => {
+            stopVerification();
+            handleQRResult(decodedText);
+          },
+          (errorMessage) => { /* ignore constant scanning noise */ }
+        );
+        // Add a temporary stop button
+        const stopBtn = document.createElement('button');
+        stopBtn.id = 'temp-stop';
+        stopBtn.className = 'btn';
+        stopBtn.style.background = '#334155';
+        stopBtn.style.marginTop = '12px';
+        stopBtn.textContent = 'Cancel Scan';
+        stopBtn.onclick = stopVerification;
+        s.parentNode.insertBefore(stopBtn, s.nextSibling);
+      } catch (err) {
+        console.error(err);
+        alert("Camera error: " + err);
+        stopVerification();
+      }
+    }
+
+    async function stopVerification() {
+      if(html5QrCode && html5QrCode.isScanning) {
+        await html5QrCode.stop();
+      }
+      document.getElementById('verify-scanner').style.display = 'none';
+      document.getElementById('scan-btn').style.display = 'block';
+      const stopBtn = document.getElementById('temp-stop');
+      if(stopBtn) stopBtn.remove();
+    }
+
+    function handleQRResult(data) {
+      const res = document.getElementById('verify-result');
+      const st = document.getElementById('v-status');
+      res.style.display = 'block';
+      try {
+        const qr = JSON.parse(data);
+        if (qr.exp < Date.now()) { 
+          st.textContent = '❌ EXPIRED'; 
+          st.style.color = '#ef4444'; 
+        } else { 
+          st.textContent = '✅ VERIFIED'; 
+          st.style.color = '#22c55e'; 
+          // Log verification
+          logActivity('QR_VERIFY', `Verified Order #${qr.id.slice(-6)}`);
+        }
+      } catch (e) { 
+        st.textContent = '⚠️ INVALID QR'; 
+        st.style.color = '#eab308'; 
+      }
+    }
 
     async function init() {
       const sales = JSON.parse(localStorage.getItem('ssc_admin_sales') || '[]');
