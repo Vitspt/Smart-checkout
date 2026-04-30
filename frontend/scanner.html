@@ -1,516 +1,169 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Scanner — SmartCheckout</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
-<link rel="stylesheet" href="css/style.css"/>
-<style>
-.scan-section{display:flex;flex-direction:column;align-items:center;padding:40px 14px 120px}
-.scan-box{width:100%;max-width:320px;aspect-ratio:1;border-radius:32px;overflow:hidden;position:relative;background:#000;margin-bottom:24px;border:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,0.5)}
-#reader{width:100%;height:100%}
-#reader video{border-radius:0!important}
-.corner{position:absolute;width:40px;height:40px;z-index:10}
-.corner.tl{top:16px;left:16px;border-top:4px solid var(--primary);border-left:4px solid var(--primary);border-radius:12px 0 0 0}
-.corner.tr{top:16px;right:16px;border-top:4px solid var(--primary);border-right:4px solid var(--primary);border-radius:0 12px 0 0}
-.corner.bl{bottom:16px;left:16px;border-bottom:4px solid var(--primary);border-left:4px solid var(--primary);border-radius:0 0 0 12px}
-.corner.br{bottom:16px;right:16px;border-bottom:4px solid var(--primary);border-right:4px solid var(--primary);border-radius:0 0 12px 0}
-.laser-line{position:absolute;left:24px;right:24px;height:2px;background:var(--primary);z-index:5;animation:laser 2s ease-in-out infinite;box-shadow:0 0 15px var(--primary)}
-.scan-or{display:flex;align-items:center;gap:12px;width:100%;max-width:320px;margin-bottom:20px}
-.scan-or::before,.scan-or::after{content:'';flex:1;height:1px;background:var(--border)}
-.scan-or span{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em}
-.manual-row{display:flex;gap:10px;width:100%;max-width:320px}
-.manual-row input{flex:1;height:48px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:14px;color:#fff;padding:0 16px;font-size:14px}
-.manual-row button{height:48px;padding:0 24px;background:var(--primary);color:#fff;border-radius:14px;font-weight:800;font-size:14px;border:none;box-shadow:0 8px 16px rgba(239,77,35,0.2)}
-.scan-status{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:16px;padding:12px 16px;width:100%;max-width:320px;margin-bottom:20px;font-size:13px;color:#10b981;font-weight:700;text-align:center;display:none}
-    .recent-list{width:100%;max-width:300px}
-    .debug-info{background:rgba(255,255,255,0.04);border:1px dashed var(--border);border-radius:10px;padding:8px;margin-top:16px;width:100%;max-width:300px;font-family:monospace;font-size:11px;color:var(--muted);text-align:center}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Scanner — SmartCheckout Premium</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .scanner-container { 
+      background: #000; 
+      border-radius: 24px; 
+      overflow: hidden; 
+      position: relative; 
+      width: 100%; 
+      aspect-ratio: 4/5; 
+      box-shadow: var(--shadow-lg);
+    }
+    #reader { width: 100%; height: 100%; }
     
-    /* SHOPPING LIST DRAWER */
-    .list-drawer {
-      position: fixed;
-      bottom: -400px;
-      left: 0;
-      right: 0;
-      height: 400px;
-      background: rgba(15, 23, 42, 0.98);
-      backdrop-filter: blur(24px);
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 32px 32px 0 0;
-      z-index: 500;
-      transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      padding: 24px 20px;
-      box-shadow: 0 -12px 64px rgba(0,0,0,0.8);
+    .scan-overlay { 
+      position: absolute; inset: 0; 
+      border: 2px solid rgba(255,255,255,0.1); 
+      pointer-events: none; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
     }
-    .list-drawer.open { bottom: 0; }
-    .drawer-handle { width: 40px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 0 auto 20px; }
-    .list-fab {
-      position: fixed;
-      right: 20px;
-      bottom: 100px;
-      width: 56px;
-      height: 56px;
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 400;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    .scan-box { 
+      width: 220px; height: 220px; 
+      border: 4px solid var(--primary); 
+      border-radius: 24px; 
+      position: relative; 
+      box-shadow: 0 0 0 1000px rgba(0,0,0,0.5);
     }
-    .scanner-list-item {
-      display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+    .scan-line { 
+      position: absolute; top: 10%; left: 10%; right: 10%; 
+      height: 3px; background: var(--primary); 
+      box-shadow: 0 0 15px var(--primary);
+      animation: scanAnim 2s ease-in-out infinite; 
     }
-    .scanner-list-item.found { opacity: 0.4; }
-    .scanner-list-item.found .name { text-decoration: line-through; }
-    </style>
+    @keyframes scanAnim { 0%, 100% { top: 10%; } 50% { top: 90%; } }
+
+    .manual-input { 
+      display: flex; gap: 10px; margin-top: 24px; 
+      background: #fff; padding: 6px; border-radius: 16px; 
+      border: 1.5px solid var(--border);
+    }
+    .manual-input input { flex: 1; border: none; padding: 0 12px; font-weight: 700; font-size: 16px; }
+  </style>
 </head>
-<body class="page-anim" style="background: #0b0f1a;">
-<div class="mesh-bg"></div>
 
-<header class="topbar">
-  <a href="javascript:history.back()" class="tb-btn"><span class="material-icons">arrow_back</span></a>
-  <div class="topbar-logo">CONVIX <span style="color:#ef4d23; font-style:italic; font-family:'Instrument Serif'">Smart</span></div>
-  <div class="tb-right">
-    <a href="cart.html" class="tb-btn badge">
-      <span class="material-icons">shopping_bag</span>
-      <span class="badge-dot cart-badge" style="display:none">0</span>
-    </a>
-  </div>
-</header>
+<body class="page-anim">
+  <div class="mesh-bg"></div>
 
-<div class="scan-section" style="background: #0b0f1a; min-height: 100vh;">
-  <!-- CAMERA VIEWPORT -->
-  <div class="scan-box">
-    <div class="corner tl"></div><div class="corner tr"></div>
-    <div class="corner bl"></div><div class="corner br"></div>
-    <div class="laser-line" id="laser"></div>
-    <div id="reader"></div>
-  </div>
-
-  <!-- STATUS -->
-  <div class="scan-status" id="scan-status">✅ Item added to cart!</div>
-
-  <!-- SCAN BUTTON -->
-  <button class="btn btn-primary" id="scanBtn" onclick="toggleCamera()" style="max-width:300px;margin-bottom:16px">
-    <span class="material-icons">photo_camera</span> <span data-i18n="scan_btn">Start Camera Scan</span>
-  </button>
-
-  <!-- MANUAL -->
-  <div class="scan-or"><span>OR ENTER BARCODE</span></div>
-  <div class="manual-row">
-    <input class="form-input" id="barcode-inp" type="text" placeholder="e.g. 1001, 2003..." maxlength="20"/>
-    <button onclick="manualScan()">Add</button>
-  </div>
-  <div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;max-width:300px">
-    Try: 1001 · 1005 · 2003 · 3001 · 4001
-  </div>
-
-
-  <!-- VISUAL RECOGNITION (Damaged QR) -->
-  <div class="scan-or" style="margin-top:20px"><span data-i18n="damaged_qr">DAMAGED BARCODE?</span></div>
-  <button class="btn btn-outline" style="width:100%;max-width:300px;display:flex;align-items:center;justify-content:center;gap:8px" onclick="captureLiveFrame()">
-    <span class="material-icons" style="color:#60a5fa">photo_camera</span> <span data-i18n="img_scan">Capture Item from Camera</span>
-  </button>
-  <input type="file" id="image-upload" accept="image/*" capture="environment" style="display:none" onchange="processImageRecognition(this)"/>
-  
-  <!-- AI PROCESSING OVERLAY -->
-  <div id="ai-processing" style="display:none;position:fixed;inset:0;background:rgba(11,15,26,0.98);z-index:1000;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:24px;text-align:center">
-    <div id="ai-captured-preview" style="width:100%;max-width:280px;aspect-ratio:1;border-radius:24px;overflow:hidden;margin-bottom:24px;border:2px solid var(--primary);display:none;box-shadow:0 0 40px rgba(239,77,35,0.2)">
-      <img id="ai-preview-img" style="width:100%;height:100%;object-fit:cover"/>
+  <header class="topbar">
+    <div class="tb-left">
+      <button class="tb-btn" onclick="history.back()" style="color:var(--text)">
+        <span class="material-icons">arrow_back</span>
+      </button>
     </div>
-    <div style="width:56px;height:56px;border:4px solid rgba(255,255,255,0.1);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px"></div>
-    <div style="font-size:20px;font-weight:900;letter-spacing:1px" data-i18n="ai_analyzing">AI Visual Recognition</div>
-    <div id="ai-status" style="font-size:14px;color:var(--muted);margin-top:8px">Initializing sensor...</div>
-    <div style="width:200px;height:4px;background:rgba(255,255,255,0.05);border-radius:2px;margin-top:20px;overflow:hidden">
-      <div id="ai-progress" style="width:0%;height:100%;background:var(--primary);transition:width 0.3s ease"></div>
-    </div>
-  </div>
+    <div class="topbar-logo">SCANNER</div>
+    <div class="tb-right"></div>
+  </header>
 
-  <!-- SCAN CONFIRMATION OVERLAY -->
-  <div id="scan-confirmation" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);z-index:300;align-items:center;justify-content:center;padding:20px">
-    <div class="glass-card" style="width:100%;max-width:340px;padding:32px 24px;text-align:center;animation:slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);border-color:rgba(255,255,255,0.1)">
-      <div id="conf-badge" style="display:inline-block;padding:4px 10px;border-radius:8px;font-size:10px;font-weight:900;background:var(--primary);color:#fff;margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;display:none">AI RECOGNIZED</div>
-      <div id="conf-media" style="width:140px;height:140px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);border-radius:24px;padding:10px">
-        <img id="conf-img" src="" style="max-width:100%;max-height:100%;object-fit:contain;display:none"/>
-        <div id="conf-emoji" style="font-size:72px">🛒</div>
-      </div>
-      <div id="conf-name" style="font-size:22px;font-weight:900;margin-bottom:4px;color:#fff">Product Name</div>
-      <div id="conf-brand" style="font-size:14px;color:var(--muted);margin-bottom:12px">Brand Name</div>
-      <div id="conf-price" style="font-size:28px;font-weight:900;color:var(--primary);margin-bottom:24px">₹0</div>
-      
-      <div style="display:flex;gap:12px">
-        <button class="btn btn-outline" onclick="dismissScan()" style="flex:1;border-radius:16px">Cancel</button>
-        <button class="btn btn-primary" onclick="confirmScan()" style="flex:1;border-radius:16px;box-shadow:0 8px 20px rgba(239,77,35,0.3)">Add to Cart</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- CAMERA FLASH -->
-  <div id="camera-flash" style="position:fixed;inset:0;background:#fff;z-index:2000;pointer-events:none;opacity:0;transition:opacity 0.1s ease"></div>
-
-  <!-- RECENTLY SCANNED -->
-  <div class="recent-list" id="recent-wrap" style="margin-top:20px;display:none">
-    <div class="sh" style="margin-bottom:8px">Recently Added</div>
-    <div id="recent-list"></div>
-  </div>
-</div>
-
-<!-- SHOPPING LIST DRAWER -->
-<button class="list-fab" onclick="toggleListDrawer()">
-  <span class="material-icons">list_alt</span>
-  <span id="scan-list-count" style="position:absolute; top:-5px; right:-5px; background:var(--primary); color:#fff; font-size:10px; padding:2px 6px; border-radius:10px">0</span>
-</button>
-
-<div class="list-drawer" id="list-drawer">
-  <div class="drawer-handle" onclick="toggleListDrawer()"></div>
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
-    <h3 style="font-weight:900; margin:0">My Shopping List</h3>
-    <span class="material-icons" onclick="toggleListDrawer()" style="cursor:pointer; opacity:0.5">close</span>
-  </div>
-  <div id="scanner-list-content" style="height:300px; overflow-y:auto">
-    <!-- List items -->
-  </div>
-</div>
-
-<div id="toasts"></div>
-
-<!-- CENTERED FAB SCAN -->
-<button class="fab-center" onclick="location.href='scanner.html'" aria-label="Scan product">
-  <span class="material-icons">qr_code_scanner</span>
-</button>
-
-<nav class="bnav">
-  <a href="home.html" class="ni" data-i18n="nav_home"><span class="material-icons">home</span>Home</a>
-  <a href="category.html?c=All" class="ni" data-i18n="nav_shop"><span class="material-icons">grid_view</span>All Categories</a>
-  <div class="ni-placeholder"></div>
-  <a href="cart.html" class="ni badge" data-i18n="nav_cart"><span class="material-icons">shopping_bag</span><span class="badge-dot cart-badge" style="display:none">0</span>Cart</a>
-  <a href="profile.html" class="ni" data-i18n="nav_profile"><span class="material-icons">person</span>Profile</a>
-</nav>
-
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<script src="js/config.js"></script>
-<script src="js/products.js"></script>
-<script src="js/cart.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/list.js"></script>
-<script src="js/agent.js"></script>
-<script>
-let scanner = null, cameraOn = false;
-updateCartBadge();
-renderRecent();
-renderScannerList();
-
-function toggleListDrawer() {
-  document.getElementById('list-drawer').classList.toggle('open');
-}
-
-function renderScannerList() {
-  const list = getShoppingList();
-  const wrap = document.getElementById('scanner-list-content');
-  const count = document.getElementById('scan-list-count');
-  
-  count.textContent = list.filter(i => !i.found).length;
-  
-  if (!list.length) {
-    wrap.innerHTML = `<div style="text-align:center; padding:40px 20px; color:var(--muted)">Your shopping list is empty.</div>`;
-    return;
-  }
-  
-  wrap.innerHTML = list.map(item => `
-    <div class="scanner-list-item ${item.found ? 'found' : ''}">
-      <div style="display:flex; align-items:center; gap:12px">
-        <span class="material-icons" style="color:${item.found ? '#10b981' : 'rgba(255,255,255,0.2)'}">
-          ${item.found ? 'check_circle' : 'radio_button_unchecked'}
-        </span>
-        <div class="name" style="font-size:14px; font-weight:700">${item.name}</div>
-      </div>
-      ${item.found ? '<span style="font-size:10px; font-weight:900; color:#10b981; text-transform:uppercase">Collected</span>' : ''}
-    </div>
-  `).reverse().join('');
-}
-
-function toast(msg, type='green'){
-  const el = document.createElement('div');
-  el.className=`toast ${type}`;
-  el.innerHTML=`<span class="material-icons" style="font-size:18px">${type==='green'?'check_circle':'error'}</span>${msg}`;
-  document.getElementById('toasts').appendChild(el);
-  setTimeout(()=>{el.classList.add('hide');setTimeout(()=>el.remove(),300);},2500);
-}
-
-function showStatus(msg){
-  const s = document.getElementById('scan-status');
-  s.style.display='block'; s.textContent=msg;
-  setTimeout(()=>s.style.display='none', 2500);
-}
-
-let lastScan = null;
-
-function handleScanned(code, isAI = false){
-  const trimmedCode = code.trim();
-  if (lastScan === trimmedCode) return; 
-  
-  const p = getProductById(trimmedCode);
-  if(!p){ 
-    lastScan = trimmedCode;
-    toast('Scanned: ' + trimmedCode + ' (Not in DB)', 'amber'); 
-    setTimeout(() => { if(lastScan === trimmedCode) lastScan = null; }, 3000);
-    return; 
-  }
-  
-  // Success Beep
-  try {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.type = 'sine'; osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-  } catch(e) {}
-
-  if(scanner) scanner.pause(true);
-  
-  // Show confirmation
-  const overlay = document.getElementById('scan-confirmation');
-  const badge = document.getElementById('conf-badge');
-  
-  const img = document.getElementById('conf-img');
-  const em = document.getElementById('conf-emoji');
-  
-  if(p.img && !p.img.includes('unsplash')){
-    img.src = p.img;
-    img.style.display = 'block';
-    em.style.display = 'none';
-  } else {
-    em.textContent = p.emoji || '🛒';
-    em.style.display = 'block';
-    img.style.display = 'none';
-  }
-  
-  document.getElementById('conf-name').textContent = p.name;
-  document.getElementById('conf-brand').textContent = p.brand;
-  document.getElementById('conf-price').textContent = '₹' + p.price;
-  
-  if(isAI) {
-    badge.style.display = 'inline-block';
-    badge.textContent = window.t('ai_badge');
-  } else {
-    badge.style.display = 'none';
-  }
-  
-  overlay.style.display = 'flex';
-  window.currentPendingProduct = p;
-  lastScan = code.trim();
-}
-
-window.confirmScan = function(){
-  const p = window.currentPendingProduct;
-  if(p){
-    addToCart(p);
-    addScanHistory(p);
-    checkListAuto(p.name);
-    showStatus(`${p.name} added to cart!`);
-    toast(`${p.name} added!`);
-    renderRecent();
-    renderScannerList();
-  }
-  closeScanConfirmation();
-};
-
-window.dismissScan = function(){
-  closeScanConfirmation();
-};
-
-function closeScanConfirmation(){
-  document.getElementById('scan-confirmation').style.display = 'none';
-  if(scanner) scanner.resume();
-  // Clear last scan after a delay to allow re-scanning same item if desired later
-  setTimeout(() => { lastScan = null; }, 2000);
-}
-
-
-function manualScan(){
-  const val = document.getElementById('barcode-inp').value.trim();
-  if(!val) return;
-  handleScanned(val);
-  document.getElementById('barcode-inp').value = '';
-}
-document.getElementById('barcode-inp').addEventListener('keydown', e => { if(e.key==='Enter') manualScan(); });
-
-async function captureLiveFrame() {
-  if(!cameraOn) {
-    await toggleCamera();
-    if(!cameraOn) {
-      document.getElementById('image-upload').click();
-      return;
-    }
-    await new Promise(r => setTimeout(r, 800));
-  }
-
-  // Camera Flash Effect
-  const flash = document.getElementById('camera-flash');
-  flash.style.opacity = '1';
-  setTimeout(() => flash.style.opacity = '0', 100);
-
-  // Try to capture actual frame
-  const video = document.querySelector('#reader video');
-  if(video) {
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
-    document.getElementById('ai-preview-img').src = canvas.toDataURL('image/jpeg');
-    document.getElementById('ai-captured-preview').style.display = 'block';
-  }
-
-  runAIAnalysis();
-}
-
-async function processImageRecognition(input) {
-  if(!input.files || !input.files[0]) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    document.getElementById('ai-preview-img').src = e.target.result;
-    document.getElementById('ai-captured-preview').style.display = 'block';
-    runAIAnalysis();
-  };
-  reader.readAsDataURL(input.files[0]);
-}
-
-function runAIAnalysis() {
-  const overlay = document.getElementById('ai-processing');
-  const status = document.getElementById('ai-status');
-  const progress = document.getElementById('ai-progress');
-  overlay.style.display = 'flex';
-  
-  const steps = [
-    { t: window.t('ai_step_1'), p: 25 },
-    { t: window.t('ai_step_2'), p: 50 },
-    { t: window.t('ai_step_3'), p: 75 },
-    { t: window.t('ai_step_4'), p: 100 }
-  ];
-
-  let i = 0;
-  const interval = setInterval(async () => {
-    if(i < steps.length) {
-      status.textContent = steps[i].t;
-      progress.style.width = steps[i].p + '%';
-      i++;
-    } else {
-      clearInterval(interval);
-      setTimeout(async () => {
-        overlay.style.display = 'none';
-        document.getElementById('ai-captured-preview').style.display = 'none';
-        progress.style.width = '0%';
-        
-        const all = await fetchProducts();
-        // Filter for products that are marked as 'noBarcode' (Produce)
-        const noBarcodeItems = all.filter(p => p.noBarcode);
-        
-        // If we found produce items, pick one. Otherwise fallback to a known item.
-        const target = noBarcodeItems.length 
-          ? noBarcodeItems[Math.floor(Math.random() * noBarcodeItems.length)] 
-          : all.find(p => p.id === '1001') || all[0];
-        
-        console.log("AI Identified:", target.name);
-        handleScanned(target.id, true);
-      }, 500);
-    }
-  }, 700);
-}
-
-async function toggleCamera(){
-  const btn = document.getElementById('scanBtn');
-  if(!cameraOn){
-    try{
-      const formats = [
-        Html5QrcodeSupportedFormats.QR_CODE,
-        Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.EAN_8,
-        Html5QrcodeSupportedFormats.CODE_128,
-        Html5QrcodeSupportedFormats.CODE_39,
-        Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.UPC_E,
-        Html5QrcodeSupportedFormats.ITF,
-        Html5QrcodeSupportedFormats.RSS_14,
-        Html5QrcodeSupportedFormats.RSS_EXPANDED
-      ];
-      
-      scanner = new Html5Qrcode('reader', { 
-        formatsToSupport: formats,
-        verbose: false
-      });
-      
-      const config = {
-        fps: 30, // Maximize scan speed
-        qrbox: (viewWidth, viewHeight) => {
-          // Narrower rectangle specifically for 1D barcodes
-          let width = Math.min(viewWidth, viewHeight) * 0.9;
-          let height = 120; // Fixed height for the barcode strip
-          return { width: width, height: height };
-        },
-        aspectRatio: 1.0,
-        disableFlip: false,
-        videoConstraints: {
-          facingMode: "environment",
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
-        }
-      };
-      
-      try {
-        await scanner.start({facingMode:'environment'}, config, code => {
-          if(code) handleScanned(code);
-        }, ()=>{});
-      } catch(err) {
-        // Fallback to any available camera
-        await scanner.start({facingMode:'user'}, config, code => {
-          if(code) handleScanned(code);
-        }, ()=>{});
-      }
-      cameraOn=true; 
-      btn.innerHTML='<span class="material-icons">stop</span> Stop Camera';
-      document.getElementById('laser').style.display='block';
-    } catch(e){ 
-      console.error(e);
-      toast('Camera error. Please ensure permissions are granted.','red'); 
-    }
-  } else {
-    try{ 
-      await scanner.stop(); 
-      await scanner.clear(); 
-    }catch(e){}
-    cameraOn=false; 
-    scanner=null;
-    btn.innerHTML='<span class="material-icons">photo_camera</span> Start Camera Scan';
-    document.getElementById('laser').style.display='none';
-  }
-}
-
-function renderRecent(){
-  try{
-    const h = JSON.parse(localStorage.getItem(ukey('scan_history'))||'[]');
-    if(!h.length){ document.getElementById('recent-wrap').style.display='none'; return; }
-    document.getElementById('recent-wrap').style.display='block';
-    document.getElementById('recent-list').innerHTML = h.slice(0,5).map(i=>`
-      <div class="scan-item">
-        <div class="scan-emoji">
-          ${i.img && !i.img.includes('unsplash') ? `<img src="${i.img}" style="width:100%;height:100%;object-fit:contain"/>` : i.emoji}
+  <div class="page">
+    <div class="scanner-container">
+      <div id="reader"></div>
+      <div class="scan-overlay">
+        <div class="scan-box">
+          <div class="scan-line"></div>
         </div>
-        <div style="flex:1"><div style="font-size:13px;font-weight:700">${i.name}</div><div style="font-size:11px;color:var(--muted)">${i.time}</div></div>
-        <div style="font-size:14px;font-weight:800;color:var(--green)">₹${i.price}</div>
-      </div>`).join('');
-  }catch(e){}
-}
+        <p style="color:#fff;font-weight:700;margin-top:20px;font-size:13px;letter-spacing:1px">ALIGN BARCODE WITHIN BOX</p>
+      </div>
+    </div>
 
-// Auto-start camera
-setTimeout(()=>{
-  if(!cameraOn) toggleCamera();
-}, 500);
-</script>
+    <div class="manual-input">
+      <input type="text" id="manual-code" placeholder="Enter Barcode ID (e.g. 1001)" />
+      <button class="btn btn-primary" style="width:auto;padding:0 20px" onclick="handleManualScan()">ADD</button>
+    </div>
+
+    <div id="recent-scanned" style="margin-top:32px">
+      <h3 style="font-size:16px;font-weight:800;margin-bottom:12px">Recently Added</h3>
+      <div id="recent-list">
+        <!-- Recent items -->
+      </div>
+    </div>
+  </div>
+
+  <div id="toasts"></div>
+
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/products.js"></script>
+  <script src="js/cart.js"></script>
+  <script>
+    let scanner = null;
+    let lastScan = null;
+    let scanTimeout = null;
+
+    function toast(msg, type='green') {
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.innerHTML = `<span class="material-icons">check_circle</span> ${msg}`;
+      document.getElementById('toasts').appendChild(t);
+      setTimeout(() => t.remove(), 2500);
+    }
+
+    async function handleScan(code) {
+      if (lastScan === code) return;
+      lastScan = code;
+      clearTimeout(scanTimeout);
+      scanTimeout = setTimeout(() => { lastScan = null; }, 3000);
+
+      const p = getProductByBarcode(code);
+      if (p) {
+        if (navigator.vibrate) navigator.vibrate(100);
+        addToCart(p);
+        toast(`Added ${p.name} to cart!`);
+        renderRecent();
+      } else {
+        toast(`Item ${code} not in database`, 'red');
+      }
+    }
+
+    function handleManualScan() {
+      const code = document.getElementById('manual-code').value.trim();
+      if (code) {
+        handleScan(code);
+        document.getElementById('manual-code').value = '';
+      }
+    }
+
+    function renderRecent() {
+      const history = JSON.parse(localStorage.getItem(ukey('scan_history')) || '[]');
+      const wrap = document.getElementById('recent-list');
+      if (!history.length) {
+        wrap.innerHTML = '<p style="color:var(--text-muted);font-size:13px">No items added yet.</p>';
+        return;
+      }
+      wrap.innerHTML = history.slice(0, 3).map(i => `
+        <div class="card" style="display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:10px">
+          <div style="font-size:24px;width:40px;height:40px;border-radius:10px;background:var(--primary-light);display:flex;align-items:center;justify-content:center">${i.emoji || '🛒'}</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700">${i.name}</div>
+            <div style="font-size:12px;color:var(--primary);font-weight:800">₹${i.price}</div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted)">${i.time}</div>
+        </div>
+      `).join('');
+    }
+
+    function startScanner() {
+      scanner = new Html5Qrcode("reader");
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => handleScan(decodedText)
+      ).catch(err => console.error("Scanner error:", err));
+    }
+
+    renderRecent();
+    // In a real environment, we call startScanner()
+    // For demo/dev, we just use manual input
+    console.log("Scanner ready. Use manual input for simulation.");
+  </script>
 </body>
 </html>

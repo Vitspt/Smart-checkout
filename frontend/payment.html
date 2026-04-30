@@ -1,162 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Payment — SmartCheckout</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
-<link rel="stylesheet" href="css/style.css"/>
-</head>
-<body class="page-anim">
-
-<header class="topbar">
-  <a href="javascript:history.back()" class="tb-btn"><span class="material-icons">arrow_back</span></a>
-  <div class="topbar-logo">Checkout</div>
-  <div class="tb-right"></div>
-</header>
-
-<div class="page" style="padding-top:14px; padding-bottom: 180px;" id="pay-page">
-  <div style="display:flex;align-items:center;justify-content:center;height:60vh;font-size:24px;color:var(--muted)">Loading...</div>
-</div>
-
-<!-- AUDIT OVERLAY -->
-<div class="success-overlay" id="audit-overlay" style="display:none;background:rgba(15,23,42,0.98)">
-  <div class="success-card" style="border-top:5px solid var(--amber)">
-    <div style="font-size:48px">🕵️</div>
-    <h2 style="font-size:22px;font-weight:900;margin:12px 0 6px">Random Security Audit</h2>
-    <p style="color:var(--muted);font-size:14px">For your safety, a staff member will briefly verify your cart. Please stay at your position.</p>
-    <div style="margin-top:20px;padding:12px;background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;color:#92400e;font-weight:700;font-size:13px">
-      Verification Code: <span id="audit-code" style="font-family:monospace;font-size:18px">...</span>
-    </div>
-    <button class="btn btn-primary" style="margin-top:20px" onclick="finishPaymentAfterAudit()">
-      I'm Verified (Demo)
-    </button>
-  </div>
-</div>
-
-<!-- SUCCESS OVERLAY -->
-<div class="success-overlay" id="success-overlay" style="display:none">
-  <div class="success-card">
-    <div class="success-icon">✅</div>
-    <h2 style="font-size:22px;font-weight:900;margin:12px 0 6px">Payment Successful!</h2>
-    <p style="color:var(--muted);font-size:14px">Generating your QR receipt...</p>
-    <div style="display:flex;gap:6px;justify-content:center;margin-top:16px">
-      <div class="dot" style="animation:bounce .9s .0s ease infinite"></div>
-      <div class="dot" style="animation:bounce .9s .15s ease infinite"></div>
-      <div class="dot" style="animation:bounce .9s .3s ease infinite"></div>
-    </div>
-  </div>
-</div>
-
-<div id="toasts"></div>
-
-<script src="js/config.js"></script>
-<script src="js/products.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/cart.js"></script>
-<script>
-let selectedMethod = 'upi';
-
-function selectMethod(m){
-  selectedMethod = m;
-  document.querySelectorAll('.pay-option').forEach(el => el.classList.toggle('selected', el.dataset.method===m));
-}
-
-async function init(){
-  const cart = getCart();
-  if(!cart.length){ location.href='cart.html'; return; }
-  const subtotal=getCartSubtotal(), mrp=getCartMRP();
-  const disc=mrp-subtotal, tax=Math.round(subtotal*TAX_RATE), total=subtotal+tax;
-
-  document.getElementById('pay-page').innerHTML=`
-    <!-- ITEM LIST -->
-    <div class="card">
-      <div style="font-size:14px;font-weight:800;margin-bottom:10px">Order Summary (${cart.length} items)</div>
-      ${cart.map(i=>`
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-          <span style="font-size:22px">${i.emoji}</span>
-          <div style="flex:1;font-size:13px;font-weight:700">${i.name} <span style="color:var(--muted);font-weight:500">×${i.qty}</span></div>
-          <div style="font-size:14px;font-weight:800;color:var(--green)">${formatPrice(i.price*i.qty)}</div>
-        </div>`).join('')}
-    </div>
-
-    <!-- PRICE BREAKDOWN -->
-    <div class="card">
-      <div style="font-size:14px;font-weight:800;margin-bottom:8px">Price Details</div>
-      <div class="price-row"><span>Subtotal (MRP)</span><span>${formatPrice(mrp)}</span></div>
-      ${disc>0?`<div class="price-row green"><span>Discount</span><span>− ${formatPrice(disc)}</span></div>`:''}
-      <div class="price-row"><span>GST (5%)</span><span>${formatPrice(tax)}</span></div>
-      <div class="price-row total"><span>Amount Payable</span><span style="color:var(--green)">${formatPrice(total)}</span></div>
-    </div>
-
-    <!-- PAYMENT OPTIONS -->
-    <div class="card">
-      <div style="font-size:14px;font-weight:800;margin-bottom:12px">Choose Payment Method</div>
-      <div class="pay-option selected" data-method="upi" onclick="selectMethod('upi')">
-        <span class="material-icons">phone_android</span>
-        <div><h4>UPI</h4><p>GPay, PhonePe, Paytm</p></div>
-        <div class="pay-radio"></div>
-      </div>
-      <div class="pay-option" data-method="card" onclick="selectMethod('card')">
-        <span class="material-icons">credit_card</span>
-        <div><h4>Debit / Credit Card</h4><p>Visa, Mastercard, RuPay</p></div>
-        <div class="pay-radio"></div>
-      </div>
-      <div class="pay-option" data-method="wallet" onclick="selectMethod('wallet')">
-        <span class="material-icons">account_balance_wallet</span>
-        <div><h4>Wallet</h4><p>Paytm Wallet, Amazon Pay</p></div>
-        <div class="pay-radio"></div>
-      </div>
-    </div>
-
-    <div class="sticky-cta" style="bottom: 0; background: var(--bg); padding-bottom: 32px;">
-      <button class="btn btn-primary" id="pay-btn" onclick="processPayment(${total})" style="box-shadow: 0 8px 32px rgba(239, 77, 35, 0.4);">
-        <span class="material-icons">lock</span> Pay Securely — ${formatPrice(total)}
-      </button>
-      <div style="text-align:center;font-size:12px;color:var(--muted);opacity:0.8">🔒 256-bit secure payment simulation</div>
-    </div>
-  `;
-}
-
-function processPayment(total){
-  const btn=document.getElementById('pay-btn');
-  btn.innerHTML='<span class="material-icons" style="animation:spin 1s linear infinite">refresh</span> Processing...';
-  btn.disabled=true;
-
-  setTimeout(()=>{
-    const needsAudit = Math.random() < 0.2; // 20% chance
-    if(needsAudit){
-      document.getElementById('audit-overlay').style.display='flex';
-      document.getElementById('audit-code').textContent = Math.floor(1000 + Math.random()*9000);
-      return;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Payment — SmartCheckout Premium</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .pay-card { 
+      background: #fff; 
+      border-radius: 24px; 
+      padding: 24px; 
+      border: 1.5px solid var(--border);
+      box-shadow: var(--shadow);
+      position: relative;
     }
-    finishPayment();
-  }, 2000);
-}
+    .glow-effect {
+      position: absolute; inset: 0;
+      border-radius: 24px;
+      box-shadow: 0 0 30px rgba(22, 163, 74, 0.2);
+      pointer-events: none;
+      animation: glowPulse 2s infinite;
+    }
+    @keyframes glowPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
-function finishPaymentAfterAudit(){
-  document.getElementById('audit-overlay').style.display='none';
-  finishPayment();
-}
+    .pay-method {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px; border: 1.5px solid var(--border);
+      border-radius: 16px; margin-bottom: 12px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .pay-method.selected { 
+      border-color: var(--primary); 
+      background: var(--primary-light); 
+    }
+    .pay-method .material-icons { color: var(--text-muted); }
+    .pay-method.selected .material-icons { color: var(--primary); }
+    
+    .loading-overlay {
+      position: fixed; inset: 0; background: rgba(255,255,255,0.9);
+      display: none; flex-direction: column; align-items: center;
+      justify-content: center; z-index: 1000;
+    }
+  </style>
+</head>
 
-function finishPayment(){
-  const cart=getCart();
-  const subtotal=getCartSubtotal(), tax=Math.round(subtotal*TAX_RATE), total=subtotal+tax;
-  const order={
-    id:'ORD'+Date.now(),
-    items:cart,
-    total,
-    method:selectedMethod,
-    status:'Paid',
-    time:new Date().toISOString()
-  };
-  savePurchaseHistory(order);
-  localStorage.setItem('ssc_last_order', JSON.stringify(order));
-  clearCart();
-  document.getElementById('success-overlay').style.display='flex';
-  setTimeout(()=>location.href='qrcode.html', 2000);
-}
+<body class="page-anim">
+  <div class="mesh-bg"></div>
 
-init();
-</script>
+  <header class="topbar">
+    <div class="tb-left">
+      <button class="tb-btn" onclick="history.back()" style="color:var(--text)">
+        <span class="material-icons">arrow_back</span>
+      </button>
+    </div>
+    <div class="topbar-logo">PAYMENT</div>
+    <div class="tb-right"></div>
+  </header>
+
+  <div class="page">
+    <div class="pay-card slide-up">
+      <div class="glow-effect"></div>
+      <div style="text-align:center;margin-bottom:24px">
+        <div style="font-size:14px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:1px">Total Amount Payable</div>
+        <div id="pay-total" style="font-size:36px;font-weight:900;color:var(--primary);margin:4px 0">₹0</div>
+        <div style="font-size:12px;color:var(--text-muted)">Secure Encryption Enabled</div>
+      </div>
+
+      <div style="font-size:15px;font-weight:800;margin-bottom:16px">Select Payment Method</div>
+      
+      <div class="pay-method selected" onclick="selectMethod(this, 'upi')">
+        <span class="material-icons">qr_code</span>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700">UPI Payment</div>
+          <div style="font-size:11px;color:var(--text-muted)">GPay, PhonePe, Paytm</div>
+        </div>
+        <span class="material-icons" style="color:var(--primary)">check_circle</span>
+      </div>
+
+      <div class="pay-method" onclick="selectMethod(this, 'card')">
+        <span class="material-icons">credit_card</span>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700">Credit / Debit Card</div>
+          <div style="font-size:11px;color:var(--text-muted)">Visa, Mastercard, RuPay</div>
+        </div>
+      </div>
+
+      <div class="pay-method" onclick="selectMethod(this, 'wallet')">
+        <span class="material-icons">account_balance_wallet</span>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700">Digital Wallets</div>
+          <div style="font-size:11px;color:var(--text-muted)">Amazon Pay, MobiKwik</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" style="margin-top:24px" onclick="processPayment()">
+        PAY NOW <span class="material-icons">security</span>
+      </button>
+    </div>
+
+    <div style="margin-top:24px;text-align:center">
+      <p style="font-size:12px;color:var(--text-muted)">By proceeding, you agree to the Terms of Service.</p>
+    </div>
+  </div>
+
+  <div class="loading-overlay" id="loader">
+    <div style="width:48px;height:48px;border:4px solid var(--primary-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite"></div>
+    <div style="margin-top:16px;font-weight:800;color:var(--text)">Processing Secure Payment...</div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/cart.js"></script>
+  <script>
+    let selectedMethod = 'upi';
+
+    function selectMethod(el, method) {
+      selectedMethod = method;
+      document.querySelectorAll('.pay-method').forEach(m => {
+        m.classList.remove('selected');
+        const icon = m.querySelector('.material-icons:last-child');
+        if (icon && icon.textContent === 'check_circle') icon.remove();
+      });
+      el.classList.add('selected');
+      el.innerHTML += '<span class="material-icons" style="color:var(--primary)">check_circle</span>';
+    }
+
+    function processPayment() {
+      document.getElementById('loader').style.display = 'flex';
+      
+      setTimeout(() => {
+        const cart = getCart();
+        const total = getCartSubtotal() + Math.round(getCartSubtotal() * 0.05);
+        
+        const order = {
+          id: 'ORD' + Date.now(),
+          items: cart,
+          total: total,
+          status: 'paid',
+          time: new Date().toISOString(),
+          method: selectedMethod,
+          used: false
+        };
+
+        savePurchaseHistory(order);
+        localStorage.setItem(ukey('last_order'), JSON.stringify(order));
+        clearCart();
+        
+        location.href = 'qrcode.html';
+      }, 2500);
+    }
+
+    function init() {
+      const subtotal = getCartSubtotal();
+      const total = subtotal + Math.round(subtotal * 0.05);
+      document.getElementById('pay-total').textContent = '₹' + total;
+      
+      if (total === 0) location.href = 'home.html';
+    }
+
+    init();
+  </script>
 </body>
 </html>
