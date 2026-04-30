@@ -45,7 +45,7 @@
     <div class="nav-item" id="nav-coupons" onclick="showTab('coupons', this)"><span class="material-icons">confirmation_number</span> Coupons</div>
     <div class="nav-item" id="nav-verify" onclick="showTab('verify', this)"><span class="material-icons">qr_code_scanner</span> QR Verify</div>
     <div style="position:absolute;bottom:32px;left:20px;right:20px">
-      <div class="nav-item" onclick="location.href='admin_login.html'" style="color:#ef4444;background:rgba(239,68,68,0.05)"><span class="material-icons">logout</span> Logout</div>
+      <div class="nav-item" onclick="logoutConfirm()" style="color:#ef4444;background:rgba(239,68,68,0.05)"><span class="material-icons">logout</span> Logout</div>
     </div>
   </div>
 
@@ -356,9 +356,30 @@
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active')); 
       el.classList.add('active'); 
       document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none'); 
-      document.getElementById('tab-' + t).style.display = 'block'; 
+      const target = document.getElementById('tab-' + t);
+      if(target) target.style.display = 'block'; 
       if(window.innerWidth < 900) toggleSidebar(); 
     }
+
+    function logoutConfirm() {
+      if(confirm('Are you sure you want to logout?')) {
+        localStorage.removeItem('ssc_admin_token');
+        localStorage.removeItem('ssc_admin_role');
+        location.href = 'admin_login.html';
+      }
+    }
+
+    // Protection against accidental back button
+    window.addEventListener('popstate', function(event) {
+      if(localStorage.getItem('ssc_admin_token')) {
+        if(!confirm('Do you want to logout?')) {
+          history.pushState(null, null, window.location.pathname);
+        } else {
+          logoutConfirm();
+        }
+      }
+    });
+    history.pushState(null, null, window.location.pathname);
 
     init();
   </script>
