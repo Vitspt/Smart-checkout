@@ -163,6 +163,17 @@ function handleScanned(code, isAI = false){
   const p = getProductById(code.trim());
   if(!p){ toast('Scanned: ' + code + ' (Not in DB)','amber'); return; }
   
+  // Success Beep
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.type = 'sine'; osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+  } catch(e) {}
+
   if(scanner) scanner.pause(true);
   
   // Show confirmation
@@ -313,25 +324,30 @@ async function toggleCamera(){
         Html5QrcodeSupportedFormats.CODE_39,
         Html5QrcodeSupportedFormats.UPC_A,
         Html5QrcodeSupportedFormats.UPC_E,
-        Html5QrcodeSupportedFormats.ITF
+        Html5QrcodeSupportedFormats.ITF,
+        Html5QrcodeSupportedFormats.RSS_14,
+        Html5QrcodeSupportedFormats.RSS_EXPANDED
       ];
       
-      scanner = new Html5Qrcode('reader', { formatsToSupport: formats });
+      scanner = new Html5Qrcode('reader', { 
+        formatsToSupport: formats,
+        verbose: false
+      });
       
       const config = {
-        fps: 25,
+        fps: 30, // Maximize scan speed
         qrbox: (viewWidth, viewHeight) => {
-          let width = Math.min(viewWidth, viewHeight) * 0.85;
-          let height = width * 0.5;
+          // Narrower rectangle specifically for 1D barcodes
+          let width = Math.min(viewWidth, viewHeight) * 0.9;
+          let height = 120; // Fixed height for the barcode strip
           return { width: width, height: height };
         },
         aspectRatio: 1.0,
         disableFlip: false,
         videoConstraints: {
-          width: { min: 640, ideal: 1280, max: 1920 },
-          height: { min: 480, ideal: 720, max: 1080 },
           facingMode: "environment",
-          focusMode: "continuous"
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
         }
       };
       
