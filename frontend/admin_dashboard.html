@@ -497,7 +497,7 @@
       }
     }
 
-    // Intelligent Back Button
+    // Intelligent Back Button (Handles modals and sidebar only)
     window.addEventListener('popstate', function(event) {
       // 1. Close modals if open
       const modals = ['prodModal', 'couponModal', 'incidentModal'];
@@ -517,15 +517,6 @@
         sb.classList.remove('open');
         document.getElementById('overlay').classList.remove('show');
         return;
-      }
-
-      // 3. Ask for logout if at root
-      if(localStorage.getItem('ssc_admin_token')) {
-        if(!confirm('Do you want to logout?')) {
-          history.pushState(null, null, window.location.pathname);
-        } else {
-          logoutConfirm();
-        }
       }
     });
     history.pushState(null, null, window.location.pathname);
