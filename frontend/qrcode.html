@@ -77,12 +77,36 @@
 <script src="js/products.js"></script>
 <script src="js/cart.js"></script>
 <script>
-function init(){
+async function init(){
   let order;
   try{ order = JSON.parse(localStorage.getItem('ssc_last_order')); }catch(e){}
+  
   if(!order){
     // Demo order fallback
     order={ id:'ORD_DEMO', items:[{name:'Amul Ghee',emoji:'🥛',qty:1,price:295},{name:"Lay's Chips",emoji:'🥔',qty:2,price:20}], total:337, status:'Paid', time:new Date().toISOString(), method:'upi' };
+  } else {
+    // Attempt to fetch real-time status if we have a real order ID
+    try {
+      const resp = await fetch(`${API_URL}/orders/${order.id}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('ssc_token')}` }
+      });
+      const data = await resp.json();
+      if(data.success) {
+        order = data.data;
+        // If order is already exited, show a warning
+        if(order.status === 'exited') {
+          document.body.innerHTML = `
+            <div style="height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0b0f1a;color:#fff;padding:20px;text-align:center">
+              <div style="font-size:64px;margin-bottom:20px">⚠️</div>
+              <h2 style="font-weight:900">QR ALREADY USED</h2>
+              <p style="color:var(--muted);margin-top:10px">This receipt was already used to exit the store at ${new Date(order.exited_at).toLocaleTimeString()}.</p>
+              <a href="home.html" class="btn btn-primary" style="margin-top:20px;text-decoration:none">Back to Home</a>
+            </div>
+          `;
+          return;
+        }
+      }
+    } catch(err) { console.log("Real-time check failed, using local data"); }
   }
 
   const qrData = JSON.stringify({
@@ -90,7 +114,7 @@ function init(){
     items: order.items.map(i=>({ name:i.name, qty:i.qty, price:i.price })),
     total: order.total,
     status: order.status,
-    time: order.time
+    time: order.created_at || order.time
   });
 
   // Store QR data for exit verification

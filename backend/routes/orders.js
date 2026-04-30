@@ -9,5 +9,6 @@ router.post('/',             c.createOrder);
 router.get('/',              c.getMyOrders);
 router.get('/:id',           c.getOrderById);
 router.patch('/:id/cancel',  c.cancelOrder);
+router.post('/:id/verify',   c.verifyOrder);
 
 module.exports = router;

@@ -85,3 +85,36 @@ exports.cancelOrder = (req, res) => {
   order.status = 'cancelled';
   res.json({ success: true, message: 'Order cancelled', order });
 };
+
+// POST /api/orders/:id/verify  — Staff action: verify QR at exit
+exports.verifyOrder = (req, res) => {
+  const order = db.orders.find(o => o.id === req.params.id);
+  if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+  
+  if (order.status === 'exited') {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'ALERT: This QR has already been used for exit!',
+      exited_at: order.exited_at 
+    });
+  }
+
+  if (order.status !== 'paid') {
+    return res.status(400).json({ 
+      success: false, 
+      message: `Invalid order status: ${order.status}` 
+    });
+  }
+
+  // Mark as exited
+  order.status = 'exited';
+  order.exited_at = new Date().toISOString();
+  
+  res.json({ 
+    success: true, 
+    message: 'Verification successful. Customer may exit.',
+    order_id: order.id,
+    purchased_at: order.created_at,
+    exited_at: order.exited_at
+  });
+};
