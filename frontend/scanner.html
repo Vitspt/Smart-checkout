@@ -134,7 +134,10 @@
   <div id="scan-confirmation" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);z-index:300;align-items:center;justify-content:center;padding:20px">
     <div class="glass-card" style="width:100%;max-width:340px;padding:32px 24px;text-align:center;animation:slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);border-color:rgba(255,255,255,0.1)">
       <div id="conf-badge" style="display:inline-block;padding:4px 10px;border-radius:8px;font-size:10px;font-weight:900;background:var(--primary);color:#fff;margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;display:none">AI RECOGNIZED</div>
-      <div id="conf-emoji" style="font-size:72px;margin-bottom:16px">🛒</div>
+      <div id="conf-media" style="width:140px;height:140px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);border-radius:24px;padding:10px">
+        <img id="conf-img" src="" style="max-width:100%;max-height:100%;object-fit:contain;display:none"/>
+        <div id="conf-emoji" style="font-size:72px">🛒</div>
+      </div>
       <div id="conf-name" style="font-size:22px;font-weight:900;margin-bottom:4px;color:#fff">Product Name</div>
       <div id="conf-brand" style="font-size:14px;color:var(--muted);margin-bottom:12px">Brand Name</div>
       <div id="conf-price" style="font-size:28px;font-weight:900;color:var(--primary);margin-bottom:24px">₹0</div>
@@ -268,7 +271,19 @@ function handleScanned(code, isAI = false){
   const overlay = document.getElementById('scan-confirmation');
   const badge = document.getElementById('conf-badge');
   
-  document.getElementById('conf-emoji').textContent = p.emoji || '🛒';
+  const img = document.getElementById('conf-img');
+  const em = document.getElementById('conf-emoji');
+  
+  if(p.img && !p.img.includes('unsplash')){
+    img.src = p.img;
+    img.style.display = 'block';
+    em.style.display = 'none';
+  } else {
+    em.textContent = p.emoji || '🛒';
+    em.style.display = 'block';
+    img.style.display = 'none';
+  }
+  
   document.getElementById('conf-name').textContent = p.name;
   document.getElementById('conf-brand').textContent = p.brand;
   document.getElementById('conf-price').textContent = '₹' + p.price;
@@ -476,7 +491,9 @@ function renderRecent(){
     document.getElementById('recent-wrap').style.display='block';
     document.getElementById('recent-list').innerHTML = h.slice(0,5).map(i=>`
       <div class="scan-item">
-        <div class="scan-emoji">${i.emoji}</div>
+        <div class="scan-emoji">
+          ${i.img && !i.img.includes('unsplash') ? `<img src="${i.img}" style="width:100%;height:100%;object-fit:contain"/>` : i.emoji}
+        </div>
         <div style="flex:1"><div style="font-size:13px;font-weight:700">${i.name}</div><div style="font-size:11px;color:var(--muted)">${i.time}</div></div>
         <div style="font-size:14px;font-weight:800;color:var(--green)">₹${i.price}</div>
       </div>`).join('');
