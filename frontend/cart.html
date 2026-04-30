@@ -67,11 +67,14 @@ function renderCart(){
   let finalSubtotal = subtotal;
   let couponDisc = 0;
   
-  // AUTO APPLY COUPON (Default for all purchases)
+  // AUTO APPLY COUPON (First Order Only)
   let activeCoupon = JSON.parse(localStorage.getItem(ukey('active_coupon')) || 'null');
   if(!activeCoupon && cart.length > 0) {
-    activeCoupon = { code: 'WELCOME20', discount: 20 };
-    localStorage.setItem(ukey('active_coupon'), JSON.stringify(activeCoupon));
+    const orders = JSON.parse(localStorage.getItem(ukey('orders')) || '[]');
+    if(orders.length === 0) {
+      activeCoupon = { code: 'WELCOME20', discount: 20 };
+      localStorage.setItem(ukey('active_coupon'), JSON.stringify(activeCoupon));
+    }
   }
   
   if(activeCoupon) {
