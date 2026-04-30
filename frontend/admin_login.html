@@ -57,6 +57,20 @@
         </div>
         
         <div class="form-group">
+          <label class="form-label">Role</label>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px">
+            <label style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.1); padding:12px; border-radius:12px; display:flex; align-items:center; gap:8px; cursor:pointer">
+              <input type="radio" name="adm-role" value="manager" checked style="accent-color:#ef4d23">
+              <span style="font-size:13px;font-weight:700">Manager</span>
+            </label>
+            <label style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.1); padding:12px; border-radius:12px; display:flex; align-items:center; gap:8px; cursor:pointer">
+              <input type="radio" name="adm-role" value="security" style="accent-color:#ef4d23">
+              <span style="font-size:13px;font-weight:700">Security</span>
+            </label>
+          </div>
+        </div>
+        
+        <div class="form-group">
           <label class="form-label">Admin Email</label>
           <input class="form-input" id="adm-email" type="email" placeholder="admin@smart.com" />
         </div>
@@ -78,9 +92,12 @@
     function handleLogin() {
       const email = document.getElementById('adm-email').value.trim();
       const pass = document.getElementById('adm-pass').value.trim();
+      const role = document.querySelector('input[name="adm-role"]:checked').value;
 
-      if (email === 'admin@smart.com' && pass === 'admin123') {
+      // Allow both admin and a default security login
+      if ((email === 'admin@smart.com' && pass === 'admin123') || (email === 'security@smart.com' && pass === 'sec123')) {
         localStorage.setItem('ssc_admin_token', 'ADM_' + Date.now());
+        localStorage.setItem('ssc_admin_role', role);
         location.href = 'admin_dashboard.html';
       } else {
         alert('Invalid Admin Credentials');
