@@ -23,9 +23,50 @@
 .manual-row input{flex:1;height:48px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:14px;color:#fff;padding:0 16px;font-size:14px}
 .manual-row button{height:48px;padding:0 24px;background:var(--primary);color:#fff;border-radius:14px;font-weight:800;font-size:14px;border:none;box-shadow:0 8px 16px rgba(239,77,35,0.2)}
 .scan-status{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:16px;padding:12px 16px;width:100%;max-width:320px;margin-bottom:20px;font-size:13px;color:#10b981;font-weight:700;text-align:center;display:none}
-.recent-list{width:100%;max-width:300px}
-.debug-info{background:rgba(255,255,255,0.04);border:1px dashed var(--border);border-radius:10px;padding:8px;margin-top:16px;width:100%;max-width:300px;font-family:monospace;font-size:11px;color:var(--muted);text-align:center}
-</style>
+    .recent-list{width:100%;max-width:300px}
+    .debug-info{background:rgba(255,255,255,0.04);border:1px dashed var(--border);border-radius:10px;padding:8px;margin-top:16px;width:100%;max-width:300px;font-family:monospace;font-size:11px;color:var(--muted);text-align:center}
+    
+    /* SHOPPING LIST DRAWER */
+    .list-drawer {
+      position: fixed;
+      bottom: -400px;
+      left: 0;
+      right: 0;
+      height: 400px;
+      background: rgba(15, 23, 42, 0.98);
+      backdrop-filter: blur(24px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 32px 32px 0 0;
+      z-index: 500;
+      transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      padding: 24px 20px;
+      box-shadow: 0 -12px 64px rgba(0,0,0,0.8);
+    }
+    .list-drawer.open { bottom: 0; }
+    .drawer-handle { width: 40px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 0 auto 20px; }
+    .list-fab {
+      position: fixed;
+      right: 20px;
+      bottom: 100px;
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 400;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    .scanner-list-item {
+      display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .scanner-list-item.found { opacity: 0.4; }
+    .scanner-list-item.found .name { text-decoration: line-through; }
+    </style>
 </head>
 <body class="page-anim" style="background: #0b0f1a;">
 <div class="mesh-bg"></div>
@@ -115,6 +156,23 @@
   </div>
 </div>
 
+<!-- SHOPPING LIST DRAWER -->
+<button class="list-fab" onclick="toggleListDrawer()">
+  <span class="material-icons">list_alt</span>
+  <span id="scan-list-count" style="position:absolute; top:-5px; right:-5px; background:var(--primary); color:#fff; font-size:10px; padding:2px 6px; border-radius:10px">0</span>
+</button>
+
+<div class="list-drawer" id="list-drawer">
+  <div class="drawer-handle" onclick="toggleListDrawer()"></div>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+    <h3 style="font-weight:900; margin:0">My Shopping List</h3>
+    <span class="material-icons" onclick="toggleListDrawer()" style="cursor:pointer; opacity:0.5">close</span>
+  </div>
+  <div id="scanner-list-content" style="height:300px; overflow-y:auto">
+    <!-- List items -->
+  </div>
+</div>
+
 <div id="toasts"></div>
 
 <!-- CENTERED FAB SCAN -->
@@ -141,6 +199,36 @@
 let scanner = null, cameraOn = false;
 updateCartBadge();
 renderRecent();
+renderScannerList();
+
+function toggleListDrawer() {
+  document.getElementById('list-drawer').classList.toggle('open');
+}
+
+function renderScannerList() {
+  const list = getShoppingList();
+  const wrap = document.getElementById('scanner-list-content');
+  const count = document.getElementById('scan-list-count');
+  
+  count.textContent = list.filter(i => !i.found).length;
+  
+  if (!list.length) {
+    wrap.innerHTML = `<div style="text-align:center; padding:40px 20px; color:var(--muted)">Your shopping list is empty.</div>`;
+    return;
+  }
+  
+  wrap.innerHTML = list.map(item => `
+    <div class="scanner-list-item ${item.found ? 'found' : ''}">
+      <div style="display:flex; align-items:center; gap:12px">
+        <span class="material-icons" style="color:${item.found ? '#10b981' : 'rgba(255,255,255,0.2)'}">
+          ${item.found ? 'check_circle' : 'radio_button_unchecked'}
+        </span>
+        <div class="name" style="font-size:14px; font-weight:700">${item.name}</div>
+      </div>
+      ${item.found ? '<span style="font-size:10px; font-weight:900; color:#10b981; text-transform:uppercase">Collected</span>' : ''}
+    </div>
+  `).reverse().join('');
+}
 
 function toast(msg, type='green'){
   const el = document.createElement('div');
@@ -206,6 +294,7 @@ window.confirmScan = function(){
     showStatus(`✅ ${p.name} added to cart!`);
     toast(`${p.emoji} ${p.name} added!`);
     renderRecent();
+    renderScannerList();
   }
   closeScanConfirmation();
 };
