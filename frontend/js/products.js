@@ -1,46 +1,70 @@
-const MOCK_PRODUCTS = [
-  // Grocery
-  { id: '1001', name: 'Premium Basmati Rice', brand: 'India Gate', price: 120, category: 'Grocery', emoji: '🌾', stock: 45, img: 'https://m.media-amazon.com/images/I/71R2oK+8mPL._SL1500_.jpg' },
-  { id: '1005', name: 'Amul Pure Ghee', brand: 'Amul', price: 595, category: 'Grocery', emoji: '🥛', stock: 20, img: 'https://m.media-amazon.com/images/I/71Xm3x4T+TL._SL1500_.jpg' },
-  { id: '1003', name: 'Fortune Sunflower Oil', brand: 'Fortune', price: 155, category: 'Grocery', emoji: '🌻', stock: 30 },
-  
-  // Snacks
-  { id: '2001', name: "Lay's Classic Salted", brand: "Lay's", price: 20, category: 'Snacks', emoji: '🥔', stock: 100, img: 'https://m.media-amazon.com/images/I/81vjS9NnLhL._SL1500_.jpg' },
-  { id: '2003', name: 'Dairy Milk Silk', brand: 'Cadbury', price: 80, category: 'Snacks', emoji: '🍫', stock: 60, img: 'https://m.media-amazon.com/images/I/61M-W0W-7SL._SL1500_.jpg' },
-  { id: '2005', name: 'Oreo Biscuits', brand: 'Oreo', price: 35, category: 'Snacks', emoji: '🍪', stock: 85, img: 'https://m.media-amazon.com/images/I/61N+U-z1SLL._SL1500_.jpg' },
-  
-  // Drinks
-  { id: '3001', name: 'Bisleri Water 1L', brand: 'Bisleri', price: 20, category: 'Drinks', emoji: '💧', stock: 200 },
-  { id: '3003', name: 'Coca-Cola 500ml', brand: 'Coca-Cola', price: 40, category: 'Drinks', emoji: '🥤', stock: 120 },
-  { id: '3005', name: 'Tropicana Orange', brand: 'Tropicana', price: 95, category: 'Drinks', emoji: '🍊', stock: 40 },
-  
-  // Produce
-  { id: '4001', name: 'Fresh Apples (4pc)', brand: 'FarmFresh', price: 160, category: 'Produce', emoji: '🍎', stock: 25 },
-  { id: '4003', name: 'Organic Bananas (6pc)', brand: 'FarmFresh', price: 40, category: 'Produce', emoji: '🍌', stock: 50 }
+// ============================================
+// SmartCheckout — Product Database
+// ============================================
+const PRODUCTS = [
+  // GROCERY
+  { id:'1001', name:'India Gate Basmati Rice', brand:'India Gate', category:'Grocery', price:89, mrp:110, rating:4.5, emoji:'🍚', img:'img/products/india gate basmati rice.jpeg', desc:'Premium aged basmati rice with long grains.', barcode:'1001', stock: 50, location: { floor: 'G', section: 'Aisle 4', hall: 'Main Hall', tab: 'T12', row: 'R05' } },
+  { id:'1002', name:'Aashirvaad Whole Wheat Atta', brand:'ITC', category:'Grocery', price:62, mrp:75, rating:4.6, emoji:'🌾', img:'img/products/Aashirvaad Whole Wheat Atta.png', desc:'Finest quality whole wheat flour.', barcode:'1002', stock: 35, location: { floor: 'G', section: 'Aisle 3', hall: 'Main Hall', tab: 'T08', row: 'R12' } },
+  { id:'1003', name:'Fortune Sunflower Oil', brand:'Fortune', category:'Grocery', price:148, mrp:180, rating:4.3, emoji:'🫙', img:'img/sunflower.jpg', desc:'Refined sunflower oil for healthy cooking.', barcode:'1003', stock: 25, location: { floor: 'G', section: 'Aisle 5', hall: 'Main Hall', tab: 'T15', row: 'R03' } },
+  { id:'1004', name:'Tata Salt Iodised', brand:'Tata', category:'Grocery', price:22, mrp:28, rating:4.9, emoji:'🧂', img:'img/products/Tata Salt Iodised.webp', desc:'Vacuum evaporated iodised salt.', barcode:'1004', stock: 100, location: { floor: 'G', section: 'Aisle 4', hall: 'Main Hall', tab: 'T12', row: 'R07' } },
+  { id:'1005', name:'Amul Taaza Milk 1L', brand:'Amul', category:'Grocery', price:64, mrp:66, rating:4.8, emoji:'🥛', img:'img/products/Amul Taaza Milk 1L.png', desc:'Fresh pasteurised toned milk.', barcode:'1005', stock: 40, location: { floor: 'G', section: 'Dairy', hall: 'North Hall', tab: 'D01', row: 'R01' } },
+  { id:'1006', name:'Fresh Farm Eggs (12pcs)', brand:'Generic', category:'Grocery', price:96, mrp:110, rating:4.6, emoji:'🥚', img:'https://images.unsplash.com/photo-1587486913049-53fc88980cfc?w=600&q=80', desc:'Farm fresh brown eggs.', barcode:'1006', stock: 30, location: { floor: 'G', section: 'Dairy', hall: 'North Hall', tab: 'D01', row: 'R03' } },
+  { id:'1007', name:'Brown Bread', brand:'Harvest Gold', category:'Grocery', price:45, mrp:50, rating:4.4, emoji:'🍞', img:'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&q=80', desc:'Healthy whole grain brown bread.', barcode:'1007', stock: 20, location: { floor: 'G', section: 'Bakery', hall: 'Main Hall', tab: 'B01', row: 'R02' } },
+  { id:'1008', name:'Amul Butter 500g', brand:'Amul', category:'Grocery', price:255, mrp:275, rating:4.9, emoji:'🧈', img:'img/products/Amul Butter 500g.webp', desc:'Pasteurised salted butter.', barcode:'1008', stock: 55, location: { floor: 'G', section: 'Dairy', hall: 'North Hall', tab: 'D02', row: 'R04' } },
+  { id:'1009', name:'Organic Honey 250g', brand:'Dabur', category:'Grocery', price:145, mrp:160, rating:4.7, emoji:'🍯', img:'img/products/Organic Honey 250g.jpeg', desc:'100% pure organic honey.', barcode:'1009', stock: 30, location: { floor: 'G', section: 'Aisle 6', hall: 'Main Hall', tab: 'T18', row: 'R09' } },
+  { id:'1010', name:'Toor Dal 1kg', brand:'Patanjali', category:'Grocery', price:165, mrp:185, rating:4.5, emoji:'🫘', img:'img/products/Toor Dal 1kg.jpeg', desc:'High protein unpolished toor dal.', barcode:'1010', stock: 45, location: { floor: 'G', section: 'Pulses', hall: 'Main Hall', tab: 'T10', row: 'R06' } },
+
+  // SNACKS
+  { id:'2001', name:"Lay's Classic Salted", brand:"Lay's", category:'Snacks', price:10, mrp:10, rating:4.5, emoji:'🥔', img:'img/products/lays.jpeg', desc:'Crispy and light potato chips.', barcode:'8909081007811', stock: 150, location: { floor: 'G', section: 'Snack Zone', hall: 'East Wing', tab: 'S02', row: 'R01' } },
+  { id:'2002', name:'Britannia Good Day', brand:'Britannia', category:'Snacks', price:35, mrp:40, rating:4.4, emoji:'🍪', img:'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=600&q=80', desc:'Buttery cashew and almond cookies.', barcode:'2002', stock: 120, location: { floor: 'G', section: 'Biscuits', hall: 'East Wing', tab: 'S04', row: 'R02' } },
+  { id:'2003', name:'Dairy Milk Silk', brand:'Cadbury', category:'Snacks', price:80, mrp:85, rating:4.8, emoji:'🍫', img:'img/products/Dairy Milk Silk.jpg', desc:'Smooth and creamy milk chocolate.', barcode:'8901063019232', stock: 90, location: { floor: 'G', section: 'Confectionery', hall: 'East Wing', tab: 'S08', row: 'R04' } },
+  { id:'2004', name:'Kurkure Masala Munch', brand:'PepsiCo', category:'Snacks', price:20, mrp:20, rating:4.3, emoji:'🌽', img:'https://images.unsplash.com/photo-1600271772470-bd22a42787b3?w=600&q=80', desc:'Spicy and crunchy corn snack.', barcode:'2004', stock: 180, location: { floor: 'G', section: 'Snack Zone', hall: 'East Wing', tab: 'S02', row: 'R05' } },
+  { id:'2005', name:'Oreo Original 120g', brand:'Oreo', category:'Snacks', price:40, mrp:40, rating:4.7, emoji:'🍪', img:'img/products/Oreo Original 120g.jpg', desc:'Vanilla cream filled cocoa cookies.', barcode:'8901719130014', stock: 100, location: { floor: 'G', section: 'Biscuits', hall: 'East Wing', tab: 'S04', row: 'R06' } },
+  { id:'2006', name:'Haldiram Aloo Bhujia', brand:'Haldiram', category:'Snacks', price:55, mrp:60, rating:4.6, emoji:'🌿', img:'img/products/Haldiram Aloo Bhujia.jpeg', desc:'Classic potato sev with authentic spices.', barcode:'2006', stock: 45, location: { floor: 'G', section: 'Namkeen', hall: 'East Wing', tab: 'S06', row: 'R03' } },
+  { id:'2007', name:'Maggi Masala Noodles', brand:'Nestle', category:'Snacks', price:14, mrp:14, rating:4.9, emoji:'🍜', img:'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=600&q=80', desc:'Instant 2-minute noodles with masala.', barcode:'2007', stock: 200, location: { floor: 'G', section: 'Instant Food', hall: 'East Wing', tab: 'S10', row: 'R08' } },
+  { id:'2008', name:'Act II Popcorn Butter', brand:'Act II', category:'Snacks', price:35, mrp:40, rating:4.5, emoji:'🍿', img:'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=600&q=80', desc:'Microwave butter popcorn.', barcode:'2008', stock: 80, location: { floor: 'G', section: 'Snack Zone', hall: 'East Wing', tab: 'S03', row: 'R07' } },
+
+  // DRINKS
+  { id:'3001', name:'Bisleri Mineral Water 1L', brand:'Bisleri', category:'Drinks', price:20, mrp:20, rating:4.5, emoji:'💧', img:'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=600&q=80', desc:'Pure and safe mineral water.', barcode:'3001', stock: 300, location: { floor: 'G', section: 'Cold Storage', hall: 'North Hall', tab: 'D05', row: 'R10' } },
+  { id:'3002', name:'Tropicana Orange Juice', brand:'Tropicana', category:'Drinks', price:110, mrp:130, rating:4.4, emoji:'🍊', img:'https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?w=600&q=80', desc:'100% pure orange juice.', barcode:'3002', stock: 40, location: { floor: 'G', section: 'Juices', hall: 'North Hall', tab: 'D06', row: 'R02' } },
+  { id:'3003', name:'Coca-Cola 750ml', brand:'Coca-Cola', category:'Drinks', price:45, mrp:50, rating:4.6, emoji:'🥤', img:'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=600&q=80', desc:'Classic refreshing cola.', barcode:'3003', stock: 150, location: { floor: 'G', section: 'Cold Storage', hall: 'North Hall', tab: 'D08', row: 'R05' } },
+  { id:'3004', name:'Red Bull Energy Drink', brand:'Red Bull', category:'Drinks', price:125, mrp:125, rating:4.5, emoji:'🐂', img:'https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=600&q=80', desc:'Revitalizes body and mind.', barcode:'3004', stock: 60, location: { floor: 'G', section: 'Energy Drinks', hall: 'North Hall', tab: 'D09', row: 'R01' } },
+  { id:'3005', name:'Nescafe Classic 50g', brand:'Nescafe', category:'Drinks', price:165, mrp:185, rating:4.7, emoji:'☕', img:'img/products/Nescafe Classic 50g.jpg', desc:'Rich and aromatic instant coffee.', barcode:'3005', stock: 45, location: { floor: 'G', section: 'Tea & Coffee', hall: 'Main Hall', tab: 'T20', row: 'R11' } },
+  { id:'3006', name:'Tata Tea Gold 250g', brand:'Tata Tea', category:'Drinks', price:145, mrp:160, rating:4.6, emoji:'🫖', img:'img/products/Tata Tea Gold 250g.jpeg', desc:'Premium blended tea for rich taste.', barcode:'3006', stock: 70, location: { floor: 'G', section: 'Tea & Coffee', hall: 'Main Hall', tab: 'T20', row: 'R12' } },
+  { id:'3007', name:'Sprite 1.25L', brand:'Coca-Cola', category:'Drinks', price:65, mrp:70, rating:4.4, emoji:'🍋', img:'https://images.unsplash.com/photo-1581006852262-e4307cf6283a?w=600&q=80', desc:'Lemon-lime flavored soft drink.', barcode:'3007', stock: 100, location: { floor: 'G', section: 'Cold Storage', hall: 'North Hall', tab: 'D08', row: 'R06' } },
+
+  // PERSONAL CARE
+  { id:'4001', name:'Dove Beauty Bar', brand:'Dove', category:'Personal Care', price:48, mrp:55, rating:4.6, emoji:'🧼', img:'img/products/Dove Beauty Bar.jpeg', desc:'Moisturising beauty bar with 1/4 cream.', barcode:'4001', stock: 200, location: { floor: '1st', section: 'Bath & Body', hall: 'West Hall', tab: 'B02', row: 'R15' } },
+  { id:'4002', name:'Head & Shoulders', brand:'P&G', category:'Personal Care', price:149, mrp:175, rating:4.5, emoji:'🧴', img:'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=600&q=80', desc:'Anti-dandruff shampoo.', barcode:'4002', stock: 75, location: { floor: '1st', section: 'Hair Care', hall: 'West Hall', tab: 'B04', row: 'R08' } },
+  { id:'4003', name:'Colgate MaxFresh', brand:'Colgate', category:'Personal Care', price:95, mrp:110, rating:4.7, emoji:'🦷', img:'img/products/Colgate MaxFresh.jpeg', desc:'Refreshing toothpaste with cooling crystals.', barcode:'4003', stock: 140, location: { floor: '1st', section: 'Oral Care', hall: 'West Hall', tab: 'B06', row: 'R03' } },
+  { id:'4004', name:'Dettol Liquid Handwash', brand:'Dettol', category:'Personal Care', price:85, mrp:99, rating:4.8, emoji:'🤲', img:'img/products/Dettol Liquid Handwash.jpg', desc:'Kills 99.9% germs, original protection.', barcode:'4004', stock: 160, location: { floor: '1st', section: 'Bath & Body', hall: 'West Hall', tab: 'B02', row: 'R18' } },
+  { id:'4005', name:'Nivea Body Milk', brand:'Nivea', category:'Personal Care', price:245, mrp:299, rating:4.7, emoji:'💆', img:'img/products/Nivea Body Milk.jpeg', desc:'Deep moisture serum and almond oil.', barcode:'4005', stock: 50, location: { floor: '1st', section: 'Skin Care', hall: 'West Hall', tab: 'B08', row: 'R05' } },
+  { id:'4006', name:'Gillette Mach3 Razor', brand:'Gillette', category:'Personal Care', price:210, mrp:250, rating:4.6, emoji:'🪒', img:'img/products/Gillette Mach3 Razor.jpeg', desc:'Triple blade technology for closer shave.', barcode:'4006', stock: 40, location: { floor: '1st', section: 'Grooming', hall: 'West Hall', tab: 'B10', row: 'R02' } },
+
+  // PRODUCE
+  { id:'5001', name:'Fresh Banana', brand:'Organic', category:'Produce', price:40, mrp:50, rating:4.8, emoji:'🍌', unit:'kg', img:'https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=600&q=80', desc:'Farm fresh organic bananas.', barcode:'5001', noBarcode: true, stock: 500, location: { floor: 'G', section: 'Fruits', hall: 'Main Hall', tab: 'F01', row: 'R02' } },
+  { id:'5002', name:'Red Onion', brand:'Organic', category:'Produce', price:35, mrp:45, rating:4.5, emoji:'🧅', unit:'kg', img:'https://images.unsplash.com/photo-1508747703725-719777637510?w=600&q=80', desc:'Crispy and fresh red onions.', barcode:'5002', noBarcode: true, stock: 400, location: { floor: 'G', section: 'Vegetables', hall: 'Main Hall', tab: 'F03', row: 'R04' } },
+  { id:'5003', name:'Fresh Tomato', brand:'Organic', category:'Produce', price:25, mrp:35, rating:4.6, emoji:'🍅', unit:'kg', img:'img/products/Fresh Tomato.jpeg', desc:'Juicy red tomatoes.', barcode:'5003', noBarcode: true, stock: 350, location: { floor: 'G', section: 'Vegetables', hall: 'Main Hall', tab: 'F03', row: 'R06' } },
+  { id:'5004', name:'Fuji Apple', brand:'Imported', category:'Produce', price:180, mrp:220, rating:4.8, emoji:'🍎', unit:'kg', img:'img/products/Fuji Apple.jpeg', desc:'Sweet and crunchy fuji apples.', barcode:'5004', noBarcode: true, stock: 150, location: { floor: 'G', section: 'Fruits', hall: 'Main Hall', tab: 'F02', row: 'R08' } },
+
+  // STATIONERY
+  { id:'6001', name:'Classmate Notebook', brand:'ITC', category:'Stationery', price:60, mrp:65, rating:4.7, emoji:'📓', img:'img/products/Classmate Notebook.jpg', desc:'Single line 172 pages notebook.', barcode:'6001', stock: 100, location: { floor: '1st', section: 'Books', hall: 'West Hall', tab: 'W02', row: 'R11' } },
+  { id:'6002', name:'Parker Vector Ball Pen', brand:'Parker', category:'Stationery', price:250, mrp:250, rating:4.8, emoji:'🖋️', img:'img/products/Parker Vector Ball Pen.jpg', desc:'Stainless steel body ball pen.', barcode:'6002', stock: 30, location: { floor: '1st', section: 'Writing', hall: 'West Hall', tab: 'W04', row: 'R09' } },
 ];
 
-const CAT_EMOJIS = {
-  'All': '📦',
-  'Grocery': '🌾',
-  'Snacks': '🍫',
-  'Drinks': '🥤',
-  'Produce': '🍎'
-};
+function fetchProducts(){ return Promise.resolve(PRODUCTS); }
+function getProductById(id){ return PRODUCTS.find(p => p.id === id || p.barcode === id); }
+function getProductsByCategory(cat){ return cat === 'All' ? PRODUCTS : PRODUCTS.filter(p => p.category === cat); }
+function searchProducts(q){ const s = q.toLowerCase(); return PRODUCTS.filter(p => p.name.toLowerCase().includes(s) || p.brand.toLowerCase().includes(s) || p.category.toLowerCase().includes(s)); }
 
-async function fetchProducts() {
-  // Simulate API delay
-  return new Promise(resolve => setTimeout(() => resolve(MOCK_PRODUCTS), 100));
+function renderStars(rating){
+  const full = Math.floor(rating), half = rating % 1 >= 0.5;
+  let s = '';
+  for(let i=0;i<full;i++) s += '★';
+  if(half) s += '½';
+  return s;
 }
 
-function getProductByBarcode(id) {
-  return MOCK_PRODUCTS.find(p => p.id === id);
-}
-
-function searchProducts(query) {
-  const q = query.toLowerCase();
-  return MOCK_PRODUCTS.filter(p => 
-    p.name.toLowerCase().includes(q) || 
-    p.brand.toLowerCase().includes(q) ||
-    p.category.toLowerCase().includes(q)
-  );
-}
+function getEmoji(p){ return p.emoji || '🛒'; }
+function formatPrice(n){ return '₹' + Number(n).toFixed(0); }
+function discount(mrp, price){ return mrp > price ? Math.round((mrp-price)/mrp*100) : 0; }

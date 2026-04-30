@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
@@ -7,105 +8,341 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
   <link rel="stylesheet" href="css/style.css" />
   <style>
-    .home-header { padding: 10px 0 20px; }
-    .search-box { 
-      background: #fff; 
-      border: 1.5px solid var(--border); 
-      border-radius: 16px; 
-      height: 52px; 
-      display: flex; 
-      align-items: center; 
-      padding: 0 16px; 
+    body {
+      background: #0b0f1a;
+      color: #fff;
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .topbar {
+      background: rgba(11, 15, 26, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+    }
+
+    .page {
+      padding: 16px 16px 100px;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .home-search {
+      display: flex;
+      align-items: center;
       gap: 12px;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 0 16px;
+      height: 52px;
     }
-    .search-box input { flex: 1; border: none; font-size: 15px; font-weight: 500; color: var(--text); }
-    
-    .promo-banner { 
-      background: linear-gradient(135deg, var(--primary), #22c55e); 
-      border-radius: 24px; 
-      padding: 24px; 
-      color: #fff; 
+
+    .home-search input {
+      flex: 1;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 500;
+      height: 100%;
+    }
+
+    .home-search input::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .section {
+      margin-bottom: 32px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section-title a {
+      font-size: 13px;
+      color: #ef4d23;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .promo-row {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scrollbar-width: none;
+    }
+
+    .promo-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .premium-card {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 24px;
+      padding: 24px;
+      transition: transform 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    .cat-scroll {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scrollbar-width: none;
+    }
+
+    .cat-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .cat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      min-width: 80px;
+      cursor: pointer;
+    }
+
+    .cat-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      color: #fff;
+    }
+
+    .cat-item.active .cat-icon {
+      background: #ef4d23;
+      border-color: #ef4d23;
+      box-shadow: 0 8px 24px rgba(239, 77, 35, 0.4);
+    }
+
+    .cat-item span {
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .prod-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .prod-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 24px;
+      padding: 12px;
+    }
+
+    .bnav {
+      background: rgba(11, 15, 26, 0.95);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 72px;
+      display: flex;
+      z-index: 100;
+    }
+
+    .ni {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: rgba(255, 255, 255, 0.4);
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .ni.active {
+      color: #ef4d23;
+    }
+
+    .fab-center {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #ef4d23;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 110;
+      border: 4px solid #0b0f1a;
+      box-shadow: 0 8px 32px rgba(239, 77, 35, 0.4);
+    }
+    .list-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 16px;
       margin-bottom: 24px;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 10px 20px rgba(22, 163, 74, 0.2);
     }
-    .promo-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
-    .promo-sub { font-size: 13px; opacity: 0.9; }
-    
-    .cat-btn { 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      gap: 8px; 
-      min-width: 80px; 
-      cursor: pointer; 
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
-    .cat-icon { 
-      width: 60px; 
-      height: 60px; 
-      border-radius: 20px; 
-      background: #fff; 
-      border: 1.5px solid var(--border); 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      font-size: 28px; 
-      transition: all 0.2s;
+
+    .list-item:last-child {
+      border-bottom: none;
     }
-    .cat-btn.active .cat-icon { background: var(--primary); color: #fff; border-color: var(--primary); transform: translateY(-4px); }
-    .cat-label { font-size: 11px; font-weight: 700; color: var(--text-muted); }
+
+    .list-item.found .item-name {
+      text-decoration: line-through;
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    .item-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .list-input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .list-input-row input {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 0 14px;
+      color: #fff;
+      font-size: 14px;
+      height: 44px;
+    }
+
+    .list-input-row button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   </style>
 </head>
 
 <body class="page-anim">
+
   <div class="mesh-bg"></div>
 
   <header class="topbar">
-    <div class="tb-left">
-      <div style="font-family:'Outfit';font-weight:900;color:var(--primary);font-size:22px">CONVIX</div>
-    </div>
+    <div class="topbar-logo">CONVIX <span
+        style="color:#ef4d23; font-style:italic; font-family:'Instrument Serif'">Smart</span></div>
     <div class="tb-right">
-      <button class="tb-btn badge" onclick="location.href='cart.html'" style="color:var(--text)">
+      <a href="cart.html" class="tb-btn badge">
         <span class="material-icons">shopping_bag</span>
-        <span class="badge-dot cart-badge" style="display:none">0</span>
-      </button>
+        <span class="badge-dot cart-badge" style="display:none; background:#ef4d23; color:#fff">0</span>
+      </a>
     </div>
   </header>
 
   <div class="page">
-    <div class="home-header">
-      <h1 style="font-size:24px;font-weight:900;margin-bottom:16px">Welcome to <span style="color:var(--primary)">Smart Store</span></h1>
-      <div class="search-box">
-        <span class="material-icons" style="color:var(--primary)">search</span>
-        <input type="text" placeholder="Search for items..." oninput="uiSearch(this.value)" />
-        <span class="material-icons" style="color:var(--text-muted);cursor:pointer">mic</span>
+    <!-- SEARCH -->
+    <div class="section" style="margin-top:10px">
+      <div class="home-search">
+        <span class="material-icons" style="color:rgba(255,255,255,0.4)">search</span>
+        <input id="search-input" type="search" data-i18n="search_placeholder" placeholder="Search products, brands..." oninput="uiSearch(this.value)"
+          style="flex:1; background:none; border:none; color:#fff; font-size:15px; font-weight:500; height:100%" />
+        <span class="material-icons" id="voice-btn" style="cursor:pointer; color:#ef4d23">mic</span>
       </div>
     </div>
 
-    <div class="promo-banner">
-      <div class="promo-title">Fast & Secure</div>
-      <div class="promo-sub">Scan products and pay instantly. No queues.</div>
-      <span class="material-icons" style="position:absolute;right:-20px;bottom:-20px;font-size:120px;opacity:0.1">qr_code_scanner</span>
+    <!-- SHOPPING LIST -->
+    <div class="section">
+      <div class="section-title">
+        <span data-i18n="shopping_list">My Shopping List</span>
+        <span id="list-count" style="font-size:12px; font-weight:500; color:var(--muted)">0 items</span>
+      </div>
+      <div class="list-card">
+        <div class="list-input-row">
+          <input id="list-inp" type="text" placeholder="Add milk, eggs, rice..." />
+          <button onclick="uiAddToList()"><span class="material-icons">add</span></button>
+        </div>
+        <div id="shopping-list-items">
+          <!-- Items here -->
+        </div>
+      </div>
     </div>
 
-    <div style="margin-bottom:24px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h3 style="font-size:18px;font-weight:800">Categories</h3>
-      </div>
-      <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:10px" id="cat-list">
-        <!-- Categories -->
+    <!-- BANNERS -->
+    <div class="section">
+      <div class="promo-row">
+        <div class="premium-card" onclick="location.href='category.html?c=Produce'"
+          style="min-width:280px; background: linear-gradient(135deg, #ef4d23, #f97316); border:none; cursor:pointer">
+          <div style="font-size:12px; font-weight:800; color:rgba(255,255,255,0.6)" data-i18n="banner_limited">SPECIAL OFFER</div>
+          <div style="font-size:20px; font-weight:800; margin:8px 0">50% OFF on Fruits</div>
+          <div style="font-size:13px; opacity:0.8">Valid for today only.</div>
+        </div>
+        <div class="premium-card" onclick="location.href='product.html?id=3005'"
+          style="min-width:280px; background: rgba(255,255,255,0.05); cursor:pointer">
+          <div style="font-size:12px; font-weight:800; color:#ef4d23" data-i18n="banner_new">NEW ARRIVAL</div>
+          <div style="font-size:20px; font-weight:800; margin:8px 0">Organic Coffee</div>
+          <div style="font-size:13px; color:rgba(255,255,255,0.5)">Freshly roasted beans.</div>
+        </div>
       </div>
     </div>
 
-    <div style="margin-bottom:24px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h3 style="font-size:18px;font-weight:800">Trending Now</h3>
-        <a href="category.html?c=All" style="font-size:13px;font-weight:700;color:var(--primary)">View All</a>
+    <!-- CATEGORIES -->
+    <div class="section">
+      <div class="section-title" data-i18n="shop_category">Categories</div>
+      <div class="cat-scroll" id="cat-list">
+        <!-- Dynamic categories -->
       </div>
+    </div>
+
+    <!-- PRODUCTS GRID -->
+    <div class="section">
+      <div class="section-title"><span data-i18n="trending_now">Trending Now</span> <a href="category.html?c=All" data-i18n="view_all">View All</a></div>
       <div class="prod-grid" id="featured-grid">
-        <!-- Products -->
+        <!-- Dynamic products -->
       </div>
     </div>
   </div>
@@ -116,56 +353,126 @@
 
   <nav class="bnav">
     <a href="home.html" class="ni active"><span class="material-icons">home</span>Home</a>
-    <a href="category.html?c=All" class="ni"><span class="material-icons">grid_view</span>All</a>
+    <a href="category.html?c=All" class="ni"><span class="material-icons">grid_view</span>All Categories</a>
     <div class="ni-placeholder"></div>
     <a href="cart.html" class="ni"><span class="material-icons">shopping_bag</span>Cart</a>
     <a href="profile.html" class="ni"><span class="material-icons">person</span>Profile</a>
   </nav>
 
-  <script src="js/auth.js"></script>
   <script src="js/products.js"></script>
   <script src="js/cart.js"></script>
+  <script src="js/list.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/agent.js"></script>
   <script>
-    async function init() {
-      const prods = await fetchProducts();
-      renderGrid(prods.slice(0, 6), 'featured-grid');
-
-      const cats = ['All', 'Grocery', 'Snacks', 'Drinks', 'Produce'];
-      const catWrap = document.getElementById('cat-list');
-      catWrap.innerHTML = cats.map(c => `
-        <div class="cat-btn ${c === 'All' ? 'active' : ''}" onclick="location.href='category.html?c=${c}'">
-          <div class="cat-icon">${CAT_EMOJIS[c] || '📦'}</div>
-          <div class="cat-label">${c}</div>
-        </div>
-      `).join('');
-
-      updateCartBadge();
+    function uiAddToList() {
+      const inp = document.getElementById('list-inp');
+      const val = inp.value.trim();
+      if (!val) return;
+      addToList(val);
+      inp.value = '';
+      uiRenderList();
     }
 
-    function renderGrid(prods, id) {
-      const wrap = document.getElementById(id);
-      wrap.innerHTML = prods.map(p => `
-        <div class="prod-card" onclick="location.href='product.html?id=${p.id}'">
-          <div class="prod-img-box">
-            ${p.img ? `<img src="${p.img}" style="width:100%;height:100%;object-fit:contain"/>` : p.emoji}
-          </div>
-          <div class="prod-name">${p.name}</div>
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div class="prod-price">₹${p.price}</div>
-            <div style="width:28px;height:28px;border-radius:8px;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center">
-              <span class="material-icons" style="font-size:18px">add</span>
-            </div>
-          </div>
-        </div>
-      `).join('');
+    function uiRemoveFromList(id) {
+      removeFromList(id);
+      uiRenderList();
     }
 
-    function uiSearch(q) {
+    function uiToggleList(id, found) {
+      toggleListFound(id, found);
+      uiRenderList();
+    }
+
+    function uiRenderList() {
+      const list = getShoppingList();
+      const wrap = document.getElementById('shopping-list-items');
+      const count = document.getElementById('list-count');
+      
+      count.textContent = `${list.length} items`;
+      
+      if (!list.length) {
+        wrap.innerHTML = `<div style="text-align:center; padding:10px; color:rgba(255,255,255,0.2); font-size:13px">Your list is empty. Add items to remember!</div>`;
+        return;
+      }
+      
+      wrap.innerHTML = list.map(item => `
+        <div class="list-item ${item.found ? 'found' : ''}">
+          <div style="display:flex; align-items:center; gap:10px">
+            <span class="material-icons" style="font-size:20px; color:${item.found ? '#10b981' : 'rgba(255,255,255,0.2)'}; cursor:pointer" onclick="uiToggleList(${item.id}, ${!item.found})">
+              ${item.found ? 'check_circle' : 'radio_button_unchecked'}
+            </span>
+            <span class="item-name">${item.name}</span>
+          </div>
+          <span class="material-icons" style="font-size:18px; color:rgba(255,255,255,0.2); cursor:pointer" onclick="uiRemoveFromList(${item.id})">close</span>
+        </div>
+      `).reverse().join('');
+    }
+    async function uiSearch(q) {
       const results = searchProducts(q);
       renderGrid(results, 'featured-grid');
     }
 
+    function renderGrid(prods, id) {
+      const wrap = document.getElementById(id);
+      if (!prods.length) { wrap.innerHTML = '<div class="empty">No items found</div>'; return; }
+      wrap.innerHTML = prods.map(p => productCard(p)).join('');
+    }
+
+    function productCard(p) {
+      const off = discount(p.mrp, p.price);
+      return `
+    <div class="prod-card" onclick="location.href='product.html?id=${p.id}'">
+      ${off > 0 ? `<div style="position:absolute; top:12px; left:12px; background:#ef4d23; color:#fff; font-size:10px; font-weight:900; padding:4px 8px; border-radius:8px; z-index:2">${off}% OFF</div>` : ''}
+      <div class="prod-img-ph">
+        ${p.img ? `<img src="${p.img}" class="prod-img" alt="${p.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='${p.emoji}'"/>` : p.emoji}
+      </div>
+      <div style="padding:4px">
+        <div class="prod-name">${p.name}</div>
+        <div class="prod-brand">${p.brand}</div>
+        <div style="margin-top:10px; display:flex; align-items:center; justify-content:space-between">
+          <span style="font-size:16px; font-weight:800; color:#ef4d23">${formatPrice(p.price)}</span>
+          <span class="material-icons" style="font-size:18px; color:rgba(255,255,255,0.2)">add_circle</span>
+        </div>
+      </div>
+    </div>
+  `;
+    }
+
+    async function init() {
+      const prods = await fetchProducts();
+      renderGrid(prods.slice(0, 6), 'featured-grid');
+
+      const cats = ['All', 'Grocery', 'Snacks', 'Drinks', 'Personal Care', 'Produce', 'Stationery'];
+      const catWrap = document.getElementById('cat-list');
+      catWrap.innerHTML = cats.map(c => `
+    <div class="cat-item ${c === 'All' ? 'active' : ''}" onclick="location.href='category.html?c=${c}'">
+      <div class="cat-icon">${CAT_EMOJIS[c] || '🛒'}</div>
+      <span>${c}</span>
+    </div>
+  `).join('');
+
+      updateCartBadge();
+      uiRenderList();
+    }
+
+    // Voice Search
+    if ('webkitSpeechRecognition' in window) {
+      const recognition = new webkitSpeechRecognition();
+      recognition.continuous = false;
+      recognition.onresult = (e) => {
+        const text = e.results[0][0].transcript;
+        document.getElementById('search-input').value = text;
+        uiSearch(text);
+      };
+      document.getElementById('voice-btn').onclick = () => recognition.start();
+    }
+
+    // Enter to add to list
+    document.getElementById('list-inp').addEventListener('keydown', e => { if (e.key === 'Enter') uiAddToList(); });
+
     init();
   </script>
 </body>
+
 </html>
