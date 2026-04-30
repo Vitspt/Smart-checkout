@@ -1,5 +1,5 @@
 // ============================================
-// SmartCheckout — Product System (Restored)
+// SmartCheckout — Product System (RECOVERY)
 // ============================================
 
 const DEFAULT_PRODUCTS = [
@@ -43,10 +43,16 @@ const DEFAULT_PRODUCTS = [
 ];
 
 async function fetchProducts() {
-  const local = localStorage.getItem('ssc_products');
-  if (local) return JSON.parse(local);
+  try {
+    const local = localStorage.getItem('ssc_products');
+    // If we have data and it's not an empty array, use it
+    if (local) {
+      const parsed = JSON.parse(local);
+      if (parsed && parsed.length > 0) return parsed;
+    }
+  } catch(e) {}
 
-  // If empty, use our restored defaults
+  // EMERGENCY FALLBACK: If everything fails, reload defaults
   localStorage.setItem('ssc_products', JSON.stringify(DEFAULT_PRODUCTS));
   return DEFAULT_PRODUCTS;
 }
@@ -56,12 +62,12 @@ function saveProducts(prods) {
 }
 
 function getProductById(id) {
-  const prods = JSON.parse(localStorage.getItem('ssc_products') || '[]');
+  const prods = JSON.parse(localStorage.getItem('ssc_products') || JSON.stringify(DEFAULT_PRODUCTS));
   return prods.find(p => p.id === id);
 }
 
 function searchProducts(q) {
-  const prods = JSON.parse(localStorage.getItem('ssc_products') || '[]');
+  const prods = JSON.parse(localStorage.getItem('ssc_products') || JSON.stringify(DEFAULT_PRODUCTS));
   if (!q) return prods;
   q = q.toLowerCase();
   return prods.filter(p => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
