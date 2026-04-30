@@ -25,6 +25,7 @@
     .btn-sm { padding: 6px 10px; font-size: 11px; font-weight: 800; border-radius: 8px; border: none; cursor: pointer; transition: 0.2s; }
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 3000; align-items: center; justify-content: center; padding: 0; backdrop-filter: blur(8px); }
     .modal-card { background: #1a1f2e; width: 100%; max-width: 440px; border-radius: 24px; padding: 32px; border: 1px solid rgba(255,255,255,0.1); max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(0,0,0,0.5); }
+    @media (max-width: 900px) { .sec-grid { grid-template-columns: 1fr !important; } }
     @media (max-width: 600px) { 
       .modal-card { max-width: 100%; height: 100%; max-height: 100vh; border-radius: 0; border: none; padding: 24px; } 
     }
@@ -94,12 +95,59 @@
       </div>
 
       <div id="tab-verify" class="tab-content" style="display:none">
-        <h1 style="font-size:28px;margin-bottom:24px">Verify</h1>
-        <div class="card-dash" style="text-align:center">
-          <div id="verify-scanner"></div>
-          <button id="scan-btn" class="btn btn-primary" onclick="startVerification()" style="max-width:260px;margin:20px auto">OPEN SCANNER</button>
-          <div id="verify-result" style="margin-top:20px;display:none"><div id="v-status" style="font-size:20px;font-weight:900"></div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+          <h1 style="font-size:28px;margin:0">Security Console</h1>
+          <div id="shift-status" style="font-size:12px;font-weight:800;color:#22c55e"></div>
         </div>
+
+        <div class="card-dash" style="margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;padding:16px 24px">
+          <div>
+            <div style="font-size:14px;font-weight:800;margin-bottom:4px">Shift Management</div>
+            <div id="shift-time" style="font-size:12px;opacity:0.6">No active shift detected</div>
+          </div>
+          <button id="shift-btn" class="btn btn-primary" onclick="toggleShift()" style="width:auto;padding:8px 24px;border-radius:12px">START SHIFT</button>
+        </div>
+
+        <div class="sec-grid" style="display:grid;grid-template-columns:1.5fr 1fr;gap:24px">
+          <div>
+            <div class="card-dash" style="text-align:center;min-height:360px">
+              <div id="verify-scanner" style="border-radius:24px;overflow:hidden;background:#000"></div>
+              <button id="scan-btn" class="btn btn-primary" onclick="startVerification()" style="max-width:260px;margin:20px auto">OPEN SCANNER</button>
+              <div id="verify-result" style="margin-top:20px;display:none"><div id="v-status" style="font-size:20px;font-weight:900"></div></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card-dash">
+              <div style="font-size:14px;font-weight:800;margin-bottom:16px;display:flex;justify-content:space-between">
+                <span>Recent Verifications</span>
+                <span class="material-icons" style="font-size:18px;opacity:0.4">history</span>
+              </div>
+              <div id="recent-scans" style="display:flex;flex-direction:column;gap:12px"></div>
+            </div>
+
+            <div class="card-dash" style="margin-top:24px;border-color:rgba(239,68,68,0.2)">
+              <div style="font-size:14px;font-weight:800;margin-bottom:12px;color:#ef4444">Report Incident</div>
+              <button class="btn" style="background:#ef4444;width:100%;height:44px;font-size:12px;font-weight:900" onclick="openIncidentModal()">FLAG SECURITY ISSUE</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="incidentModal">
+    <div class="modal-card">
+      <h2 style="margin-top:0;color:#ef4444">Security Report</h2>
+      <div class="form-group"><label class="form-label">Issue Type</label>
+        <select class="form-input" id="in-type">
+          <option>Unscanned Items</option><option>Wrong Product</option><option>Suspicious Behavior</option><option>Technical Glitch</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="in-desc" style="height:100px;padding:12px" placeholder="Details of the incident..."></textarea></div>
+      <div style="display:flex;gap:12px;margin-top:24px">
+        <button class="btn" style="background:#334155" onclick="closeIncidentModal()">Cancel</button>
+        <button class="btn" style="background:#ef4444" onclick="saveIncident()">Submit Report</button>
       </div>
     </div>
   </div>
@@ -209,37 +257,47 @@
         
         if (isExpired) { 
           st.innerHTML = '<div style="color:#ef4444;font-size:24px;font-weight:900;margin-bottom:16px">❌ EXPIRED RECEIPT</div>'; 
-        } else { 
+        } else {
+          const isHighValue = qr.total > 5000 || (qr.items || []).some(i => i.price > 1000);
+          
           st.innerHTML = `
-            <div style="color:#22c55e;font-size:24px;font-weight:900;margin-bottom:16px">✅ VERIFIED RECEIPT</div>
-            <div class="card-dash" style="text-align:left; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1)">
-              <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:10px;margin-bottom:12px">
-                <span style="font-size:12px;opacity:0.5">Order ID: #${qr.id.slice(-8)}</span>
-                <span style="font-size:12px;opacity:0.5">${new Date(qr.time || Date.now()).toLocaleString()}</span>
-              </div>
-              
-              <div style="margin-bottom:16px">
-                ${(qr.items || []).map(i => `
-                  <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px">
-                    <span>${i.qty}x ${i.name}</span>
-                    <span style="font-weight:700">₹${i.price * i.qty}</span>
-                  </div>
-                `).join('')}
-              </div>
-              
-              <div style="display:flex;justify-content:space-between;border-top:2px dashed rgba(255,255,255,0.1);padding-top:12px;margin-top:12px">
-                <span style="font-weight:800;font-size:18px">TOTAL PAID</span>
-                <span style="font-weight:900;font-size:22px;color:#ef4d23">₹${qr.total}</span>
-              </div>
+            <div style="color:#22c55e;font-size:24px;font-weight:900;margin-bottom:8px">✅ VERIFIED RECEIPT</div>
+            ${isHighValue ? `<div style="background:#ef4444;color:#fff;font-size:11px;font-weight:900;padding:4px 10px;border-radius:6px;display:inline-block;margin-bottom:16px;animation:pulse 1s infinite">🚨 HIGH VALUE ALERT: MANUAL CHECK</div>` : ''}
+            
+            <div class="card-dash" style="text-align:left; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); margin-bottom:16px">
+              <div style="font-size:12px;opacity:0.5;margin-bottom:10px">Order #${qr.id.slice(-8)}</div>
+              ${(qr.items || []).map(i => `<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>${i.qty}x ${i.name}</span><span>₹${i.price * i.qty}</span></div>`).join('')}
+              <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.1);padding-top:8px;margin-top:8px;font-weight:900"><span>TOTAL</span><span>₹${qr.total}</span></div>
+            </div>
+
+            <div style="display:flex;gap:12px">
+              <button class="btn btn-primary" style="flex:1;background:#22c55e" onclick="openGate()">OPEN GATE</button>
+              <button class="btn" style="width:auto;background:#334155;padding:0 20px" onclick="closeVerify()">Done</button>
             </div>
           `; 
-          // Log verification
+          
+          const scans = JSON.parse(localStorage.getItem('ssc_security_scans') || '[]');
+          scans.unshift({ id: qr.id, time: Date.now(), total: qr.total, high: isHighValue });
+          localStorage.setItem('ssc_security_scans', JSON.stringify(scans.slice(0, 15)));
+          renderRecentScans();
+          
           logActivity('QR_VERIFY', `Verified Order #${qr.id.slice(-6)} (₹${qr.total})`);
         }
       } catch (e) { 
         st.innerHTML = '<div style="color:#eab308;font-size:24px;font-weight:900">⚠️ INVALID QR CODE</div>'; 
       }
     }
+
+    function openGate() {
+      document.getElementById('v-status').innerHTML = `
+        <div style="color:#22c55e;font-size:32px;font-weight:900;margin:40px 0;animation:bounceIn 0.5s">🔓 GATE OPEN</div>
+        <p style="font-size:14px;opacity:0.6;margin-bottom:24px">Customer cleared for exit</p>
+        <button class="btn btn-primary" onclick="closeVerify()">CLOSE & RESET</button>
+      `;
+      logActivity('GATE_OPEN', 'Security opened exit gate');
+    }
+
+    function closeVerify() { document.getElementById('verify-result').style.display='none'; }
 
     async function init() {
       const role = localStorage.getItem('ssc_admin_role') || 'manager';
@@ -264,6 +322,56 @@
       
       renderInventory();
       renderCoupons();
+      renderRecentScans();
+    }
+
+    function renderRecentScans() {
+      const scans = JSON.parse(localStorage.getItem('ssc_security_scans') || '[]');
+      const wrap = document.getElementById('recent-scans');
+      if(!wrap) return;
+      if(!scans.length) { wrap.innerHTML = '<div style="font-size:11px;opacity:0.4;text-align:center;padding:20px">No recent scans</div>'; return; }
+      wrap.innerHTML = scans.map(s => `
+        <div style="padding:10px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid ${s.high ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.05)'}">
+          <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800;margin-bottom:4px">
+            <span>#${s.id.slice(-6)}</span>
+            <span style="color:${s.high ? '#ef4444' : '#22c55e'}">₹${s.total}</span>
+          </div>
+          <div style="font-size:10px;opacity:0.4">${new Date(s.time).toLocaleTimeString()}</div>
+        </div>
+      `).join('');
+    }
+
+    let shiftStart = null;
+    function toggleShift() {
+      const btn = document.getElementById('shift-btn');
+      const time = document.getElementById('shift-time');
+      if(!shiftStart) {
+        shiftStart = Date.now();
+        btn.textContent = 'END SHIFT';
+        btn.style.background = '#ef4444';
+        time.textContent = 'Shift active since ' + new Date(shiftStart).toLocaleTimeString();
+        logActivity('SHIFT_START', 'Security staff started shift');
+      } else {
+        const dur = Math.round((Date.now() - shiftStart) / 60000);
+        alert(`Shift completed. Duration: ${dur} minutes`);
+        shiftStart = null;
+        btn.textContent = 'START SHIFT';
+        btn.style.background = '#ef4d23';
+        time.textContent = 'No active shift detected';
+        logActivity('SHIFT_END', `Security staff ended shift (${dur}m)`);
+      }
+    }
+
+    function openIncidentModal() { document.getElementById('incidentModal').style.display='flex'; }
+    function closeIncidentModal() { document.getElementById('incidentModal').style.display='none'; }
+    function saveIncident() {
+      const type = document.getElementById('in-type').value;
+      const desc = document.getElementById('in-desc').value;
+      if(!desc) return alert('Please describe the incident');
+      logActivity('INCIDENT', `[${type}] ${desc}`);
+      alert('Security report submitted successfully');
+      closeIncidentModal();
+      document.getElementById('in-desc').value = '';
     }
 
     function renderCoupons() {
