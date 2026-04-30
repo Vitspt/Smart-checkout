@@ -24,7 +24,11 @@
     td { padding: 16px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
     .btn-sm { padding: 6px 10px; font-size: 11px; font-weight: 800; border-radius: 8px; border: none; cursor: pointer; transition: 0.2s; }
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 3000; align-items: center; justify-content: center; padding: 20px; }
-    .modal-card { background: #1a1f2e; width: 100%; max-width: 440px; border-radius: 24px; padding: 32px; border: 1px solid rgba(255,255,255,0.1); }
+    .modal-card { background: #1a1f2e; width: 100%; max-width: 440px; border-radius: 24px; padding: 32px; border: 1px solid rgba(255,255,255,0.1); max-height: 90vh; overflow-y: auto; }
+    .stock-tag { padding: 4px 10px; border-radius: 99px; font-size: 10px; font-weight: 800; }
+    .low { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    .med { background: rgba(234, 179, 8, 0.1); color: #eab308; }
+    .high { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
   </style>
 </head>
 <body>
@@ -32,10 +36,10 @@
   <div class="sidebar" id="sidebar">
     <div style="font-size:24px;font-weight:900;color:#ef4d23;margin-bottom:48px">🛒 CONVIX</div>
     <div class="nav-item active" onclick="showTab('dashboard', this)"><span class="material-icons">dashboard</span> Dashboard</div>
-    <div class="nav-item" onclick="showTab('users', this)"><span class="material-icons">people</span> User Manager</div>
     <div class="nav-item" onclick="showTab('inventory', this)"><span class="material-icons">inventory_2</span> Inventory</div>
-    <div class="nav-item" onclick="showTab('verify', this)"><span class="material-icons">qr_code_scanner</span> QR Verify</div>
+    <div class="nav-item" onclick="showTab('users', this)"><span class="material-icons">people</span> User Manager</div>
     <div class="nav-item" onclick="showTab('activity', this)"><span class="material-icons">history</span> Activity Log</div>
+    <div class="nav-item" onclick="showTab('verify', this)"><span class="material-icons">qr_code_scanner</span> QR Verify</div>
     <div style="position:absolute;bottom:32px;left:20px;right:20px">
       <div class="nav-item" onclick="location.href='admin_login.html'" style="color:#ef4444;background:rgba(239,68,68,0.05)"><span class="material-icons">logout</span> Logout</div>
     </div>
@@ -49,37 +53,36 @@
 
     <div class="main">
       <div id="tab-dashboard" class="tab-content">
-        <h1 style="font-size:28px;margin-bottom:24px">Dashboard Overview</h1>
+        <h1 style="font-size:28px;margin-bottom:24px">Dashboard</h1>
         <div class="grid">
-          <div class="card-dash"><div class="stat-label">Total Revenue</div><div class="stat-val" id="stat-rev">₹0</div></div>
-          <div class="card-dash"><div class="stat-label">Total Users</div><div class="stat-val" id="stat-users-count">0</div></div>
-        </div>
-      </div>
-
-      <div id="tab-users" class="tab-content" style="display:none">
-        <h1 style="font-size:28px;margin-bottom:24px">User Management</h1>
-        <div class="card-dash">
-          <table><thead><tr><th>Name</th><th>Email</th><th>Action</th></tr></thead><tbody id="users-tbody"></tbody></table>
+          <div class="card-dash"><div class="stat-label">Revenue</div><div class="stat-val" id="stat-rev">₹0</div></div>
+          <div class="card-dash"><div class="stat-label">Users</div><div class="stat-val" id="stat-users-count">0</div></div>
         </div>
       </div>
 
       <div id="tab-inventory" class="tab-content" style="display:none">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;gap:16px">
           <h1 style="font-size:28px;margin:0">Inventory</h1>
-          <button class="btn btn-primary" style="width:auto;padding:12px 24px" onclick="openModal()">+ Add Product</button>
+          <button class="btn btn-primary" style="width:auto;padding:12px 24px" onclick="openModal()">+ Add</button>
         </div>
-        <div class="card-dash" id="stock-list"></div>
+        <div class="card-dash" style="padding:16px">
+          <input type="text" id="inv-search" class="form-input" placeholder="Search inventory..." oninput="renderInventory()" style="margin-bottom:16px;background:rgba(255,255,255,0.02)" />
+          <div id="stock-list"></div>
+        </div>
+      </div>
+
+      <div id="tab-users" class="tab-content" style="display:none">
+        <h1 style="font-size:28px;margin-bottom:24px">Users</h1>
+        <div class="card-dash"><table><thead><tr><th>Name</th><th>Email</th><th>Action</th></tr></thead><tbody id="users-tbody"></tbody></table></div>
       </div>
 
       <div id="tab-activity" class="tab-content" style="display:none">
-        <h1 style="font-size:28px;margin-bottom:24px">Recent Activity</h1>
-        <div class="card-dash">
-          <table><thead><tr><th>Time</th><th>User</th><th>Action</th></tr></thead><tbody id="activity-tbody"></tbody></table>
-        </div>
+        <h1 style="font-size:28px;margin-bottom:24px">Activity</h1>
+        <div class="card-dash"><table><thead><tr><th>Time</th><th>User</th><th>Action</th></tr></thead><tbody id="activity-tbody"></tbody></table></div>
       </div>
 
       <div id="tab-verify" class="tab-content" style="display:none">
-        <h1 style="font-size:28px;margin-bottom:24px">Exit Verification</h1>
+        <h1 style="font-size:28px;margin-bottom:24px">Verify</h1>
         <div class="card-dash" style="text-align:center">
           <div id="verify-scanner"></div>
           <button id="scan-btn" class="btn btn-primary" onclick="startVerification()" style="max-width:260px;margin:20px auto">OPEN SCANNER</button>
@@ -89,17 +92,22 @@
     </div>
   </div>
 
-  <!-- ADD PRODUCT MODAL -->
   <div class="modal" id="prodModal">
     <div class="modal-card">
-      <h2 style="margin-top:0">Add New Product</h2>
-      <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="p-name" placeholder="Apple" /></div>
-      <div class="form-group"><label class="form-label">Price (₹)</label><input class="form-input" id="p-price" type="number" placeholder="99" /></div>
-      <div class="form-group"><label class="form-label">Image URL</label><input class="form-input" id="p-img" placeholder="https://..." /></div>
-      <div class="form-group"><label class="form-label">Emoji (Fallback)</label><input class="form-input" id="p-emoji" placeholder="🍎" /></div>
+      <h2 style="margin-top:0">Add Product</h2>
+      <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="p-name" /></div>
+      <div class="form-group"><label class="form-label">Barcode ID</label><input class="form-input" id="p-barcode" placeholder="e.g. 1001" /></div>
+      <div class="form-group"><label class="form-label">Category</label>
+        <select class="form-input" id="p-cat">
+          <option>Grocery</option><option>Snacks</option><option>Drinks</option><option>Personal Care</option><option>Produce</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Price (₹)</label><input class="form-input" id="p-price" type="number" /></div>
+      <div class="form-group"><label class="form-label">Image URL</label><input class="form-input" id="p-img" /></div>
+      <div class="form-group"><label class="form-label">Emoji (Fallback)</label><input class="form-input" id="p-emoji" /></div>
       <div style="display:flex;gap:12px;margin-top:24px">
         <button class="btn" style="background:#334155" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="addProduct()">Save Product</button>
+        <button class="btn btn-primary" onclick="addProduct()">Save</button>
       </div>
     </div>
   </div>
@@ -114,73 +122,65 @@
     function closeModal() { document.getElementById('prodModal').style.display='none'; }
 
     async function init() {
-      const prods = await fetchProducts();
+      const sales = JSON.parse(localStorage.getItem('ssc_admin_sales') || '[]');
       const users = JSON.parse(localStorage.getItem('ssc_users') || '[]');
       const activity = JSON.parse(localStorage.getItem('ssc_global_activity') || '[]');
-      const sales = JSON.parse(localStorage.getItem('ssc_admin_sales') || '[]');
 
       document.getElementById('stat-rev').textContent = '₹' + sales.reduce((s,o)=>s+o.total,0);
       document.getElementById('stat-users-count').textContent = users.length;
 
-      document.getElementById('users-tbody').innerHTML = users.map(u => `
-        <tr><td>${u.name}</td><td>${u.email}</td><td><button class="btn-sm" style="background:#ef4444" onclick="deleteUser('${u.email}')">Delete</button></td></tr>
-      `).join('');
+      document.getElementById('users-tbody').innerHTML = users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td><button class="btn-sm" style="background:#ef4444" onclick="deleteUser('${u.email}')">Delete</button></td></tr>`).join('');
+      document.getElementById('activity-tbody').innerHTML = activity.slice(0, 30).map(a => `<tr><td>${new Date(a.ts).toLocaleTimeString()}</td><td>${a.user}</td><td>${a.type}</td></tr>`).join('');
+      
+      renderInventory();
+    }
 
-      document.getElementById('stock-list').innerHTML = prods.map(p => `
+    async function renderInventory() {
+      const prods = await fetchProducts();
+      const q = document.getElementById('inv-search').value.toLowerCase();
+      const filtered = prods.filter(p => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
+
+      document.getElementById('stock-list').innerHTML = filtered.map(p => {
+        const s = p.stock || 0;
+        const cls = s < 10 ? 'low' : (s < 30 ? 'med' : 'high');
+        return `
         <div style="display:flex;align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-          <div style="width:52px;height:52px;border-radius:12px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center;overflow:hidden">
+          <div style="width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center;overflow:hidden">
             ${p.img ? `<img src="${p.img}" style="width:100%;height:100%;object-fit:contain" onerror="this.parentElement.innerHTML='${p.emoji}'"/>` : p.emoji}
           </div>
-          <div style="flex:1"><div><strong>${p.name}</strong></div><div style="font-size:11px;opacity:0.5">₹${p.price} • Stock: ${p.stock||0}</div></div>
-          <div style="display:flex;gap:4px">
-            <button class="btn-sm" style="background:rgba(255,255,255,0.1)" onclick="updateStock('${p.id}', 10)">+10</button>
-            <button class="btn-sm" style="background:rgba(255,255,255,0.1)" onclick="updateStock('${p.id}', -10)">-10</button>
-            <button class="btn-sm" style="background:#ef4444" onclick="deleteProd('${p.id}')">🗑️</button>
+          <div style="flex:1">
+            <div style="font-weight:700">${p.name}</div>
+            <div style="font-size:11px;opacity:0.5">${p.category} • ₹${p.price}</div>
           </div>
-        </div>
-      `).join('');
-
-      document.getElementById('activity-tbody').innerHTML = activity.slice(0, 20).map(a => `
-        <tr><td>${new Date(a.ts).toLocaleTimeString()}</td><td>${a.user}</td><td>${a.type}</td></tr>
-      `).join('');
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+            <span class="stock-tag ${cls}">Stock: ${s}</span>
+            <div style="display:flex;gap:4px">
+              <button class="btn-sm" style="background:rgba(255,255,255,0.05)" onclick="updateStock('${p.id}', 10)">+</button>
+              <button class="btn-sm" style="background:rgba(255,255,255,0.05)" onclick="updateStock('${p.id}', -10)">-</button>
+              <button class="btn-sm" style="background:#ef4444" onclick="deleteProd('${p.id}')">🗑️</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
     }
 
     async function addProduct() {
-      const name = document.getElementById('p-name').value;
-      const price = parseFloat(document.getElementById('p-price').value);
-      const img = document.getElementById('p-img').value;
-      const emoji = document.getElementById('p-emoji').value;
-      if(!name || !price) return alert('Fill fields');
+      const n = document.getElementById('p-name').value, p = parseFloat(document.getElementById('p-price').value), b = document.getElementById('p-barcode').value, c = document.getElementById('p-cat').value;
+      if(!n || isNaN(p)) return alert('Enter valid name and price');
       const prods = await fetchProducts();
-      prods.push({ id: Date.now().toString(), name, price, mrp: price, img, emoji, category: 'General', stock: 100 });
-      saveProducts(prods); closeModal(); init();
+      prods.push({ id: b || Date.now().toString(), name: n, price: p, mrp: p, category: c, img: document.getElementById('p-img').value, emoji: document.getElementById('p-emoji').value, stock: 50 });
+      saveProducts(prods); closeModal(); renderInventory();
     }
 
-    async function updateStock(id, delta) {
-      const prods = await fetchProducts();
-      const p = prods.find(x => x.id === id);
-      if(p) p.stock = (p.stock||0) + delta;
-      saveProducts(prods); init();
-    }
-
-    async function deleteProd(id) {
-      if(!confirm('Delete this product?')) return;
-      const prods = await fetchProducts();
-      saveProducts(prods.filter(p => p.id !== id)); init();
-    }
-
-    function deleteUser(email) {
-      if(!confirm('Delete this user?')) return;
-      const users = JSON.parse(localStorage.getItem('ssc_users') || '[]');
-      localStorage.setItem('ssc_users', JSON.stringify(users.filter(u => u.email !== email))); init();
-    }
-
-    function showTab(t, el) {
-      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-      el.classList.add('active');
-      document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-      document.getElementById('tab-' + t).style.display = 'block';
-      if(window.innerWidth < 900) toggleSidebar();
+    async function updateStock(id, d) { const prods = await fetchProducts(); const p = prods.find(x => x.id === id); if(p) p.stock = Math.max(0, (p.stock||0)+d); saveProducts(prods); renderInventory(); }
+    async function deleteProd(id) { if(confirm('Delete product?')) { const prods = await fetchProducts(); saveProducts(prods.filter(p => p.id !== id)); renderInventory(); } }
+    function deleteUser(e) { if(confirm('Delete user?')) { const u = JSON.parse(localStorage.getItem('ssc_users')||'[]'); localStorage.setItem('ssc_users', JSON.stringify(u.filter(x => x.email !== e))); init(); } }
+    function showTab(t, el) { 
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active')); 
+      el.classList.add('active'); 
+      document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none'); 
+      document.getElementById('tab-' + t).style.display = 'block'; 
+      if(window.innerWidth < 900) toggleSidebar(); 
     }
 
     init();
