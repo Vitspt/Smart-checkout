@@ -319,15 +319,20 @@ async function toggleCamera(){
       scanner = new Html5Qrcode('reader', { formatsToSupport: formats });
       
       const config = {
-        fps: 20,
+        fps: 25,
         qrbox: (viewWidth, viewHeight) => {
-          // For 1D barcodes, a wider rectangle is often better than a square
-          let width = Math.min(viewWidth, viewHeight) * 0.8;
-          let height = width * 0.6;
+          let width = Math.min(viewWidth, viewHeight) * 0.85;
+          let height = width * 0.5;
           return { width: width, height: height };
         },
         aspectRatio: 1.0,
-        disableFlip: false
+        disableFlip: false,
+        videoConstraints: {
+          width: { min: 640, ideal: 1280, max: 1920 },
+          height: { min: 480, ideal: 720, max: 1080 },
+          facingMode: "environment",
+          focusMode: "continuous"
+        }
       };
       
       try {
