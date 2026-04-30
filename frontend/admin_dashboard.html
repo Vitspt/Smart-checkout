@@ -105,7 +105,23 @@
   </div>
 
     <div class="modal" id="prodModal">
-      <!-- ... existing product modal content ... -->
+      <div class="modal-card">
+        <h2 style="margin-top:0">Add Product</h2>
+        <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="p-name" /></div>
+        <div class="form-group"><label class="form-label">Barcode ID</label><input class="form-input" id="p-barcode" placeholder="e.g. 1001" /></div>
+        <div class="form-group"><label class="form-label">Category</label>
+          <select class="form-input" id="p-cat">
+            <option>Grocery</option><option>Snacks</option><option>Drinks</option><option>Personal Care</option><option>Produce</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Price (₹)</label><input class="form-input" id="p-price" type="number" /></div>
+        <div class="form-group"><label class="form-label">Image URL</label><input class="form-input" id="p-img" /></div>
+        <div class="form-group"><label class="form-label">Emoji (Fallback)</label><input class="form-input" id="p-emoji" /></div>
+        <div style="display:flex;gap:12px;margin-top:24px">
+          <button class="btn" style="background:#334155" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="addProduct()">Save</button>
+        </div>
+      </div>
     </div>
 
     <div class="modal" id="couponModal">
@@ -114,26 +130,9 @@
         <div class="form-group"><label class="form-label">Code</label><input class="form-input" id="c-code" placeholder="e.g. WELCOME10" /></div>
         <div class="form-group"><label class="form-label">Discount (%)</label><input class="form-input" type="number" id="c-disc" placeholder="e.g. 10" /></div>
         <div style="display:flex;gap:12px;margin-top:24px">
+          <button class="btn" style="background:#334155" onclick="closeCouponModal()">Cancel</button>
           <button class="btn btn-primary" onclick="saveCoupon()">Save Coupon</button>
-          <button class="btn" onclick="closeCouponModal()">Cancel</button>
         </div>
-      </div>
-    </div>
-    <div class="modal-card">
-      <h2 style="margin-top:0">Add Product</h2>
-      <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="p-name" /></div>
-      <div class="form-group"><label class="form-label">Barcode ID</label><input class="form-input" id="p-barcode" placeholder="e.g. 1001" /></div>
-      <div class="form-group"><label class="form-label">Category</label>
-        <select class="form-input" id="p-cat">
-          <option>Grocery</option><option>Snacks</option><option>Drinks</option><option>Personal Care</option><option>Produce</option>
-        </select>
-      </div>
-      <div class="form-group"><label class="form-label">Price (₹)</label><input class="form-input" id="p-price" type="number" /></div>
-      <div class="form-group"><label class="form-label">Image URL</label><input class="form-input" id="p-img" /></div>
-      <div class="form-group"><label class="form-label">Emoji (Fallback)</label><input class="form-input" id="p-emoji" /></div>
-      <div style="display:flex;gap:12px;margin-top:24px">
-        <button class="btn" style="background:#334155" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="addProduct()">Save</button>
       </div>
     </div>
   </div>
@@ -309,16 +308,27 @@
             <div style="font-weight:700">${p.name}</div>
             <div style="font-size:11px;opacity:0.5">${p.category} • ₹${p.price}</div>
           </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-            <span class="stock-tag ${cls}">Stock: ${s}</span>
-            <div style="display:flex;gap:4px">
-              <button class="btn-sm" style="background:rgba(255,255,255,0.05)" onclick="updateStock('${p.id}', 10)">+</button>
-              <button class="btn-sm" style="background:rgba(255,255,255,0.05)" onclick="updateStock('${p.id}', -10)">-</button>
-              <button class="btn-sm" style="background:#ef4444" onclick="deleteProd('${p.id}')">🗑️</button>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+            <span class="stock-tag ${cls}" style="font-size:9px">Current: ${s}</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <button class="btn-sm" style="background:#334155;padding:4px 8px" onclick="updateStock('${p.id}', -1)">-</button>
+              <input type="number" value="${s}" style="width:44px;height:24px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;text-align:center;font-size:12px;border-radius:4px" onchange="editStock('${p.id}', this.value)" />
+              <button class="btn-sm" style="background:#334155;padding:4px 8px" onclick="updateStock('${p.id}', 1)">+</button>
+              <button class="btn-sm" style="background:#ef4444;margin-left:4px;padding:4px 8px" onclick="deleteProd('${p.id}')">🗑️</button>
             </div>
           </div>
         </div>`;
       }).join('');
+    }
+
+    async function editStock(id, val) {
+      const v = parseInt(val);
+      if(isNaN(v)) return;
+      const prods = await fetchProducts();
+      const p = prods.find(x => x.id === id);
+      if(p) p.stock = Math.max(0, v);
+      saveProducts(prods);
+      renderInventory();
     }
 
     async function addProduct() {
