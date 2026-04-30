@@ -75,6 +75,14 @@ function savePurchaseHistory(order){
     h.unshift(order);
     localStorage.setItem(ukey('orders'), JSON.stringify(h.slice(0,50)));
     
+    // Global log for Admin
+    try {
+      const session = getSession();
+      const adminLog = JSON.parse(localStorage.getItem('ssc_admin_sales') || '[]');
+      adminLog.unshift({ ...order, customer: session ? session.user.name : 'Guest' });
+      localStorage.setItem('ssc_admin_sales', JSON.stringify(adminLog.slice(0, 500)));
+    } catch(err) {}
+
     // Award points (1 point per 100 spent)
     const points = Math.floor(order.total / 100);
     awardPoints(points);
