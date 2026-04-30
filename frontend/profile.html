@@ -85,6 +85,9 @@
       <div class="menu-item" onclick="location.href='support.html'">
         <span class="material-icons">help_outline</span><span class="label" data-i18n="profile_support">Help & Support</span><span class="material-icons arrow">chevron_right</span>
       </div>
+      <div class="menu-item" onclick="openPinSetup()">
+        <span class="material-icons" style="color:#ef4d23">security</span><span class="label">Wallet Security (PIN)</span><span class="material-icons arrow">chevron_right</span>
+      </div>
     </div>
     <button class="btn btn-outline" onclick="doLogout()" style="color:var(--red);border-color:var(--red)">
       <span class="material-icons">logout</span> <span data-i18n="profile_logout">Sign Out</span>
@@ -146,6 +149,16 @@
     <div style="font-size:24px;font-weight:900">Top-up Successful!</div>
     <div id="gateway-amt" style="font-size:18px;color:#ef4d23;font-weight:800;margin:12px 0">₹0.00</div>
     <button class="btn btn-primary" onclick="closeGateway()" style="margin-top:20px">Back to Profile</button>
+  </div>
+</div>
+
+<div class="modal" id="pinSetupModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(8px)">
+  <div class="card" style="width:90%;max-width:340px;text-align:center">
+    <h2 style="margin-top:0">Set Wallet PIN</h2>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:20px">Enter a 4-digit code for secure payments</p>
+    <input type="password" id="new-pin" maxlength="4" placeholder="1234" style="width:100px;height:50px;text-align:center;font-size:24px;letter-spacing:4px;margin-bottom:20px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:#fff">
+    <button class="btn btn-primary" style="width:100%;margin-bottom:10px" onclick="saveNewPin()">Save PIN</button>
+    <button class="btn" style="background:#334155;width:100%" onclick="closePinSetup()">Cancel</button>
   </div>
 </div>
 
@@ -320,6 +333,19 @@ function confirmTopup(amt){
   }, 2500);
 }
 function closeGateway(){ document.getElementById('gatewayModal').style.display='none'; }
+
+function openPinSetup(){ document.getElementById('pinSetupModal').style.display='flex'; }
+function closePinSetup(){ document.getElementById('pinSetupModal').style.display='none'; }
+function saveNewPin(){
+  const pin = document.getElementById('new-pin').value;
+  if(pin.length !== 4) {
+    if(typeof showToast === 'function') showToast('PIN must be 4 digits', 'error');
+    return;
+  }
+  setWalletPin(pin);
+  closePinSetup();
+  if(typeof showToast === 'function') showToast('Wallet PIN updated successfully!', 'success');
+}
 
 init();
 </script>

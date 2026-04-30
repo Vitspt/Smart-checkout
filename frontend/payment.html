@@ -50,6 +50,20 @@
   </div>
 </div>
 
+<!-- PIN MODAL -->
+<div class="modal" id="pinModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:4000;align-items:center;justify-content:center;backdrop-filter:blur(10px)">
+  <div class="card" style="width:90%;max-width:320px;text-align:center;padding:32px">
+    <div class="material-icons" style="font-size:48px;color:#ef4d23;margin-bottom:16px">lock_person</div>
+    <h2 style="margin-top:0;font-size:20px">Enter Wallet PIN</h2>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:24px">Authorize payment for CONVIX Wallet</p>
+    <div style="display:flex;gap:12px;justify-content:center;margin-bottom:24px">
+      <input type="password" id="pin-input" maxlength="4" placeholder="••••" style="width:120px;height:56px;text-align:center;font-size:32px;letter-spacing:8px;background:rgba(255,255,255,0.05);border:1.5px solid var(--border);border-radius:12px;color:#fff" oninput="if(this.value.length===4) confirmPin()">
+    </div>
+    <div id="pin-error" style="color:#ef4444;font-size:12px;margin-bottom:16px;display:none">Incorrect PIN. Try again.</div>
+    <button class="btn" style="background:rgba(255,255,255,0.05);width:100%" onclick="closePinModal()">Cancel</button>
+  </div>
+</div>
+
 <div id="toasts"></div>
 
 <script src="js/config.js"></script>
@@ -136,14 +150,44 @@ async function init(){
   if(statusEl) statusEl.textContent = `Balance: ₹${bal.toFixed(2)}`;
 }
 
+let pendingTotal = 0;
 function processPayment(total){
   if(selectedMethod === 'convix') {
-    if(!payWithWallet(total)) {
+    const bal = getWalletBalance();
+    if(bal < total) {
       if(typeof showToast === 'function') showToast('Insufficient wallet balance! Please top up.', 'error');
-      else alert('Insufficient wallet balance!');
+      else alert('Insufficient balance');
       return;
     }
+    pendingTotal = total;
+    openPinModal();
+    return;
   }
+  startProcessing();
+}
+
+function openPinModal(){
+  document.getElementById('pinModal').style.display = 'flex';
+  document.getElementById('pin-input').value = '';
+  document.getElementById('pin-input').focus();
+  document.getElementById('pin-error').style.display = 'none';
+}
+function closePinModal(){ document.getElementById('pinModal').style.display = 'none'; }
+
+function confirmPin(){
+  const pin = document.getElementById('pin-input').value;
+  if(verifyWalletPin(pin)) {
+    closePinModal();
+    startProcessing();
+  } else {
+    document.getElementById('pin-error').style.display = 'block';
+    document.getElementById('pin-input').value = '';
+    if(navigator.vibrate) navigator.vibrate(200);
+  }
+}
+
+function startProcessing(){
+  if(selectedMethod === 'convix') payWithWallet(pendingTotal);
 
   const btn=document.getElementById('pay-btn');
   btn.innerHTML='<span class="material-icons" style="animation:spin 1s linear infinite">refresh</span> Processing...';
