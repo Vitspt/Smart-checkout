@@ -250,9 +250,16 @@ function showStatus(msg){
 let lastScan = null;
 
 function handleScanned(code, isAI = false){
-  if (lastScan === code.trim()) return; 
-  const p = getProductById(code.trim());
-  if(!p){ toast('Scanned: ' + code + ' (Not in DB)','amber'); return; }
+  const trimmedCode = code.trim();
+  if (lastScan === trimmedCode) return; 
+  
+  const p = getProductById(trimmedCode);
+  if(!p){ 
+    lastScan = trimmedCode;
+    toast('Scanned: ' + trimmedCode + ' (Not in DB)', 'amber'); 
+    setTimeout(() => { if(lastScan === trimmedCode) lastScan = null; }, 3000);
+    return; 
+  }
   
   // Success Beep
   try {
