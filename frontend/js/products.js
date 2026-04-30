@@ -42,8 +42,16 @@ const DEFAULT_PRODUCTS = [
   { id:'6002', name:'Parker Vector Ball Pen', brand:'Parker', category:'Stationery', price:250, mrp:250, emoji:'🖋️', stock:30, img:'img/products/Parker Vector Ball Pen.jpg', location:{ floor:'1st', section:'Writing', hall:'West Hall', tab:'W04', row:'R09' } }
 ];
 
+const DATA_VERSION = '1.0.3'; // Update this to force refresh
+
 async function fetchProducts() {
   try {
+    const v = localStorage.getItem('ssc_products_v');
+    if (v !== DATA_VERSION) {
+      localStorage.removeItem('ssc_products');
+      localStorage.setItem('ssc_products_v', DATA_VERSION);
+    }
+
     const local = localStorage.getItem('ssc_products');
     if (local) {
       const parsed = JSON.parse(local);
