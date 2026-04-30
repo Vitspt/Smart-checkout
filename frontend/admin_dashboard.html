@@ -33,6 +33,8 @@
     .low { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
     .med { background: rgba(234, 179, 8, 0.1); color: #eab308; }
     .high { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+    .tab-content { animation: tabFade 0.4s cubic-bezier(0.4, 0, 0.2, 1) both; }
+    @keyframes tabFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
   </style>
 </head>
 <body>
@@ -312,6 +314,9 @@
           if(el) el.style.display = 'none';
         });
         showTab('verify', document.getElementById('nav-verify'));
+      } else if (role === 'manager') {
+        const el = document.getElementById('nav-verify');
+        if(el) el.style.display = 'none';
       }
 
       const sales = JSON.parse(localStorage.getItem('ssc_admin_sales') || '[]');
