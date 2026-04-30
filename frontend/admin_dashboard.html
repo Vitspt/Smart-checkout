@@ -42,7 +42,7 @@
     <div class="nav-item active" id="nav-dashboard" onclick="showTab('dashboard', this)"><span class="material-icons">dashboard</span> Dashboard</div>
     <div class="nav-item" id="nav-inventory" onclick="showTab('inventory', this)"><span class="material-icons">inventory_2</span> Inventory</div>
     <div class="nav-item" id="nav-users" onclick="showTab('users', this)"><span class="material-icons">people</span> User Manager</div>
-    <div class="nav-item" id="nav-activity" id="nav-activity" onclick="showTab('activity', this)"><span class="material-icons">history</span> Activity Log</div>
+    <div class="nav-item" id="nav-activity" onclick="showTab('activity', this)"><span class="material-icons">history</span> Activity Log</div>
     <div class="nav-item" id="nav-coupons" onclick="showTab('coupons', this)"><span class="material-icons">confirmation_number</span> Coupons</div>
     <div class="nav-item" id="nav-verify" onclick="showTab('verify', this)"><span class="material-icons">qr_code_scanner</span> QR Verify</div>
     <div style="position:absolute;bottom:32px;left:20px;right:20px">
@@ -460,6 +460,12 @@
     async function updateStock(id, d) { const prods = await fetchProducts(); const p = prods.find(x => x.id === id); if(p) p.stock = Math.max(0, (p.stock||0)+d); saveProducts(prods); renderInventory(); }
     async function deleteProd(id) { if(confirm('Delete product?')) { const prods = await fetchProducts(); saveProducts(prods.filter(p => p.id !== id)); renderInventory(); } }
     function deleteUser(e) { if(confirm('Delete user?')) { const u = JSON.parse(localStorage.getItem('ssc_users')||'[]'); localStorage.setItem('ssc_users', JSON.stringify(u.filter(x => x.email !== e))); init(); } }
+    function toggleSidebar() { 
+      const sb = document.getElementById('sidebar');
+      const ov = document.getElementById('overlay');
+      if(sb) sb.classList.toggle('open'); 
+      if(ov) ov.classList.toggle('show'); 
+    }
     function showTab(t, el) { 
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active')); 
       el.classList.add('active'); 
