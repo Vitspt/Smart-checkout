@@ -12,5 +12,10 @@
   "license": "ISC",
   "devDependencies": {
     "live-server": "^1.2.2"
+  },
+  "overrides": {
+    "braces": "^3.0.3",
+    "micromatch": "^4.0.8",
+    "uuid": "^14.0.0"
   }
 }

@@ -55,9 +55,7 @@
     <div id="order-summary"></div>
 
     <div style="margin-top:16px;display:flex;gap:8px;flex-direction:column">
-      <button onclick="simulateVerification()" class="btn btn-primary" id="verify-btn">
-        <span class="material-icons">verified_user</span> Verify at Exit (Sim)
-      </button>
+
       <a href="home.html" class="btn btn-outline" style="text-decoration:none">
         <span class="material-icons">shopping_cart</span> Shop More
       </a>
@@ -136,29 +134,10 @@ function init(){
       ${order.items.map(i=>`<div class="order-row"><span style="color:#fff">${i.emoji} ${i.name}</span><span style="font-weight:800;color:var(--muted)">x${i.qty}</span></div>`).join('')}
     </div>
     <div style="margin-top:20px;display:flex;gap:10px;justify-content:center">
-      <span class="pill pill-green" id="verify-pill" style="padding:6px 12px;border-radius:12px">✅ Ready</span>
+      <span class="pill pill-green" id="verify-pill" style="padding:6px 12px;border-radius:12px">✅ Exit Ready</span>
       <span class="pill" style="background:rgba(59,130,246,0.1);color:#60a5fa;padding:6px 12px;border-radius:12px">👜 ${order.items.reduce((s,i)=>s+i.qty,0)} Items</span>
     </div>
   `;
-}
-
-window.simulateVerification = function(){
-  if(localStorage.getItem('ssc_qr_used') === 'true'){
-    alert('This QR has already been used!');
-    return;
-  }
-  const btn = document.getElementById('verify-btn');
-  btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite">refresh</span> Verifying...';
-  
-  setTimeout(() => {
-    localStorage.setItem('ssc_qr_used', 'true');
-    btn.innerHTML = '<span class="material-icons">check_circle</span> VERIFIED';
-    btn.style.background = 'var(--green)';
-    btn.disabled = true;
-    document.getElementById('verify-pill').innerHTML = '✅ VERIFIED & USED';
-    document.getElementById('verify-pill').className = 'pill pill-amber';
-    alert('QR Verified! You can now exit the store.');
-  }, 1500);
 }
 init();
 </script>

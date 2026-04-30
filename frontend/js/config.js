@@ -163,7 +163,7 @@ window.applyNativeLanguage = function() {
     const key = el.getAttribute('data-i18n');
     const translated = window.t(key);
     
-    if (translated === key && lang !== 'en') return; // Skip if untranslated and not English
+    if (translated === key && lang !== 'en') return;
 
     if(el.classList.contains('ni')) {
        const icon = el.querySelector('.material-icons');
@@ -182,11 +182,10 @@ window.applyNativeLanguage = function() {
     } else if (el.classList.contains('menu-item') && el.querySelector('.label')) {
        el.querySelector('.label').textContent = translated;
     } else {
-       // Check if we should use innerHTML or textContent
        if (translated.includes('<') || translated.includes('&')) {
-         el.innerHTML = translated;
+         if (el.innerHTML !== translated) el.innerHTML = translated;
        } else {
-         el.textContent = translated;
+         if (el.textContent !== translated) el.textContent = translated;
        }
     }
   });
