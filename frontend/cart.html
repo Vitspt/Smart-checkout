@@ -11,9 +11,10 @@
 
 <header class="topbar">
   <div class="tb-left">
-    <button class="tb-btn" onclick="history.back()"><span class="material-icons">arrow_back</span></button>
-    <div class="topbar-logo">CONVIX <span style="color:#ef4d23; font-style:italic; font-family:'Instrument Serif'">Smart</span></div>
+    <a href="javascript:history.back()" class="tb-btn"><span class="material-icons">chevron_left</span></a>
+    <a href="javascript:history.forward()" class="tb-btn"><span class="material-icons">chevron_right</span></a>
   </div>
+  <div class="topbar-logo">CONVIX <span style="color:#ef4d23; font-style:italic; font-family:'Instrument Serif'">Smart</span></div>
   <div class="tb-right">
     <button class="tb-btn" onclick="if(confirm('Clear cart?')){clearCart();renderCart();}" title="Clear cart">
       <span class="material-icons">delete_outline</span>
