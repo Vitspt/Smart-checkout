@@ -177,20 +177,42 @@
       const res = document.getElementById('verify-result');
       const st = document.getElementById('v-status');
       res.style.display = 'block';
+      
       try {
         const qr = JSON.parse(data);
-        if (qr.exp < Date.now()) { 
-          st.textContent = '❌ EXPIRED'; 
-          st.style.color = '#ef4444'; 
+        const isExpired = qr.exp < Date.now();
+        
+        if (isExpired) { 
+          st.innerHTML = '<div style="color:#ef4444;font-size:24px;font-weight:900;margin-bottom:16px">❌ EXPIRED RECEIPT</div>'; 
         } else { 
-          st.textContent = '✅ VERIFIED'; 
-          st.style.color = '#22c55e'; 
+          st.innerHTML = `
+            <div style="color:#22c55e;font-size:24px;font-weight:900;margin-bottom:16px">✅ VERIFIED RECEIPT</div>
+            <div class="card-dash" style="text-align:left; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1)">
+              <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:10px;margin-bottom:12px">
+                <span style="font-size:12px;opacity:0.5">Order ID: #${qr.id.slice(-8)}</span>
+                <span style="font-size:12px;opacity:0.5">${new Date(qr.time || Date.now()).toLocaleString()}</span>
+              </div>
+              
+              <div style="margin-bottom:16px">
+                ${(qr.items || []).map(i => `
+                  <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px">
+                    <span>${i.qty}x ${i.name}</span>
+                    <span style="font-weight:700">₹${i.price * i.qty}</span>
+                  </div>
+                `).join('')}
+              </div>
+              
+              <div style="display:flex;justify-content:space-between;border-top:2px dashed rgba(255,255,255,0.1);padding-top:12px;margin-top:12px">
+                <span style="font-weight:800;font-size:18px">TOTAL PAID</span>
+                <span style="font-weight:900;font-size:22px;color:#ef4d23">₹${qr.total}</span>
+              </div>
+            </div>
+          `; 
           // Log verification
-          logActivity('QR_VERIFY', `Verified Order #${qr.id.slice(-6)}`);
+          logActivity('QR_VERIFY', `Verified Order #${qr.id.slice(-6)} (₹${qr.total})`);
         }
       } catch (e) { 
-        st.textContent = '⚠️ INVALID QR'; 
-        st.style.color = '#eab308'; 
+        st.innerHTML = '<div style="color:#eab308;font-size:24px;font-weight:900">⚠️ INVALID QR CODE</div>'; 
       }
     }
 
