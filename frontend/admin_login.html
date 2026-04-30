@@ -4,38 +4,44 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Admin Login — SmartCheckout</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+  <link rel="stylesheet" href="css/style.css" />
   <style>
-    :root { --primary: #16a34a; --bg: #f8fafc; --text: #1e293b; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-    .login-card { background: #fff; padding: 40px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; text-align: center; }
-    .logo { width: 64px; height: 64px; background: var(--primary); color: #fff; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
-    h1 { font-size: 24px; margin-bottom: 8px; color: var(--text); }
-    p { font-size: 14px; color: #64748b; margin-bottom: 32px; }
-    .input-group { text-align: left; margin-bottom: 20px; }
-    label { font-size: 12px; font-weight: 800; text-transform: uppercase; color: #94a3b8; display: block; margin-bottom: 8px; }
-    input { width: 100%; padding: 14px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 15px; outline: none; }
-    input:focus { border-color: var(--primary); }
-    .btn { width: 100%; padding: 16px; background: var(--primary); color: #fff; border: none; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; transition: 0.2s; }
-    .btn:hover { background: #15803d; }
+    .login-outer { min-height: 100vh; background: #0b0f1a; display: flex; align-items: center; justify-content: center; padding: 24px; position: relative; overflow: hidden; }
+    .login-outer::before { content: ''; position: absolute; width: 300px; height: 300px; border-radius: 50%; background: rgba(239, 77, 35, .06); top: -80px; right: -80px; }
+    .login-container { width: 100%; max-width: 390px; position: relative; z-index: 1; }
+    .login-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); border-radius: 24px; padding: 32px 24px; color: #fff; box-shadow: 0 24px 64px rgba(0,0,0,.3); }
+    .login-header { text-align: center; margin-bottom: 28px; }
+    .login-logo { font-size: 48px; display: block; margin-bottom: 10px; }
+    .login-title { font-size: 24px; font-weight: 900; color: #fff; }
+    .login-sub { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px; }
   </style>
 </head>
 <body>
-  <div class="login-card">
-    <div class="logo"><span class="material-icons" style="font-size:32px">admin_panel_settings</span></div>
-    <h1>Admin Access</h1>
-    <p>Please enter your administrative credentials</p>
-    
-    <div class="input-group">
-      <label>Admin Email</label>
-      <input type="email" id="adm-email" placeholder="admin@smart.com" />
+  <div class="login-outer">
+    <div class="login-container">
+      <div class="login-card">
+        <div class="login-header">
+          <span class="login-logo">🛡️</span>
+          <div class="login-title">Admin Access</div>
+          <div class="login-sub">Enter administrative credentials</div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Admin Email</label>
+          <input class="form-input" id="adm-email" type="email" placeholder="admin@smart.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" id="adm-pass" type="password" placeholder="••••••••" />
+        </div>
+        
+        <button class="btn btn-primary" style="margin-top:8px" onclick="handleLogin()">Sign In to Dashboard</button>
+        
+        <div style="text-align:center;margin-top:24px">
+          <a href="login.html" style="font-size:12px;color:rgba(255,255,255,0.3);text-decoration:none;font-weight:700">BACK TO STORE</a>
+        </div>
+      </div>
     </div>
-    <div class="input-group">
-      <label>Password</label>
-      <input type="password" id="adm-pass" placeholder="••••••••" />
-    </div>
-    
-    <button class="btn" onclick="handleLogin()">SIGN IN TO DASHBOARD</button>
   </div>
 
   <script>
@@ -43,7 +49,6 @@
       const email = document.getElementById('adm-email').value.trim();
       const pass = document.getElementById('adm-pass').value.trim();
 
-      // Separate Admin Credentials
       if (email === 'admin@smart.com' && pass === 'admin123') {
         localStorage.setItem('ssc_admin_token', 'ADM_' + Date.now());
         location.href = 'admin_dashboard.html';
