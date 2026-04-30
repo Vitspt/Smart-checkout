@@ -306,8 +306,8 @@ window.confirmScan = function(){
     addToCart(p);
     addScanHistory(p);
     checkListAuto(p.name);
-    showStatus(`✅ ${p.name} added to cart!`);
-    toast(`${p.emoji} ${p.name} added!`);
+    showStatus(`${p.name} added to cart!`);
+    toast(`${p.name} added!`);
     renderRecent();
     renderScannerList();
   }
