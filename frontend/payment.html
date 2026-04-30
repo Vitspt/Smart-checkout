@@ -65,7 +65,16 @@ async function init(){
   const cart = getCart();
   if(!cart.length){ location.href='cart.html'; return; }
   const subtotal=getCartSubtotal(), mrp=getCartMRP();
-  const disc=mrp-subtotal, tax=Math.round(subtotal*TAX_RATE), total=subtotal+tax;
+  
+  let finalSubtotal = subtotal;
+  let couponDisc = 0;
+  const activeCoupon = JSON.parse(localStorage.getItem(ukey('active_coupon')) || 'null');
+  if(activeCoupon) {
+    couponDisc = Math.round(subtotal * (activeCoupon.discount / 100));
+    finalSubtotal = subtotal - couponDisc;
+  }
+
+  const disc=mrp-subtotal, tax=Math.round(finalSubtotal*TAX_RATE), total=finalSubtotal+tax;
 
   document.getElementById('pay-page').innerHTML=`
     <!-- ITEM LIST -->
@@ -84,8 +93,9 @@ async function init(){
     <div class="card">
       <div style="font-size:14px;font-weight:800;margin-bottom:8px">Price Details</div>
       <div class="price-row"><span>Subtotal (MRP)</span><span>${formatPrice(mrp)}</span></div>
-      ${disc>0?`<div class="price-row green"><span>Discount</span><span>− ${formatPrice(disc)}</span></div>`:''}
-      ${tax>0?`<div class="price-row"><span>GST (5%)</span><span>${formatPrice(tax)}</span></div>`:''}
+      ${disc>0?`<div class="price-row green"><span>Product Discount</span><span>− ${formatPrice(disc)}</span></div>`:''}
+      ${couponDisc>0?`<div class="price-row green" style="font-weight:800"><span>Coupon (${activeCoupon.code})</span><span>− ${formatPrice(couponDisc)}</span></div>`:''}
+      ${tax>0?`<div class="price-row"><span>GST</span><span>+ ${formatPrice(tax)}</span></div>`:''}
       <div class="price-row total"><span>Amount Payable</span><span style="color:var(--green)">${formatPrice(total)}</span></div>
     </div>
 
