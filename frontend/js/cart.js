@@ -32,6 +32,9 @@ function addToCart(product, qty=1){
   
   // 3. INVENTORY REDUCTION (Simulation)
   if (product.stock !== undefined) product.stock -= 1;
+
+  // 4. AUTO-CHECK SHOPPING LIST
+  if(typeof checkListAuto === 'function') checkListAuto(product.name);
 }
 
 function removeFromCart(id){ saveCart(getCart().filter(i => i.id !== id)); }
