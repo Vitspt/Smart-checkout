@@ -3,20 +3,7 @@
 // ============================================
 function getShoppingList(){ 
   try{ 
-    const l = JSON.parse(localStorage.getItem(ukey('list')));
-    if(!l || l.length === 0) {
-      // Initialize with user requested categories
-      const defaults = [
-        { name: 'Dairy Milk Silk', found: false, id: 1 },
-        { name: 'Fresh Banana', found: false, id: 2 },
-        { name: 'Fortune Sunflower Oil', found: false, id: 3 },
-        { name: 'Fresh Tomato', found: false, id: 4 },
-        { name: 'Coca-Cola 750ml', found: false, id: 5 }
-      ];
-      localStorage.setItem(ukey('list'), JSON.stringify(defaults));
-      return defaults;
-    }
-    return l;
+    return JSON.parse(localStorage.getItem(ukey('list'))) || [];
   } catch(e){ return []; } 
 }
 function saveShoppingList(l){ localStorage.setItem(ukey('list'), JSON.stringify(l)); }
