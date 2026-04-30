@@ -73,31 +73,41 @@
   <a href="profile.html" class="ni" data-i18n="nav_profile"><span class="material-icons">person</span>Profile</a>
 </nav>
 
-<script src="js/config.js"></script>
-<script src="js/products.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/cart.js"></script>
-<script src="js/agent.js"></script>
-<script>
-let currentProd=null, qty=1;
-updateCartBadge();
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/products.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/agent.js"></script>
+  <script>
+  let currentProd=null, qty=1;
+  
+  function renderStars(rating) {
+    const r = Math.round(rating || 0);
+    let html = '';
+    for (let i = 1; i <= 5; i++) {
+      html += `<span class="material-icons" style="font-size:16px">${i <= r ? 'star' : 'star_outline'}</span>`;
+    }
+    return html;
+  }
 
-function toast(msg,type='green'){
-  const el=document.createElement('div'); el.className=`toast ${type}`;
-  el.innerHTML=`<span class="material-icons" style="font-size:18px">check_circle</span>${msg}`;
-  document.getElementById('toasts').appendChild(el);
-  setTimeout(()=>{el.classList.add('hide');setTimeout(()=>el.remove(),300);},2500);
-}
+  updateCartBadge();
+  
+  function toast(msg,type='green'){
+    const el=document.createElement('div'); el.className=`toast ${type}`;
+    el.innerHTML=`<span class="material-icons" style="font-size:18px">check_circle</span>${msg}`;
+    document.getElementById('toasts').appendChild(el);
+    setTimeout(()=>{el.classList.add('hide');setTimeout(()=>el.remove(),300);},2500);
+  }
 
-function changeQty(d){ qty=Math.max(1,qty+d); document.getElementById('qty-display').textContent=qty; }
+  function changeQty(d){ qty=Math.max(1,qty+d); document.getElementById('qty-display').textContent=qty; }
 
-function doAdd(){
-  if(!currentProd) return;
-  addToCart(currentProd, qty);
-  toast(`${currentProd.emoji} ${currentProd.name} ×${qty} added to cart`);
-}
+  function doAdd(){
+    if(!currentProd) return;
+    addToCart(currentProd, qty);
+    toast(`${currentProd.emoji} ${currentProd.name} ×${qty} added to cart`);
+  }
 
-async function init(){
+  async function init(){
   const id=new URLSearchParams(location.search).get('id');
   if(!id){ document.getElementById('prod-content').innerHTML=`<div class="empty"><div class="empty-icon">❌</div><h3 data-i18n="product_not_found">${window.t('product_not_found')}</h3><p><a href="home.html" data-i18n="go_home">${window.t('go_home')}</a></p></div>`; return; }
   
