@@ -9,6 +9,13 @@ function saveUsers(u){ localStorage.setItem('ssc_users', JSON.stringify(u)); }
 function setSession(user){ localStorage.setItem('ssc_session', JSON.stringify({ user, ts: Date.now() })); }
 function clearSession(){ localStorage.removeItem('ssc_session'); }
 
+// HELPERS FOR MULTI-USER DATA ISOLATION
+function ukey(key){
+  const session = getSession();
+  const userId = session ? session.user.email.replace(/[^a-zA-Z0-9]/g, '_') : 'guest';
+  return `ssc_${userId}_${key}`;
+}
+
 async function authGuard(){
   if(!getSession()){ window.location.href='login.html'; return false; }
   return true;

@@ -143,7 +143,7 @@ function showTab(t){
   if(t==='scans') renderScans();
 }
 
-let notifOn = localStorage.getItem('ssc_notif') !== 'false';
+let notifOn = localStorage.getItem(ukey('notif')) !== 'false';
 
 function initSettings() {
   updateNotifUI();
@@ -151,7 +151,7 @@ function initSettings() {
 
 function toggleNotif() {
   notifOn = !notifOn;
-  localStorage.setItem('ssc_notif', notifOn);
+  localStorage.setItem(ukey('notif'), notifOn);
   updateNotifUI();
   toast(notifOn ? 'Notifications Enabled' : 'Notifications Disabled');
 }
@@ -165,12 +165,12 @@ function updateNotifUI() {
 
 function toggleDarkMode() {
   const isDark = document.body.classList.toggle('dark');
-  localStorage.setItem('ssc_dark', isDark);
+  localStorage.setItem(ukey('dark'), isDark);
   updateDarkUI();
   toast(isDark ? 'Dark Mode Enabled' : 'Dark Mode Disabled');
 }
 function updateDarkUI() {
-  const isDark = localStorage.getItem('ssc_dark') === 'true';
+  const isDark = localStorage.getItem(ukey('dark')) === 'true';
   const el = document.getElementById('set-dark');
   if(el){
     el.textContent = isDark ? 'ON' : 'OFF';
@@ -224,7 +224,7 @@ function init(){
 
 function renderOrders(){
   try{
-    const orders=JSON.parse(localStorage.getItem('ssc_orders')||'[]');
+    const orders=JSON.parse(localStorage.getItem(ukey('orders'))||'[]');
     const el=document.getElementById('orders-list');
     if(!orders.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📦</div><h3>No orders yet</h3><p>Complete a checkout to see history here</p></div>'; return; }
     el.innerHTML=orders.map(o=>`
@@ -244,7 +244,7 @@ function renderOrders(){
 
 function renderScans(){
   try{
-    const scans=JSON.parse(localStorage.getItem('ssc_scan_history')||'[]');
+    const scans=JSON.parse(localStorage.getItem(ukey('scan_history'))||'[]');
     const el=document.getElementById('scans-list');
     if(!scans.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📷</div><h3>No scan history</h3><p>Scanned items will appear here</p></div>'; return; }
     el.innerHTML=scans.map(s=>`

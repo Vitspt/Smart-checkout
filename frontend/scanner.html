@@ -493,7 +493,7 @@ async function toggleCamera(){
 
 function renderRecent(){
   try{
-    const h = JSON.parse(localStorage.getItem('ssc_scan_history')||'[]');
+    const h = JSON.parse(localStorage.getItem(ukey('scan_history'))||'[]');
     if(!h.length){ document.getElementById('recent-wrap').style.display='none'; return; }
     document.getElementById('recent-wrap').style.display='block';
     document.getElementById('recent-list').innerHTML = h.slice(0,5).map(i=>`

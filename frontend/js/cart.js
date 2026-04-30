@@ -1,9 +1,9 @@
 // ============================================
 // SmartCheckout — Cart System (localStorage)
 // ============================================
-function getCart(){ try{ return JSON.parse(localStorage.getItem('ssc_cart')) || []; }catch(e){ return []; } }
-function saveCart(c){ localStorage.setItem('ssc_cart', JSON.stringify(c)); updateCartBadge(); }
-function clearCart(){ localStorage.removeItem('ssc_cart'); updateCartBadge(); }
+function getCart(){ try{ return JSON.parse(localStorage.getItem(ukey('cart'))) || []; }catch(e){ return []; } }
+function saveCart(c){ localStorage.setItem(ukey('cart'), JSON.stringify(c)); updateCartBadge(); }
+function clearCart(){ localStorage.removeItem(ukey('cart')); updateCartBadge(); }
 
 function addToCart(product, qty=1){
   const cart = getCart();
@@ -15,13 +15,14 @@ function addToCart(product, qty=1){
   }
 
   // 2. DUPLICATE DETECTION (Fast Scan Prevention)
-  const lastScan = localStorage.getItem('ssc_last_scan_time');
+  const lastScanKey = ukey('last_scan_time');
+  const lastScan = localStorage.getItem(lastScanKey);
   const now = Date.now();
   if (lastScan && (now - lastScan < 800)) { 
     console.warn("Duplicate scan detected.");
     return;
   }
-  localStorage.setItem('ssc_last_scan_time', now);
+  localStorage.setItem(lastScanKey, now);
 
   const idx = cart.findIndex(i => i.id === product.id);
   if(idx >= 0){ cart[idx].qty += qty; }
@@ -58,18 +59,18 @@ function updateCartBadge(){
 // Add to scan history
 function addScanHistory(product){
   try{
-    const h = JSON.parse(localStorage.getItem('ssc_scan_history') || '[]');
+    const h = JSON.parse(localStorage.getItem(ukey('scan_history')) || '[]');
     h.unshift({ id:product.id, name:product.name, emoji:product.emoji, price:product.price, time: new Date().toLocaleTimeString() });
-    localStorage.setItem('ssc_scan_history', JSON.stringify(h.slice(0,20)));
+    localStorage.setItem(ukey('scan_history'), JSON.stringify(h.slice(0,20)));
   }catch(e){}
 }
 
 // Save order to purchase history
 function savePurchaseHistory(order){
   try{
-    const h = JSON.parse(localStorage.getItem('ssc_orders') || '[]');
+    const h = JSON.parse(localStorage.getItem(ukey('orders')) || '[]');
     h.unshift(order);
-    localStorage.setItem('ssc_orders', JSON.stringify(h.slice(0,50)));
+    localStorage.setItem(ukey('orders'), JSON.stringify(h.slice(0,50)));
     
     // Award points (1 point per 100 spent)
     const points = Math.floor(order.total / 100);
@@ -78,14 +79,14 @@ function savePurchaseHistory(order){
 }
 
 // Points Logic
-function getPoints(){ return parseInt(localStorage.getItem('ssc_points') || '0'); }
+function getPoints(){ return parseInt(localStorage.getItem(ukey('points')) || '0'); }
 function awardPoints(pts){ 
   const current = getPoints();
-  localStorage.setItem('ssc_points', current + pts);
+  localStorage.setItem(ukey('points'), current + pts);
 }
 function redeemPoints(pts){
   const current = getPoints();
   if(current < pts) return false;
-  localStorage.setItem('ssc_points', current - pts);
+  localStorage.setItem(ukey('points'), current - pts);
   return true;
 }
