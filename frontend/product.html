@@ -134,13 +134,9 @@
         ${p.mrp>p.price?`<span class="prod-detail-mrp">${formatPrice(p.mrp)}</span><span class="prod-detail-off">SAVE ${formatPrice(p.mrp-p.price)}</span>`:''}
       </div>
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:16px">
-        <span style="color:var(--amber);font-size:16px">${renderStars(p.rating)}</span>
-        <span style="font-size:13px;font-weight:700">${p.rating}/5</span>
+        <span style="color:var(--amber);font-size:16px">${renderStars(p.rating || 4.5)}</span>
+        <span style="font-size:13px;font-weight:700">${p.rating || 4.5}/5</span>
       </div>
-    </div>
-    <div class="card" style="margin:0 14px 12px;border-radius:14px">
-      <div style="font-size:14px;font-weight:800;margin-bottom:8px" data-i18n="about_product">${window.t('about_product')}</div>
-      <p style="font-size:13px;color:var(--muted);line-height:1.7">${p.desc}</p>
     </div>
     <div class="card" style="margin:0 14px 12px;border-radius:14px; background: rgba(239, 77, 35, 0.05); border: 1px solid rgba(239, 77, 35, 0.1)">
       <div style="font-size:14px;font-weight:800;margin-bottom:12px;color:var(--primary);display:flex;align-items:center;gap:8px">
