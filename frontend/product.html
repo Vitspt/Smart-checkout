@@ -100,6 +100,10 @@ function doAdd(){
 async function init(){
   const id=new URLSearchParams(location.search).get('id');
   if(!id){ document.getElementById('prod-content').innerHTML=`<div class="empty"><div class="empty-icon">❌</div><h3 data-i18n="product_not_found">${window.t('product_not_found')}</h3><p><a href="home.html" data-i18n="go_home">${window.t('go_home')}</a></p></div>`; return; }
+  
+  // Force products to load first
+  await fetchProducts();
+  
   currentProd = getProductById(id);
   if(!currentProd){ document.getElementById('prod-content').innerHTML=`<div class="empty"><div class="empty-icon">❌</div><h3 data-i18n="product_not_found">${window.t('product_not_found')}</h3></div>`; return; }
   const p=currentProd, off=discount(p.mrp,p.price);
