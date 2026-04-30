@@ -28,6 +28,7 @@ function addToCart(product, qty=1){
   if(idx >= 0){ cart[idx].qty += qty; }
   else { cart.push({ id:product.id, name:product.name, brand:product.brand||'', price:product.price, mrp:product.mrp||product.price, emoji:product.emoji||'🛒', img:product.img||'', qty }); }
   saveCart(cart);
+  logActivity('CART_ADD', `Added ${product.name} to cart`);
   if(navigator.vibrate) navigator.vibrate(60);
   
   // 3. INVENTORY REDUCTION (Simulation)
@@ -81,6 +82,7 @@ function savePurchaseHistory(order){
       const adminLog = JSON.parse(localStorage.getItem('ssc_admin_sales') || '[]');
       adminLog.unshift({ ...order, customer: session ? session.user.name : 'Guest' });
       localStorage.setItem('ssc_admin_sales', JSON.stringify(adminLog.slice(0, 500)));
+      logActivity('PAYMENT', `Order completed: ${order.id} (₹${order.total})`);
     } catch(err) {}
 
     // Award points (1 point per 100 spent)

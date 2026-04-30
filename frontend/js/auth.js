@@ -9,6 +9,21 @@ function saveUsers(u){ localStorage.setItem('ssc_users', JSON.stringify(u)); }
 function setSession(user){ localStorage.setItem('ssc_session', JSON.stringify({ user, ts: Date.now() })); }
 function clearSession(){ localStorage.removeItem('ssc_session'); }
 
+// GLOBAL ACTIVITY TRACKER
+function logActivity(type, msg){
+  try {
+    const session = getSession();
+    const log = JSON.parse(localStorage.getItem('ssc_global_activity') || '[]');
+    log.unshift({
+      ts: new Date().toISOString(),
+      user: session ? session.user.email : 'Guest',
+      type: type,
+      msg: msg
+    });
+    localStorage.setItem('ssc_global_activity', JSON.stringify(log.slice(0, 1000)));
+  } catch(e){}
+}
+
 // HELPERS FOR MULTI-USER DATA ISOLATION
 function ukey(key){
   const session = getSession();
@@ -26,6 +41,7 @@ async function signIn(email, password){
   const user = users.find(u => u.email === email && u.password === password);
   if(!user) throw new Error('Invalid credentials');
   setSession(user);
+  logActivity('LOGIN', `User ${user.email} signed in`);
   return user;
 }
 
@@ -36,6 +52,7 @@ async function signUp(name, email, password, phone){
   users.push(user);
   saveUsers(users);
   setSession(user);
+  logActivity('SIGNUP', `New user registered: ${email}`);
   return user;
 }
 

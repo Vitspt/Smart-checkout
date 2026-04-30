@@ -41,6 +41,8 @@
     </div>
     
     <div class="nav-item active" onclick="showTab('dashboard', this)"><span class="material-icons">dashboard</span> Dashboard</div>
+    <div class="nav-item" onclick="showTab('users', this)"><span class="material-icons">people</span> User Manager</div>
+    <div class="nav-item" onclick="showTab('activity', this)"><span class="material-icons">history</span> Activity Log</div>
     <div class="nav-item" onclick="showTab('inventory', this)"><span class="material-icons">inventory_2</span> Inventory</div>
     <div class="nav-item" onclick="showTab('verify', this)"><span class="material-icons">qr_code_scanner</span> QR Verify</div>
     <div class="nav-item" onclick="showTab('sales', this)"><span class="material-icons">receipt_long</span> Sales History</div>
@@ -87,7 +89,29 @@
       </div>
     </div>
 
-    <!-- INVENTORY -->
+    <!-- ACTIVITY -->
+    <div id="tab-activity" class="tab-content" style="display:none">
+      <div class="header"><h1 style="font-size:32px;font-weight:900">System Activity</h1></div>
+      <div class="card-dash">
+        <table id="activity-table">
+          <thead>
+            <tr><th>Time</th><th>User</th><th>Action</th><th>Message</th></tr>
+          </thead>
+          <tbody id="activity-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="tab-users" class="tab-content" style="display:none">
+      <div class="header"><h1 style="font-size:32px;font-weight:900">User Management</h1></div>
+      <div class="card-dash">
+        <table>
+          <thead>
+            <tr><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th></tr>
+          </thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+      </div>
+    </div>
     <div id="tab-inventory" class="tab-content" style="display:none">
       <div class="header">
         <h1 style="font-size:32px;font-weight:900">Inventory Control</h1>
@@ -155,6 +179,28 @@
       // Tables
       renderTable(history.slice(-8).reverse(), 'sales-tbody-dash');
       renderTable(history.slice().reverse(), 'sales-tbody');
+
+      // Users
+      const users = JSON.parse(localStorage.getItem('ssc_users') || '[]');
+      document.getElementById('users-tbody').innerHTML = users.map(u => `
+        <tr>
+          <td style="font-weight:700">${u.name}</td>
+          <td style="color:rgba(255,255,255,0.5)">${u.email}</td>
+          <td>${u.phone || 'N/A'}</td>
+          <td style="font-size:12px">${u.joined || 'Unknown'}</td>
+        </tr>
+      `).join('');
+
+      // Activity Log
+      const activity = JSON.parse(localStorage.getItem('ssc_global_activity') || '[]');
+      document.getElementById('activity-tbody').innerHTML = activity.map(a => `
+        <tr>
+          <td style="font-size:12px;color:rgba(255,255,255,0.4)">${new Date(a.ts).toLocaleTimeString()}</td>
+          <td style="font-weight:700">${a.user}</td>
+          <td><span style="background:rgba(255,255,255,0.05);padding:4px 8px;border-radius:6px;font-size:11px;font-weight:800">${a.type}</span></td>
+          <td style="color:rgba(255,255,255,0.6)">${a.msg}</td>
+        </tr>
+      `).join('');
 
       // Stock
       document.getElementById('stock-list').innerHTML = prods.map(p => `
