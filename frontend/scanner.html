@@ -305,21 +305,37 @@ async function toggleCamera(){
   const btn = document.getElementById('scanBtn');
   if(!cameraOn){
     try{
-      scanner = new Html5Qrcode('reader');
+      const formats = [
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8,
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.UPC_A,
+        Html5QrcodeSupportedFormats.UPC_E,
+        Html5QrcodeSupportedFormats.ITF
+      ];
+      
+      scanner = new Html5Qrcode('reader', { formatsToSupport: formats });
+      
       const config = {
-        fps: 10,
+        fps: 20,
         qrbox: (viewWidth, viewHeight) => {
-          let size = Math.min(viewWidth, viewHeight) * 0.75;
-          return { width: size, height: size };
+          // For 1D barcodes, a wider rectangle is often better than a square
+          let width = Math.min(viewWidth, viewHeight) * 0.8;
+          let height = width * 0.6;
+          return { width: width, height: height };
         },
-        aspectRatio: 1.0
+        aspectRatio: 1.0,
+        disableFlip: false
       };
+      
       try {
         await scanner.start({facingMode:'environment'}, config, code => {
           if(code) handleScanned(code);
         }, ()=>{});
       } catch(err) {
-        // Fallback to any available camera (like front camera on desktop)
+        // Fallback to any available camera
         await scanner.start({facingMode:'user'}, config, code => {
           if(code) handleScanned(code);
         }, ()=>{});
