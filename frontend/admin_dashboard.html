@@ -384,8 +384,12 @@
         </tr>`).join('');
     }
 
-    function openCouponModal() { document.getElementById('couponModal').style.display = 'flex'; }
+    function openModal() { document.getElementById('prodModal').style.display = 'flex'; history.pushState({modal: 'product'}, ''); }
+    function closeModal() { document.getElementById('prodModal').style.display = 'none'; }
+    function openCouponModal() { document.getElementById('couponModal').style.display = 'flex'; history.pushState({modal: 'coupon'}, ''); }
     function closeCouponModal() { document.getElementById('couponModal').style.display = 'none'; }
+    function openIncidentModal() { document.getElementById('incidentModal').style.display='flex'; history.pushState({modal: 'incident'}, ''); }
+    function closeIncidentModal() { document.getElementById('incidentModal').style.display='none'; }
 
     function saveCoupon() {
       const code = document.getElementById('c-code').value.trim().toUpperCase();
@@ -463,8 +467,14 @@
     function toggleSidebar() { 
       const sb = document.getElementById('sidebar');
       const ov = document.getElementById('overlay');
-      if(sb) sb.classList.toggle('open'); 
-      if(ov) ov.classList.toggle('show'); 
+      if(sb && sb.classList.contains('open')) {
+        sb.classList.remove('open');
+        if(ov) ov.classList.remove('show');
+      } else {
+        if(sb) sb.classList.add('open');
+        if(ov) ov.classList.add('show');
+        history.pushState({nav: 'sidebar'}, '');
+      }
     }
     function showTab(t, el) { 
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active')); 
@@ -483,8 +493,29 @@
       }
     }
 
-    // Protection against accidental back button
+    // Intelligent Back Button
     window.addEventListener('popstate', function(event) {
+      // 1. Close modals if open
+      const modals = ['prodModal', 'couponModal', 'incidentModal'];
+      let modalClosed = false;
+      modals.forEach(m => {
+        const el = document.getElementById(m);
+        if(el && el.style.display === 'flex') {
+          el.style.display = 'none';
+          modalClosed = true;
+        }
+      });
+      if(modalClosed) return;
+
+      // 2. Close sidebar if open
+      const sb = document.getElementById('sidebar');
+      if(sb && sb.classList.contains('open')) {
+        sb.classList.remove('open');
+        document.getElementById('overlay').classList.remove('show');
+        return;
+      }
+
+      // 3. Ask for logout if at root
       if(localStorage.getItem('ssc_admin_token')) {
         if(!confirm('Do you want to logout?')) {
           history.pushState(null, null, window.location.pathname);
