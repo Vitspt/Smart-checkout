@@ -111,7 +111,7 @@ function renderCart(){
       <div style="font-size:14px;font-weight:800;margin-bottom:8px;color:#fff" data-i18n="price_breakdown">${window.t('price_breakdown')}</div>
       <div class="price-row" style="display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-bottom:8px"><span data-i18n="mrp_total">${window.t('mrp_total')}</span><span>${formatPrice(mrpTotal)}</span></div>
       ${disc>0?`<div class="price-row" style="display:flex;justify-content:space-between;font-size:14px;color:#10b981;margin-bottom:8px"><span data-i18n="discount">${window.t('discount')}</span><span>− ${formatPrice(disc)}</span></div>`:''}
-      <div class="price-row" style="display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-bottom:8px"><span data-i18n="gst">${window.t('gst')}</span><span>+ ${formatPrice(tax)}</span></div>
+      ${tax>0?`<div class="price-row" style="display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-bottom:8px"><span data-i18n="gst">${window.t('gst')}</span><span>+ ${formatPrice(tax)}</span></div>`:''}
       <div class="price-row total" style="display:flex;justify-content:space-between;font-size:18px;font-weight:900;color:#fff;margin-top:12px;border-top:1px solid var(--border);padding-top:12px"><span data-i18n="total_amount">${window.t('total_amount')}</span><span style="color:var(--primary)">${formatPrice(total)}</span></div>
       ${disc>0?`<div style="background:rgba(16,185,129,0.1);color:#10b981;font-size:12px;font-weight:700;padding:8px 10px;border-radius:8px;margin-top:8px">🎉 ${window.t('save_msg')} ${formatPrice(disc)} on this order!</div>`:''}
     </div>
@@ -163,12 +163,23 @@ function doRemove(id){
   renderCart();
 }
 
-function applyCoupon(){
-  const code=document.getElementById('coupon-inp').value.trim().toUpperCase();
-  const msg=document.getElementById('coupon-msg');
-  if(code==='SMART10'){ msg.style.color='var(--green)'; msg.textContent='✅ Coupon applied! 10% discount added.'; }
-  else if(code==='FIRST'){ msg.style.color='var(--green)'; msg.textContent='✅ First order discount applied!'; }
-  else { msg.style.color='var(--red)'; msg.textContent='❌ Invalid coupon code.'; }
+function applyCoupon() {
+  const code = document.getElementById('coupon-inp').value.trim().toUpperCase();
+  const msg = document.getElementById('coupon-msg');
+  if(!code) return;
+
+  const coupons = JSON.parse(localStorage.getItem('ssc_coupons') || '[]');
+  const c = coupons.find(x => x.code === code);
+  
+  if(c) {
+    localStorage.setItem(ukey('active_coupon'), JSON.stringify(c));
+    msg.style.color = '#10b981';
+    msg.textContent = `Coupon applied! ${c.discount}% Discount added.`;
+    renderCart();
+  } else {
+    msg.style.color = '#ef4444';
+    msg.textContent = 'Invalid coupon code';
+  }
 }
 
 renderCart();

@@ -39,6 +39,7 @@
     <div class="nav-item" onclick="showTab('inventory', this)"><span class="material-icons">inventory_2</span> Inventory</div>
     <div class="nav-item" onclick="showTab('users', this)"><span class="material-icons">people</span> User Manager</div>
     <div class="nav-item" onclick="showTab('activity', this)"><span class="material-icons">history</span> Activity Log</div>
+    <div class="nav-item" onclick="showTab('coupons', this)"><span class="material-icons">confirmation_number</span> Coupons</div>
     <div class="nav-item" onclick="showTab('verify', this)"><span class="material-icons">qr_code_scanner</span> QR Verify</div>
     <div style="position:absolute;bottom:32px;left:20px;right:20px">
       <div class="nav-item" onclick="location.href='admin_login.html'" style="color:#ef4444;background:rgba(239,68,68,0.05)"><span class="material-icons">logout</span> Logout</div>
@@ -81,6 +82,14 @@
         <div class="card-dash"><table><thead><tr><th>Time</th><th>User</th><th>Action</th></tr></thead><tbody id="activity-tbody"></tbody></table></div>
       </div>
 
+      <div id="tab-coupons" class="tab-content" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;gap:16px">
+          <h1 style="font-size:28px;margin:0">Coupons</h1>
+          <button class="btn btn-primary" style="width:auto;padding:12px 24px" onclick="openCouponModal()">+ Create</button>
+        </div>
+        <div class="card-dash"><table><thead><tr><th>Code</th><th>Discount (%)</th><th>Action</th></tr></thead><tbody id="coupons-tbody"></tbody></table></div>
+      </div>
+
       <div id="tab-verify" class="tab-content" style="display:none">
         <h1 style="font-size:28px;margin-bottom:24px">Verify</h1>
         <div class="card-dash" style="text-align:center">
@@ -92,7 +101,21 @@
     </div>
   </div>
 
-  <div class="modal" id="prodModal">
+    <div class="modal" id="prodModal">
+      <!-- ... existing product modal content ... -->
+    </div>
+
+    <div class="modal" id="couponModal">
+      <div class="modal-card">
+        <h2 style="margin-top:0">Create Coupon</h2>
+        <div class="form-group"><label class="form-label">Code</label><input class="form-input" id="c-code" placeholder="e.g. WELCOME10" /></div>
+        <div class="form-group"><label class="form-label">Discount (%)</label><input class="form-input" type="number" id="c-disc" placeholder="e.g. 10" /></div>
+        <div style="display:flex;gap:12px;margin-top:24px">
+          <button class="btn btn-primary" onclick="saveCoupon()">Save Coupon</button>
+          <button class="btn" onclick="closeCouponModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
     <div class="modal-card">
       <h2 style="margin-top:0">Add Product</h2>
       <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="p-name" /></div>
@@ -228,6 +251,42 @@
       document.getElementById('activity-tbody').innerHTML = activity.slice(0, 30).map(a => `<tr><td>${new Date(a.ts).toLocaleTimeString()}</td><td>${a.user}</td><td>${a.type}</td></tr>`).join('');
       
       renderInventory();
+      renderCoupons();
+    }
+
+    function renderCoupons() {
+      const coupons = JSON.parse(localStorage.getItem('ssc_coupons') || '[]');
+      document.getElementById('coupons-tbody').innerHTML = coupons.map(c => `
+        <tr>
+          <td><span style="font-family:monospace;font-weight:700;background:rgba(255,255,255,0.05);padding:4px 8px;border-radius:6px">${c.code}</span></td>
+          <td>${c.discount}% OFF</td>
+          <td><button class="btn-sm" style="background:#ef4444" onclick="deleteCoupon('${c.code}')">Delete</button></td>
+        </tr>`).join('');
+    }
+
+    function openCouponModal() { document.getElementById('couponModal').style.display = 'flex'; }
+    function closeCouponModal() { document.getElementById('couponModal').style.display = 'none'; }
+
+    function saveCoupon() {
+      const code = document.getElementById('c-code').value.trim().toUpperCase();
+      const disc = parseInt(document.getElementById('c-disc').value);
+      if(!code || !disc) return alert("Please enter code and discount");
+      
+      const coupons = JSON.parse(localStorage.getItem('ssc_coupons') || '[]');
+      coupons.push({ code, discount: disc });
+      localStorage.setItem('ssc_coupons', JSON.stringify(coupons));
+      
+      logActivity('COUPON_ADD', `Created coupon ${code} (${disc}%)`);
+      closeCouponModal();
+      renderCoupons();
+    }
+
+    function deleteCoupon(code) {
+      if(!confirm(`Delete coupon ${code}?`)) return;
+      let coupons = JSON.parse(localStorage.getItem('ssc_coupons') || '[]');
+      coupons = coupons.filter(c => c.code !== code);
+      localStorage.setItem('ssc_coupons', JSON.stringify(coupons));
+      renderCoupons();
     }
 
     async function renderInventory() {

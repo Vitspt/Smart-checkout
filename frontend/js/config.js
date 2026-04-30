@@ -3,7 +3,7 @@
 // ============================================
 const STORE_NAME = 'SmartCheckout';
 const STORE_TAGLINE = 'In-Store Smart Checkout';
-const TAX_RATE = 0.05;        // 5% GST
+const TAX_RATE = 0;        // 0% GST (Removed)
 const PLATFORM_FEE = 0;       // no platform fee
 
 const CATEGORIES = ['All','Grocery','Snacks','Drinks','Personal Care'];

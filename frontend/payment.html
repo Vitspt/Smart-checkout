@@ -84,7 +84,7 @@ async function init(){
       <div style="font-size:14px;font-weight:800;margin-bottom:8px">Price Details</div>
       <div class="price-row"><span>Subtotal (MRP)</span><span>${formatPrice(mrp)}</span></div>
       ${disc>0?`<div class="price-row green"><span>Discount</span><span>− ${formatPrice(disc)}</span></div>`:''}
-      <div class="price-row"><span>GST (5%)</span><span>${formatPrice(tax)}</span></div>
+      ${tax>0?`<div class="price-row"><span>GST (5%)</span><span>${formatPrice(tax)}</span></div>`:''}
       <div class="price-row total"><span>Amount Payable</span><span style="color:var(--green)">${formatPrice(total)}</span></div>
     </div>
 
