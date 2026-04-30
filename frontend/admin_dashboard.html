@@ -8,13 +8,26 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
   <style>
     body { background: #0b0f1a; color: #fff; margin: 0; padding: 0; display: flex; }
-    .sidebar { width: 280px; height: 100vh; background: rgba(255, 255, 255, 0.02); border-right: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); position: fixed; padding: 32px 20px; box-sizing: border-box; }
-    .main { margin-left: 280px; flex: 1; padding: 40px; }
+    .sidebar { width: 280px; height: 100vh; background: rgba(255, 255, 255, 0.02); border-right: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); position: fixed; padding: 32px 20px; box-sizing: border-box; z-index: 100; transition: 0.3s; }
+    .main { margin-left: 280px; flex: 1; padding: 40px; min-height: 100vh; }
+    .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; height: 72px; background: rgba(11, 15, 26, 0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 1000; display: none; justify-content: space-around; align-items: center; }
+    .m-ni { display: flex; flex-direction: column; align-items: center; color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 700; gap: 4px; text-decoration: none; }
+    .m-ni.active { color: #ef4d23; }
     
     .nav-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px; cursor: pointer; color: rgba(255,255,255,0.5); font-weight: 700; font-size: 14px; margin-bottom: 8px; transition: 0.2s; }
     .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
     .nav-item.active { background: #ef4d23; color: #fff; box-shadow: 0 8px 24px rgba(239, 77, 35, 0.3); }
     .nav-item .material-icons { font-size: 22px; }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 24px 20px 100px; }
+      .mobile-nav { display: flex; }
+      .header { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .grid { grid-template-columns: 1fr; }
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .stat-val { font-size: 28px; }
+    }
 
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; margin-bottom: 40px; }
@@ -80,12 +93,14 @@
 
       <div class="card-dash">
         <h3 style="margin-top:0;font-size:20px">Recent Sales</h3>
-        <table>
-          <thead>
-            <tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Amount</th><th>Method</th></tr>
-          </thead>
-          <tbody id="sales-tbody-dash"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Amount</th><th>Method</th></tr>
+            </thead>
+            <tbody id="sales-tbody-dash"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -93,23 +108,27 @@
     <div id="tab-activity" class="tab-content" style="display:none">
       <div class="header"><h1 style="font-size:32px;font-weight:900">System Activity</h1></div>
       <div class="card-dash">
-        <table id="activity-table">
-          <thead>
-            <tr><th>Time</th><th>User</th><th>Action</th><th>Message</th></tr>
-          </thead>
-          <tbody id="activity-tbody"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table id="activity-table">
+            <thead>
+              <tr><th>Time</th><th>User</th><th>Action</th><th>Message</th></tr>
+            </thead>
+            <tbody id="activity-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
     <div id="tab-users" class="tab-content" style="display:none">
       <div class="header"><h1 style="font-size:32px;font-weight:900">User Management</h1></div>
       <div class="card-dash">
-        <table>
-          <thead>
-            <tr><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th></tr>
-          </thead>
-          <tbody id="users-tbody"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th></tr>
+            </thead>
+            <tbody id="users-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
     <div id="tab-inventory" class="tab-content" style="display:none">
@@ -143,19 +162,28 @@
       </div>
     </div>
 
-    <!-- SALES HISTORY -->
     <div id="tab-sales" class="tab-content" style="display:none">
       <div class="header"><h1 style="font-size:32px;font-weight:900">Transaction Logs</h1></div>
       <div class="card-dash">
-        <table>
-          <thead>
-            <tr><th>Date</th><th>Order ID</th><th>Customer</th><th>Items</th><th>Total Amount</th><th>Method</th></tr>
-          </thead>
-          <tbody id="sales-tbody"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Date</th><th>Order ID</th><th>Customer</th><th>Items</th><th>Total Amount</th><th>Method</th></tr>
+            </thead>
+            <tbody id="sales-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
+
+  <nav class="mobile-nav">
+    <a href="#" class="m-ni active" onclick="showTab('dashboard', this)"><span class="material-icons">dashboard</span>Dash</a>
+    <a href="#" class="m-ni" onclick="showTab('inventory', this)"><span class="material-icons">inventory_2</span>Stock</a>
+    <a href="#" class="m-ni" onclick="showTab('verify', this)"><span class="material-icons">qr_code_scanner</span>Verify</a>
+    <a href="#" class="m-ni" onclick="showTab('users', this)"><span class="material-icons">people</span>Users</a>
+    <a href="admin_login.html" class="m-ni" style="color:#ef4444"><span class="material-icons">logout</span>Exit</a>
+  </nav>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="js/products.js"></script>
@@ -232,10 +260,16 @@
     }
 
     function showTab(tabId, el) {
-      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.nav-item, .m-ni').forEach(b => b.classList.remove('active'));
       el.classList.add('active');
+      
+      // Also sync mobile nav if desktop nav clicked and vice versa
+      const targetId = el.textContent.trim().toLowerCase();
+      // ... (simplification for now)
+
       document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
       document.getElementById('tab-' + tabId).style.display = 'block';
+      window.scrollTo(0,0);
     }
 
     function startVerification() {
