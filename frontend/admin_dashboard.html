@@ -363,6 +363,7 @@
         } else if (role === 'manager') {
           const el = document.getElementById('nav-verify');
           if(el) el.style.display = 'none';
+          showTab('dashboard', document.getElementById('nav-dashboard'));
         }
 
         const sales = JSON.parse(localStorage.getItem('ssc_all_sales') || '[]');
@@ -610,12 +611,28 @@
     }
 
     function showTab(id, el) {
-      document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-      document.getElementById('tab-' + id).style.display = 'block';
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      el.classList.add('active');
-      if(window.innerWidth < 900) toggleSidebar();
-      if(id === 'visualize') setTimeout(initCharts, 100);
+      try {
+        const targetTab = document.getElementById('tab-' + id);
+        if(!targetTab) return;
+
+        document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+        targetTab.style.display = 'block';
+        
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        
+        // Find element if not passed
+        const navEl = el || document.getElementById('nav-' + id);
+        if(navEl) navEl.classList.add('active');
+        
+        if(window.innerWidth < 900) {
+          const sb = document.getElementById('sidebar');
+          if(sb && sb.classList.contains('open')) toggleSidebar();
+        }
+        
+        if(id === 'visualize') setTimeout(initCharts, 100);
+      } catch(err) {
+        console.error("Tab Switch Error:", err);
+      }
     }
 
     function logoutConfirm() {
