@@ -331,9 +331,8 @@
         renderRecentScans();
         logActivity('QR_VERIFY', `Verified Order #${officialOrder.id.slice(-8)} (₹${officialOrder.total})`);
         
-      } catch (e) {
-        st.innerHTML = '<div style="color:#eab308;font-size:24px;font-weight:900">⚠️ INVALID QR CODE</div>';
       }
+    }
 
     function openGate() {
       document.getElementById('v-status').innerHTML = `
