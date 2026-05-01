@@ -442,7 +442,15 @@
       renderCoupons();
     }
 
-    function getAllProducts() { return JSON.parse(localStorage.getItem('ssc_products_all') || '[]'); }
+    function getAllProducts() { 
+      const local = localStorage.getItem('ssc_products');
+      if(local) {
+        const parsed = JSON.parse(local);
+        if(parsed && parsed.length > 0) return parsed;
+      }
+      // If empty, return default products
+      return (typeof DEFAULT_PRODUCTS !== 'undefined') ? DEFAULT_PRODUCTS : [];
+    }
 
     function renderInventory() {
       const list = document.getElementById('stock-list');
@@ -501,12 +509,12 @@
       const products = getAllProducts();
       if(editingProductId) {
         const idx = products.findIndex(x => x.id === editingProductId);
-        if(idx >= 0) products[idx] = { ...products[idx], name, price, stock, category: cat, emoji, img };
+        if(idx >= 0) products[idx] = { ...products[idx], name, price, mrp: price, stock, category: cat, emoji, img };
       } else {
-        products.push({ id: 'P'+Date.now(), name, price, stock, category: cat, emoji, img });
+        products.push({ id: 'P'+Date.now(), barcode: 'P'+Date.now(), name, price, mrp: price, stock, category: cat, emoji, img });
       }
       
-      localStorage.setItem('ssc_products_all', JSON.stringify(products));
+      localStorage.setItem('ssc_products', JSON.stringify(products));
       renderInventory();
       closeModal();
       logActivity('ADMIN_STOCK', `${editingProductId ? 'Edited' : 'Added'} product: ${name}`);
@@ -515,13 +523,13 @@
     function adjustStock(id, d) {
         const prods = getAllProducts();
         const p = prods.find(x => x.id === id);
-        if(p) { p.stock = Math.max(0, p.stock + d); localStorage.setItem('ssc_products_all', JSON.stringify(prods)); renderInventory(); }
+        if(p) { p.stock = Math.max(0, (p.stock||0) + d); localStorage.setItem('ssc_products', JSON.stringify(prods)); renderInventory(); }
     }
     
     function deleteProduct(id) {
         if(confirm('Delete?')) {
             const prods = getAllProducts().filter(p => p.id !== id);
-            localStorage.setItem('ssc_products_all', JSON.stringify(prods));
+            localStorage.setItem('ssc_products', JSON.stringify(prods));
             renderInventory();
         }
     }
