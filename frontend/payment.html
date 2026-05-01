@@ -222,6 +222,12 @@ function finishPayment(){
   };
   savePurchaseHistory(order);
   localStorage.setItem('ssc_last_order', JSON.stringify(order));
+
+  // GLOBAL STORAGE FOR ADMIN/SECURITY VERIFICATION
+  const allSales = JSON.parse(localStorage.getItem('ssc_all_sales') || '[]');
+  allSales.push(order);
+  localStorage.setItem('ssc_all_sales', JSON.stringify(allSales));
+
   clearCart();
   document.getElementById('success-overlay').style.display='flex';
   setTimeout(()=>location.href='qrcode.html', 2000);

@@ -283,40 +283,57 @@
       
       try {
         const qr = JSON.parse(data);
-        const isExpired = qr.exp < Date.now();
+        const orderId = qr.id;
         
-        if (isExpired) { 
-          st.innerHTML = '<div style="color:#ef4444;font-size:24px;font-weight:900;margin-bottom:16px">❌ EXPIRED RECEIPT</div>'; 
-        } else {
-          const isHighValue = qr.total > 5000 || (qr.items || []).some(i => i.price > 1000);
-          
-          st.innerHTML = `
-            <div style="color:#22c55e;font-size:24px;font-weight:900;margin-bottom:8px">✅ VERIFIED RECEIPT</div>
-            ${isHighValue ? `<div style="background:#ef4444;color:#fff;font-size:11px;font-weight:900;padding:4px 10px;border-radius:6px;display:inline-block;margin-bottom:16px;animation:pulse 1s infinite">🚨 HIGH VALUE ALERT: MANUAL CHECK</div>` : ''}
-            
-            <div class="card-dash" style="text-align:left; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); margin-bottom:16px">
-              <div style="font-size:12px;opacity:0.5;margin-bottom:10px">Order #${qr.id.slice(-8)}</div>
-              ${(qr.items || []).map(i => `<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>${i.qty}x ${i.name}</span><span>₹${i.price * i.qty}</span></div>`).join('')}
-              <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.1);padding-top:8px;margin-top:8px;font-weight:900"><span>TOTAL</span><span>₹${qr.total}</span></div>
-            </div>
-
-            <div style="display:flex;gap:12px">
-              <button class="btn btn-primary" style="flex:1;background:#22c55e" onclick="openGate()">OPEN GATE</button>
-              <button class="btn" style="width:auto;background:#334155;padding:0 20px" onclick="closeVerify()">Done</button>
-            </div>
-          `; 
-          
-          const scans = JSON.parse(localStorage.getItem('ssc_security_scans') || '[]');
-          scans.unshift({ id: qr.id, time: Date.now(), total: qr.total, high: isHighValue });
-          localStorage.setItem('ssc_security_scans', JSON.stringify(scans.slice(0, 15)));
-          renderRecentScans();
-          
-          logActivity('QR_VERIFY', `Verified Order #${qr.id.slice(-6)} (₹${qr.total})`);
+        // FETCH OFFICIAL DATA FROM GLOBAL STORE
+        const allSales = JSON.parse(localStorage.getItem('ssc_all_sales') || '[]');
+        const officialOrder = allSales.find(o => o.id === orderId);
+        
+        if (!officialOrder) {
+          st.innerHTML = '<div style="color:#ef4444;font-size:24px;font-weight:900;margin-bottom:16px">❌ INVALID ORDER ID</div><div style="font-size:12px;opacity:0.5">Order not found in global sales records.</div>';
+          return;
         }
-      } catch (e) { 
-        st.innerHTML = '<div style="color:#eab308;font-size:24px;font-weight:900">⚠️ INVALID QR CODE</div>'; 
+
+        const isHighValue = officialOrder.total > 5000 || officialOrder.items.some(i => i.price > 1000);
+        
+        st.innerHTML = `
+          <div style="color:#22c55e;font-size:24px;font-weight:900;margin-bottom:8px">✅ VERIFIED BILL</div>
+          ${isHighValue ? `<div style="background:#ef4444;color:#fff;font-size:11px;font-weight:900;padding:4px 10px;border-radius:6px;display:inline-block;margin-bottom:16px;animation:pulse 1s infinite">🚨 HIGH VALUE ALERT: MANUAL CHECK</div>` : ''}
+          
+          <div class="card-dash" style="text-align:left; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); margin-bottom:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="font-size:12px;opacity:0.5">Order #${officialOrder.id.slice(-8)}</div>
+              <div style="font-size:10px;font-weight:900;background:rgba(34,197,94,0.1);color:#22c55e;padding:2px 6px;border-radius:4px">${(officialOrder.method||'UPI').toUpperCase()}</div>
+            </div>
+            <div style="max-height:180px;overflow-y:auto;margin-bottom:12px">
+              ${officialOrder.items.map(i => `
+                <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+                  <span>${i.qty}x ${i.name}</span>
+                  <span>₹${i.price * i.qty}</span>
+                </div>
+              `).join('')}
+            </div>
+            <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.1);padding-top:10px;margin-top:10px;font-weight:900;font-size:16px">
+              <span>TOTAL PAID</span>
+              <span style="color:#22c55e">₹${officialOrder.total}</span>
+            </div>
+          </div>
+          
+          <div style="display:flex;gap:12px">
+            <button class="btn btn-primary" style="flex:1;background:#22c55e" onclick="openGate()">OPEN GATE</button>
+            <button class="btn" style="width:auto;background:#334155;padding:0 20px" onclick="closeVerify()">Done</button>
+          </div>
+        `;
+
+        const scans = JSON.parse(localStorage.getItem('ssc_security_scans') || '[]');
+        scans.unshift({ id: officialOrder.id, time: Date.now(), total: officialOrder.total, high: isHighValue });
+        localStorage.setItem('ssc_security_scans', JSON.stringify(scans.slice(0, 15)));
+        renderRecentScans();
+        logActivity('QR_VERIFY', `Verified Order #${officialOrder.id.slice(-8)} (₹${officialOrder.total})`);
+        
+      } catch (e) {
+        st.innerHTML = '<div style="color:#eab308;font-size:24px;font-weight:900">⚠️ INVALID QR CODE</div>';
       }
-    }
 
     function openGate() {
       document.getElementById('v-status').innerHTML = `
