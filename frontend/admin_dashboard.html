@@ -223,7 +223,12 @@
   <script>
     if (!localStorage.getItem('ssc_admin_token')) location.href = 'admin_login.html';
     
-    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
+    function toggleSidebar() { 
+      const sb = document.getElementById('sidebar');
+      const ov = document.getElementById('overlay');
+      if(sb) sb.classList.toggle('open'); 
+      if(ov) ov.classList.toggle('show'); 
+    }
     function openModal() { document.getElementById('p-modal').style.display='flex'; }
     
     let html5QrCode = null;
@@ -346,32 +351,43 @@
     function closeVerify() { document.getElementById('verify-result').style.display='none'; }
 
     async function init() {
-      const role = localStorage.getItem('ssc_admin_role') || 'manager';
-      if (role === 'security') {
-        const toHide = ['nav-dashboard', 'nav-inventory', 'nav-users', 'nav-activity', 'nav-coupons'];
-        toHide.forEach(id => {
-          const el = document.getElementById(id);
+      try {
+        const role = localStorage.getItem('ssc_admin_role') || 'manager';
+        if (role === 'security') {
+          const toHide = ['nav-dashboard', 'nav-inventory', 'nav-users', 'nav-activity', 'nav-coupons', 'nav-visualize'];
+          toHide.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.style.display = 'none';
+          });
+          showTab('verify', document.getElementById('nav-verify'));
+        } else if (role === 'manager') {
+          const el = document.getElementById('nav-verify');
           if(el) el.style.display = 'none';
-        });
-        showTab('verify', document.getElementById('nav-verify'));
-      } else if (role === 'manager') {
-        const el = document.getElementById('nav-verify');
-        if(el) el.style.display = 'none';
+        }
+
+        const sales = JSON.parse(localStorage.getItem('ssc_all_sales') || '[]');
+        const users = JSON.parse(localStorage.getItem('ssc_users') || '[]');
+        const activity = JSON.parse(localStorage.getItem('ssc_global_activity') || '[]');
+
+        const totalRev = sales.reduce((s,o)=>s+(o.total||0),0);
+        const revEl = document.getElementById('stat-rev');
+        if(revEl) revEl.textContent = '₹' + totalRev.toLocaleString();
+        
+        const userCountEl = document.getElementById('stat-users-count');
+        if(userCountEl) userCountEl.textContent = users.length;
+
+        const usersTbody = document.getElementById('users-tbody');
+        if(usersTbody) usersTbody.innerHTML = users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td><button class="btn-sm" style="background:#ef4444" onclick="deleteUser('${u.email}')">Delete</button></td></tr>`).join('');
+        
+        const activityTbody = document.getElementById('activity-tbody');
+        if(activityTbody) activityTbody.innerHTML = activity.slice(0, 30).map(a => `<tr><td>${new Date(a.ts).toLocaleTimeString()}</td><td>${a.user}</td><td>${a.type}</td></tr>`).join('');
+        
+        renderInventory();
+        renderCoupons();
+        renderRecentScans();
+      } catch(e) {
+        console.error("Dashboard Init Error:", e);
       }
-
-      const sales = JSON.parse(localStorage.getItem('ssc_admin_sales') || '[]');
-      const users = JSON.parse(localStorage.getItem('ssc_users') || '[]');
-      const activity = JSON.parse(localStorage.getItem('ssc_global_activity') || '[]');
-
-      document.getElementById('stat-rev').textContent = '₹' + sales.reduce((s,o)=>s+o.total,0);
-      document.getElementById('stat-users-count').textContent = users.length;
-
-      document.getElementById('users-tbody').innerHTML = users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td><button class="btn-sm" style="background:#ef4444" onclick="deleteUser('${u.email}')">Delete</button></td></tr>`).join('');
-      document.getElementById('activity-tbody').innerHTML = activity.slice(0, 30).map(a => `<tr><td>${new Date(a.ts).toLocaleTimeString()}</td><td>${a.user}</td><td>${a.type}</td></tr>`).join('');
-      
-      renderInventory();
-      renderCoupons();
-      renderRecentScans();
     }
 
     function renderRecentScans() {
