@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
   <style>
     body { background: #0b0f1a; color: #fff; margin: 0; padding: 0; display: flex; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+    canvas { width: 100% !important; height: 100% !important; }
     .sidebar { width: 280px; height: 100vh; background: rgba(15, 20, 35, 0.98); border-right: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); position: fixed; padding: 32px 20px; box-sizing: border-box; z-index: 2000; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     .main { margin-left: 280px; flex: 1; padding: 40px; min-height: 100vh; box-sizing: border-box; transition: margin-left 0.3s; }
     .nav-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px; cursor: pointer; color: rgba(255,255,255,0.5); font-weight: 700; font-size: 14px; margin-bottom: 8px; transition: 0.2s; text-decoration: none; }
@@ -43,6 +44,7 @@
     <div style="font-size:24px;font-weight:900;color:#ef4d23;margin-bottom:48px">🛒 CONVIX</div>
     <div class="nav-item active" id="nav-dashboard" onclick="showTab('dashboard', this)"><span class="material-icons">dashboard</span> Dashboard</div>
     <div class="nav-item" id="nav-inventory" onclick="showTab('inventory', this)"><span class="material-icons">inventory_2</span> Inventory</div>
+    <div class="nav-item" id="nav-visualize" onclick="showTab('visualize', this)"><span class="material-icons">insights</span> Visualize</div>
     <div class="nav-item" id="nav-users" onclick="showTab('users', this)"><span class="material-icons">people</span> User Manager</div>
     <div class="nav-item" id="nav-activity" onclick="showTab('activity', this)"><span class="material-icons">history</span> Activity Log</div>
     <div class="nav-item" id="nav-coupons" onclick="showTab('coupons', this)"><span class="material-icons">confirmation_number</span> Coupons</div>
@@ -98,6 +100,24 @@
           <button class="btn btn-primary" style="width:auto;padding:12px 24px" onclick="openCouponModal()">+ Create</button>
         </div>
         <div class="card-dash"><table><thead><tr><th>Code</th><th>Discount (%)</th><th>Action</th></tr></thead><tbody id="coupons-tbody"></tbody></table></div>
+      </div>
+
+      <div id="tab-visualize" class="tab-content" style="display:none">
+        <h1 style="font-size:28px;margin-bottom:24px">Analytics Visualization</h1>
+        <div class="grid">
+          <div class="card-dash" style="grid-column: span 2">
+            <div class="stat-label">Revenue Trends (Last 7 Days)</div>
+            <div style="height:320px;margin-top:20px;position:relative"><canvas id="revChart"></canvas></div>
+          </div>
+          <div class="card-dash">
+            <div class="stat-label">Inventory Distribution</div>
+            <div style="height:320px;margin-top:20px;position:relative"><canvas id="stockChart"></canvas></div>
+          </div>
+          <div class="card-dash" style="grid-column: span 3">
+            <div class="stat-label">Top Selling Products & Workflow Performance</div>
+            <div style="height:320px;margin-top:20px;position:relative"><canvas id="salesChart"></canvas></div>
+          </div>
+        </div>
       </div>
 
       <div id="tab-verify" class="tab-content" style="display:none">
@@ -158,48 +178,53 @@
     </div>
   </div>
 
-    <div class="modal" id="prodModal">
-      <div class="modal-card">
-        <h2 style="margin-top:0">Add Product</h2>
-        <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="p-name" /></div>
-        <div class="form-group"><label class="form-label">Barcode ID</label><input class="form-input" id="p-barcode" placeholder="e.g. 1001" /></div>
-        <div class="form-group"><label class="form-label">Category</label>
-          <select class="form-input" id="p-cat">
-            <option>Grocery</option><option>Snacks</option><option>Drinks</option><option>Personal Care</option><option>Produce</option>
-          </select>
+  <div class="modal" id="p-modal">
+    <div class="modal-card">
+      <h2 id="modal-title" style="margin-top:0">Product Details</h2>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <input type="text" id="p-name" class="form-input" placeholder="Product Name" style="background:rgba(255,255,255,0.02)">
+        <div style="display:flex;gap:12px">
+          <input type="number" id="p-price" class="form-input" placeholder="Price (₹)" style="background:rgba(255,255,255,0.02)">
+          <input type="number" id="p-stock" class="form-input" placeholder="Stock Qty" style="background:rgba(255,255,255,0.02)">
         </div>
-        <div class="form-group"><label class="form-label">Price (₹)</label><input class="form-input" id="p-price" type="number" /></div>
-        <div class="form-group"><label class="form-label">Image URL</label><input class="form-input" id="p-img" /></div>
-        <div class="form-group"><label class="form-label">Emoji (Fallback)</label><input class="form-input" id="p-emoji" /></div>
-        <div style="display:flex;gap:12px;margin-top:24px">
-          <button class="btn" style="background:#334155" onclick="closeModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="addProduct()">Save</button>
+        <select id="p-cat" class="form-input" style="background:rgba(255,255,255,0.02)">
+          <option value="Grocery">Grocery</option>
+          <option value="Electronics">Electronics</option>
+          <option value="Dairy">Dairy</option>
+          <option value="Beverages">Beverages</option>
+          <option value="Personal Care">Personal Care</option>
+        </select>
+        <input type="text" id="p-emoji" class="form-input" placeholder="Emoji (e.g. 🥛)" style="background:rgba(255,255,255,0.02)">
+        <input type="text" id="p-img" class="form-input" placeholder="Image URL (Optional)" style="background:rgba(255,255,255,0.02)">
+        <div style="display:flex;gap:12px;margin-top:8px">
+          <button class="btn btn-primary" onclick="saveProduct()">Save Product</button>
+          <button class="btn btn-outline" style="background:none" onclick="closeModal()">Cancel</button>
         </div>
       </div>
     </div>
+  </div>
 
-    <div class="modal" id="couponModal">
-      <div class="modal-card">
-        <h2 style="margin-top:0">Create Coupon</h2>
-        <div class="form-group"><label class="form-label">Code</label><input class="form-input" id="c-code" placeholder="e.g. WELCOME10" /></div>
-        <div class="form-group"><label class="form-label">Discount (%)</label><input class="form-input" type="number" id="c-disc" placeholder="e.g. 10" /></div>
-        <div style="display:flex;gap:12px;margin-top:24px">
-          <button class="btn" style="background:#334155" onclick="closeCouponModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="saveCoupon()">Save Coupon</button>
-        </div>
+  <div class="modal" id="couponModal">
+    <div class="modal-card">
+      <h2 style="margin-top:0">Create Coupon</h2>
+      <div class="form-group"><label class="form-label">Code</label><input class="form-input" id="c-code" placeholder="e.g. WELCOME10" /></div>
+      <div class="form-group"><label class="form-label">Discount (%)</label><input class="form-input" type="number" id="c-disc" placeholder="e.g. 10" /></div>
+      <div style="display:flex;gap:12px;margin-top:24px">
+        <button class="btn" style="background:#334155" onclick="closeCouponModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveCoupon()">Save Coupon</button>
       </div>
     </div>
   </div>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="js/products.js"></script>
-  <script src="js/auth.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     if (!localStorage.getItem('ssc_admin_token')) location.href = 'admin_login.html';
     
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
-    function openModal() { document.getElementById('prodModal').style.display='flex'; }
-    function closeModal() { document.getElementById('prodModal').style.display='none'; }
+    function openModal() { document.getElementById('p-modal').style.display='flex'; }
     
     let html5QrCode = null;
 
@@ -226,7 +251,6 @@
           },
           (errorMessage) => { /* ignore constant scanning noise */ }
         );
-        // Add a temporary stop button
         const stopBtn = document.createElement('button');
         stopBtn.id = 'temp-stop';
         stopBtn.className = 'btn';
@@ -393,12 +417,8 @@
         </tr>`).join('');
     }
 
-    function openModal() { document.getElementById('prodModal').style.display = 'flex'; history.pushState({modal: 'product'}, ''); }
-    function closeModal() { document.getElementById('prodModal').style.display = 'none'; }
-    function openCouponModal() { document.getElementById('couponModal').style.display = 'flex'; history.pushState({modal: 'coupon'}, ''); }
+    function openCouponModal() { document.getElementById('couponModal').style.display = 'flex'; }
     function closeCouponModal() { document.getElementById('couponModal').style.display = 'none'; }
-    function openIncidentModal() { document.getElementById('incidentModal').style.display='flex'; history.pushState({modal: 'incident'}, ''); }
-    function closeIncidentModal() { document.getElementById('incidentModal').style.display='none'; }
 
     function saveCoupon() {
       const code = document.getElementById('c-code').value.trim().toUpperCase();
@@ -422,76 +442,140 @@
       renderCoupons();
     }
 
-    async function renderInventory() {
-      const prods = await fetchProducts();
-      const q = document.getElementById('inv-search').value.toLowerCase();
-      const filtered = prods.filter(p => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
+    function getAllProducts() { return JSON.parse(localStorage.getItem('ssc_products_all') || '[]'); }
 
-      document.getElementById('stock-list').innerHTML = filtered.map(p => {
-        const s = p.stock || 0;
-        const cls = s < 10 ? 'low' : (s < 30 ? 'med' : 'high');
+    function renderInventory() {
+      const list = document.getElementById('stock-list');
+      const q = document.getElementById('inv-search').value.toLowerCase();
+      const products = getAllProducts();
+      list.innerHTML = products.filter(p => p.name.toLowerCase().includes(q)).map(p => {
+        const status = p.stock < 10 ? 'low' : p.stock < 30 ? 'med' : 'high';
         return `
-        <div style="display:flex;align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-          <div style="width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center;overflow:hidden">
-            ${p.img ? `<img src="${p.img}" style="width:100%;height:100%;object-fit:contain" onerror="this.parentElement.innerHTML='${p.emoji}'"/>` : p.emoji}
-          </div>
-          <div style="flex:1">
-            <div style="font-weight:700">${p.name}</div>
-            <div style="font-size:11px;opacity:0.5">${p.category} • ₹${p.price}</div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
-            <span class="stock-tag ${cls}" style="font-size:9px">Current: ${s}</span>
-            <div style="display:flex;align-items:center;gap:6px">
-              <button class="btn-sm" style="background:#334155;padding:4px 8px" onclick="updateStock('${p.id}', -1)">-</button>
-              <input type="number" value="${s}" style="width:44px;height:24px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;text-align:center;font-size:12px;border-radius:4px" onchange="editStock('${p.id}', this.value)" />
-              <button class="btn-sm" style="background:#334155;padding:4px 8px" onclick="updateStock('${p.id}', 1)">+</button>
-              <button class="btn-sm" style="background:#ef4444;margin-left:4px;padding:4px 8px" onclick="deleteProd('${p.id}')">🗑️</button>
+          <div style="display:flex;align-items:center;padding:16px;border-bottom:1px solid rgba(255,255,255,0.05);gap:16px">
+            <div style="width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;font-size:24px">
+              ${p.img ? `<img src="${p.img}" style="width:100%;height:100%;object-fit:contain"/>` : p.emoji || '🛒'}
+            </div>
+            <div style="flex:1">
+              <div style="font-weight:700">${p.name}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.4)">${p.category} • ₹${p.price}</div>
+            </div>
+            <div class="stock-tag ${status}">Current: ${p.stock}</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn-sm" style="background:#3b82f6;color:#fff" onclick="editProduct('${p.id}')"><span class="material-icons" style="font-size:14px">edit</span></button>
+              <button class="btn-sm" style="background:rgba(239,68,68,0.1);color:#ef4444" onclick="adjustStock('${p.id}', -1)">-</button>
+              <button class="btn-sm" style="background:rgba(34,197,94,0.1);color:#22c55e" onclick="adjustStock('${p.id}', 1)">+</button>
+              <button class="btn-sm" style="background:rgba(239,68,68,0.1);color:#ef4444" onclick="deleteProduct('${p.id}')"><span class="material-icons" style="font-size:14px">delete</span></button>
             </div>
           </div>
-        </div>`;
+        `;
       }).join('');
     }
 
-    async function editStock(id, val) {
-      const v = parseInt(val);
-      if(isNaN(v)) return;
-      const prods = await fetchProducts();
-      const p = prods.find(x => x.id === id);
-      if(p) p.stock = Math.max(0, v);
-      saveProducts(prods);
-      renderInventory();
+    let editingProductId = null;
+    function editProduct(id) {
+      const products = getAllProducts();
+      const p = products.find(x => x.id === id);
+      if(!p) return;
+      editingProductId = id;
+      document.getElementById('modal-title').textContent = 'Edit Product';
+      document.getElementById('p-name').value = p.name;
+      document.getElementById('p-price').value = p.price;
+      document.getElementById('p-stock').value = p.stock;
+      document.getElementById('p-cat').value = p.category;
+      document.getElementById('p-emoji').value = p.emoji || '🛒';
+      document.getElementById('p-img').value = p.img || '';
+      openModal();
     }
 
-    async function addProduct() {
-      const n = document.getElementById('p-name').value, p = parseFloat(document.getElementById('p-price').value), b = document.getElementById('p-barcode').value, c = document.getElementById('p-cat').value;
-      if(!n || isNaN(p)) return alert('Enter valid name and price');
-      const prods = await fetchProducts();
-      prods.push({ id: b || Date.now().toString(), name: n, price: p, mrp: p, category: c, img: document.getElementById('p-img').value, emoji: document.getElementById('p-emoji').value, stock: 50 });
-      saveProducts(prods); closeModal(); renderInventory();
-    }
+    function closeModal() { document.getElementById('p-modal').style.display = 'none'; editingProductId = null; }
 
-    async function updateStock(id, d) { const prods = await fetchProducts(); const p = prods.find(x => x.id === id); if(p) p.stock = Math.max(0, (p.stock||0)+d); saveProducts(prods); renderInventory(); }
-    async function deleteProd(id) { if(confirm('Delete product?')) { const prods = await fetchProducts(); saveProducts(prods.filter(p => p.id !== id)); renderInventory(); } }
-    function deleteUser(e) { if(confirm('Delete user?')) { const u = JSON.parse(localStorage.getItem('ssc_users')||'[]'); localStorage.setItem('ssc_users', JSON.stringify(u.filter(x => x.email !== e))); init(); } }
-    function toggleSidebar() { 
-      const sb = document.getElementById('sidebar');
-      const ov = document.getElementById('overlay');
-      if(sb && sb.classList.contains('open')) {
-        sb.classList.remove('open');
-        if(ov) ov.classList.remove('show');
+    function saveProduct() {
+      const name = document.getElementById('p-name').value;
+      const price = parseInt(document.getElementById('p-price').value);
+      const stock = parseInt(document.getElementById('p-stock').value);
+      const cat = document.getElementById('p-cat').value;
+      const emoji = document.getElementById('p-emoji').value;
+      const img = document.getElementById('p-img').value;
+      if(!name || isNaN(price)) return alert('Invalid data');
+
+      const products = getAllProducts();
+      if(editingProductId) {
+        const idx = products.findIndex(x => x.id === editingProductId);
+        if(idx >= 0) products[idx] = { ...products[idx], name, price, stock, category: cat, emoji, img };
       } else {
-        if(sb) sb.classList.add('open');
-        if(ov) ov.classList.add('show');
-        history.pushState({nav: 'sidebar'}, '');
+        products.push({ id: 'P'+Date.now(), name, price, stock, category: cat, emoji, img });
       }
+      
+      localStorage.setItem('ssc_products_all', JSON.stringify(products));
+      renderInventory();
+      closeModal();
+      logActivity('ADMIN_STOCK', `${editingProductId ? 'Edited' : 'Added'} product: ${name}`);
     }
-    function showTab(t, el) { 
-      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active')); 
-      el.classList.add('active'); 
-      document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none'); 
-      const target = document.getElementById('tab-' + t);
-      if(target) target.style.display = 'block'; 
-      if(window.innerWidth < 900) toggleSidebar(); 
+
+    function adjustStock(id, d) {
+        const prods = getAllProducts();
+        const p = prods.find(x => x.id === id);
+        if(p) { p.stock = Math.max(0, p.stock + d); localStorage.setItem('ssc_products_all', JSON.stringify(prods)); renderInventory(); }
+    }
+    
+    function deleteProduct(id) {
+        if(confirm('Delete?')) {
+            const prods = getAllProducts().filter(p => p.id !== id);
+            localStorage.setItem('ssc_products_all', JSON.stringify(prods));
+            renderInventory();
+        }
+    }
+
+    function deleteUser(e) { if(confirm('Delete user?')) { const u = JSON.parse(localStorage.getItem('ssc_users')||'[]'); localStorage.setItem('ssc_users', JSON.stringify(u.filter(x => x.email !== e))); init(); } }
+
+    let charts = {};
+    function initCharts() {
+      const ctxRev = document.getElementById('revChart')?.getContext('2d');
+      const ctxStock = document.getElementById('stockChart')?.getContext('2d');
+      const ctxSales = document.getElementById('salesChart')?.getContext('2d');
+      
+      if(charts.rev) charts.rev.destroy();
+      if(charts.stock) charts.stock.destroy();
+      if(charts.sales) charts.sales.destroy();
+
+      charts.rev = new Chart(ctxRev, {
+        type: 'line',
+        data: {
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          datasets: [{ label: 'Revenue', data: [12000, 19000, 15000, 25000, 22000, 30000, 45000], borderColor: '#ef4d23', tension: 0.4, fill: true, backgroundColor: 'rgba(239, 77, 35, 0.1)' }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } } } }
+      });
+
+      const products = getAllProducts();
+      const catCounts = products.reduce((acc, p) => { acc[p.category] = (acc[p.category] || 0) + p.stock; return acc; }, {});
+
+      charts.stock = new Chart(ctxStock, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(catCounts),
+          datasets: [{ data: Object.values(catCounts), backgroundColor: ['#ef4d23', '#3b82f6', '#22c55e', '#eab308', '#a855f7'] }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#fff', padding: 20 } } } }
+      });
+
+      charts.sales = new Chart(ctxSales, {
+        type: 'bar',
+        data: {
+          labels: products.slice(0, 6).map(p => p.name),
+          datasets: [{ label: 'Sales Volume', data: [45, 32, 28, 24, 19, 15], backgroundColor: '#3b82f6' }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' } } } }
+      });
+    }
+
+    function showTab(id, el) {
+      document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+      document.getElementById('tab-' + id).style.display = 'block';
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      el.classList.add('active');
+      if(window.innerWidth < 900) toggleSidebar();
+      if(id === 'visualize') setTimeout(initCharts, 100);
     }
 
     function logoutConfirm() {
