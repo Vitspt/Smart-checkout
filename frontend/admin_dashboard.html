@@ -335,7 +335,9 @@
         localStorage.setItem('ssc_security_scans', JSON.stringify(scans.slice(0, 15)));
         renderRecentScans();
         logActivity('QR_VERIFY', `Verified Order #${officialOrder.id.slice(-8)} (₹${officialOrder.total})`);
-        
+      } catch (err) {
+        st.innerHTML = '<div style="color:#ef4444;font-size:18px;font-weight:900">⚠️ SCAN ERROR</div><div style="font-size:12px;opacity:0.5;margin-top:8px">Could not process QR data.</div>';
+        console.error("QR Error:", err);
       }
     }
 
