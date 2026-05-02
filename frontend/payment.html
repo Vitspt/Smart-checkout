@@ -66,6 +66,10 @@
 
 <div id="toasts"></div>
 
+<!-- Supabase SDK & Config -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+
 <script src="js/config.js"></script>
 <script src="js/products.js"></script>
 <script src="js/auth.js"></script>
@@ -227,6 +231,20 @@ function finishPayment(){
   const allSales = JSON.parse(localStorage.getItem('ssc_all_sales') || '[]');
   allSales.push(order);
   localStorage.setItem('ssc_all_sales', JSON.stringify(allSales));
+
+  // SAVE TO SUPABASE
+  if (isSupabaseReady()) {
+    window.supabase.from('sales').insert([{
+      items: order.items,
+      total: order.total,
+      method: order.method,
+      user_email: (getSession() && getSession().user) ? getSession().user.email : 'Guest',
+      id: order.id // Optional: map your ID
+    }]).then(({ error }) => {
+      if (error) console.error('CONVIX: Supabase Order Save Error:', error.message);
+      else console.log('CONVIX: Order synced to Supabase');
+    });
+  }
 
   clearCart();
   document.getElementById('success-overlay').style.display='flex';

@@ -13,14 +13,26 @@ function clearSession(){ localStorage.removeItem('ssc_session'); }
 function logActivity(type, msg){
   try {
     const session = getSession();
+    const email = session ? session.user.email : 'Guest';
     const log = JSON.parse(localStorage.getItem('ssc_global_activity') || '[]');
     log.unshift({
       ts: new Date().toISOString(),
-      user: session ? session.user.email : 'Guest',
+      user: email,
       type: type,
       msg: msg
     });
     localStorage.setItem('ssc_global_activity', JSON.stringify(log.slice(0, 1000)));
+
+    // SYNC TO SUPABASE
+    if (typeof isSupabaseReady !== 'undefined' && isSupabaseReady()) {
+      window.supabase.from('activity_log').insert([{
+        type,
+        msg,
+        user_email: email
+      }]).then(({ error }) => {
+        if (error) console.error('CONVIX: Activity Sync Error:', error.message);
+      });
+    }
   } catch(e){}
 }
 

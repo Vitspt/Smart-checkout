@@ -231,10 +231,11 @@
   <script>
     window.onerror = function(msg, url, line, col, error) {
       console.error("GLOBAL ERROR:", msg, "at", line, ":", col);
-      // alert("Dashboard Error: " + msg); // Optional: alert for user
       return false;
     };
-    if (!localStorage.getItem('ssc_admin_token')) location.href = 'admin_login.html';
+    if (!localStorage.getItem('ssc_admin_token')) {
+      location.href = 'admin_login.html';
+    }
     
     function toggleSidebar() { 
       const sb = document.getElementById('sidebar');
