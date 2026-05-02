@@ -17,6 +17,12 @@ if (isSupabaseReady()) {
   const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   window.supabase = client;
   console.log('CONVIX: Supabase Connection Initialized');
+  
+  // RUN HEALTH CHECK
+  client.from('products').select('count', { count: 'exact', head: true }).then(({ error }) => {
+    if (error) console.error('CONVIX: Database Connection Check Failed:', error.message);
+    else console.log('CONVIX: Database Connection Success (Health Check)');
+  });
 } else {
   console.warn('CONVIX: Supabase Keys missing or using placeholders. Running in LocalStorage mode.');
 }

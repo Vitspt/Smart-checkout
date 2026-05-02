@@ -55,11 +55,20 @@ function isStrongPassword(p){ return p.length >= 6; }
 
 async function signIn(email, password){
   if (isSupabaseReady()) {
-    const { data, error } = await window.supabase.from('users').select('*').eq('email', email).eq('password', password).single();
-    if (error || !data) throw new Error('Invalid email or password');
-    setSession(data);
-    logActivity('LOGIN', `User ${data.email} signed in via Cloud`);
-    return data;
+    try {
+      const { data, error } = await window.supabase.from('users').select('*').eq('email', email).eq('password', password).single();
+      if (error) {
+        console.error('CONVIX: Supabase SignIn Error:', error);
+        throw new Error('Invalid email or password (DB)');
+      }
+      if (!data) throw new Error('Invalid email or password');
+      setSession(data);
+      logActivity('LOGIN', `User ${data.email} signed in via Cloud`);
+      return data;
+    } catch(err) {
+      console.error('CONVIX: Auth Fetch Failure:', err);
+      throw err;
+    }
   }
 
   // Fallback to local
@@ -87,14 +96,21 @@ async function signUp(name, email, password, phone){
   };
 
   if (isSupabaseReady()) {
-    const { error } = await window.supabase.from('users').insert([userData]);
-    if (error) {
-      if (error.message.includes('unique')) throw new Error('Email already registered');
-      throw new Error('Cloud registration failed: ' + error.message);
+    try {
+      console.log('CONVIX: Attempting Cloud Signup for', email);
+      const { error } = await window.supabase.from('users').insert([userData]);
+      if (error) {
+        console.error('CONVIX: Supabase Signup Error Details:', error);
+        if (error.message.includes('unique')) throw new Error('Email already registered');
+        throw new Error('Cloud registration failed: ' + error.message);
+      }
+      setSession(userData);
+      logActivity('SIGNUP', `New user registered via Cloud: ${email}`);
+      return userData;
+    } catch(err) {
+      console.error('CONVIX: Signup Fetch Failure:', err);
+      throw new Error('Network Error: Could not reach Database. Please check connection.');
     }
-    setSession(userData);
-    logActivity('SIGNUP', `New user registered via Cloud: ${email}`);
-    return userData;
   }
 
   // Fallback to local
