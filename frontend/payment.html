@@ -232,19 +232,27 @@ function finishPayment(){
   allSales.push(order);
   localStorage.setItem('ssc_all_sales', JSON.stringify(allSales));
 
-  // SAVE TO SUPABASE
-  if (isSupabaseReady()) {
-    window.supabase.from('sales').insert([{
-      items: order.items,
-      total: order.total,
-      method: order.method,
-      user_email: (getSession() && getSession().user) ? getSession().user.email : 'Guest',
-      id: order.id // Optional: map your ID
-    }]).then(({ error }) => {
-      if (error) console.error('CONVIX: Supabase Order Save Error:', error.message);
-      else console.log('CONVIX: Order synced to Supabase');
-    });
-  }
+  // SAVE TO BACKEND API
+  const token = localStorage.getItem('ssc_token');
+  fetch('/api/orders', {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ 
+      payment_method: order.method,
+      items: order.items, // Backend also calculates this, but we send it for logging
+      total: order.total
+    })
+  })
+  .then(res => res.json())
+  .then(result => {
+    if (result.success) console.log('CONVIX: Order synced to Backend');
+    else console.error('CONVIX: Backend Order Save Error:', result.message);
+  })
+  .catch(err => console.error('CONVIX: Order Sync Network Error:', err));
+
 
   clearCart();
   document.getElementById('success-overlay').style.display='flex';

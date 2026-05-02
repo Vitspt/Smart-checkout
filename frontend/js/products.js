@@ -52,20 +52,18 @@ function isSupabaseReady() {
 }
 
 async function fetchProducts() {
-  // TRY SUPABASE FIRST
-  if (isSupabaseReady()) {
-    try {
-      console.log('CONVIX: Fetching products from Supabase...');
-      const { data, error } = await supabase.from('products').select('*').order('id', { ascending: true });
-      if (error) throw error;
-      if (data && data.length > 0) {
-        localStorage.setItem('ssc_products', JSON.stringify(data));
-        return data;
-      }
-      console.warn('CONVIX: Supabase table empty, falling back to local defaults.');
-    } catch (err) {
-      console.error('CONVIX: Supabase fetch error:', err.message);
+  // TRY BACKEND API FIRST
+  try {
+    console.log('CONVIX: Fetching products from Backend API...');
+    const response = await fetch('/api/products');
+    const result = await response.json();
+    
+    if (result.success && result.data && result.data.length > 0) {
+      localStorage.setItem('ssc_products', JSON.stringify(result.data));
+      return result.data;
     }
+  } catch (err) {
+    console.error('CONVIX: Backend fetch error:', err.message);
   }
 
   // FALLBACK TO LOCAL STORAGE / DEFAULTS
@@ -86,6 +84,7 @@ async function fetchProducts() {
   localStorage.setItem('ssc_products', JSON.stringify(DEFAULT_PRODUCTS));
   return DEFAULT_PRODUCTS;
 }
+
 
 async function saveProducts(prods) {
   localStorage.setItem('ssc_products', JSON.stringify(prods));

@@ -276,78 +276,101 @@ function init(){
   });
 }
 
-function renderOrders(){
-  try{
-    const orders=JSON.parse(localStorage.getItem(ukey('orders'))||'[]');
-    const el=document.getElementById('orders-list');
-    if(!orders.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📦</div><h3>No orders yet</h3><p>Complete a checkout to see history here</p></div>'; return; }
-    el.innerHTML=orders.map(o=>`
+async function renderOrders() {
+  const el = document.getElementById('orders-list');
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Loading cloud orders...</div>';
+  
+  try {
+    const token = localStorage.getItem('ssc_token');
+    const response = await fetch('/api/orders', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const result = await response.json();
+    
+    if (!result.success || !result.data.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><h3>No orders yet</h3><p>Complete a checkout to see history here</p></div>';
+      return;
+    }
+
+    el.innerHTML = result.data.map(o => `
       <div class="order-card">
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-          <span style="font-size:12px;font-weight:800;color:var(--muted)">${o.id.slice(-8)}</span>
+          <span style="font-size:12px;font-weight:800;color:var(--muted)">${o.id.slice(0, 8)}</span>
           <span class="pill pill-green">✅ ${o.status}</span>
         </div>
-        <div style="font-size:13px;margin-bottom:4px">${(o.items||[]).map(i=>`${i.emoji||'🛒'} ${i.name}`).slice(0,2).join(', ')}${(o.items||[]).length>2?'...':''}</div>
+        <div style="font-size:13px;margin-bottom:4px">Order from ${new Date(o.time).toLocaleDateString()}</div>
         <div style="display:flex;justify-content:space-between;font-size:13px">
-          <span style="color:var(--muted)">${new Date(o.time).toLocaleDateString()}</span>
+          <span style="color:var(--muted)">Method: ${o.payment_method.toUpperCase()}</span>
           <span style="font-weight:800;color:var(--green)">₹${o.total}</span>
         </div>
       </div>`).join('');
-  }catch(e){ document.getElementById('orders-list').innerHTML='<div class="empty"><div class="empty-icon">📦</div><h3>No orders</h3></div>'; }
-}
-
-function renderScans(){
-  try{
-    const scans=JSON.parse(localStorage.getItem(ukey('scan_history'))||'[]');
-    const el=document.getElementById('scans-list');
-    if(!scans.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📷</div><h3>No scan history</h3><p>Scanned items will appear here</p></div>'; return; }
-    el.innerHTML=scans.map(s=>`
-      <div class="scan-item">
-        <div class="scan-emoji">${s.emoji}</div>
-        <div style="flex:1"><div style="font-size:13px;font-weight:700">${s.name}</div><div style="font-size:11px;color:var(--muted)">${s.time}</div></div>
-        <div style="font-size:13px;font-weight:800;color:var(--green)">₹${s.price}</div>
-      </div>`).join('');
-    document.getElementById('scans-list').innerHTML=`<div class="card">${el.innerHTML}</div>`;
-  }catch(e){}
-}
-
-function updateWalletUI(){
-  const bal = getWalletBalance();
-  const el = document.getElementById('wallet-balance');
-  if(el) el.textContent = `₹${bal.toFixed(2)}`;
-}
-function openTopup(){ document.getElementById('topupModal').style.display='flex'; }
-function closeTopup(){ document.getElementById('topupModal').style.display='none'; }
-function confirmTopup(amt){
-  closeTopup();
-  document.getElementById('gatewayModal').style.display='flex';
-  document.getElementById('gateway-processing').style.display='block';
-  document.getElementById('gateway-success').style.display='none';
-  
-  setTimeout(() => {
-    topUpWallet(amt);
-    updateWalletUI();
-    document.getElementById('gateway-processing').style.display='none';
-    document.getElementById('gateway-success').style.display='block';
-    document.getElementById('gateway-amt').textContent = `₹${amt.toFixed(2)}`;
-  }, 2500);
-}
-function closeGateway(){ document.getElementById('gatewayModal').style.display='none'; }
-
-function openPinSetup(){ document.getElementById('pinSetupModal').style.display='flex'; }
-function closePinSetup(){ document.getElementById('pinSetupModal').style.display='none'; }
-function saveNewPin(){
-  const pin = document.getElementById('new-pin').value;
-  if(pin.length !== 4) {
-    if(typeof showToast === 'function') showToast('PIN must be 4 digits', 'error');
-    return;
+  } catch (e) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><h3>Offline Mode</h3><p>Could not reach server.</p></div>';
   }
-  setWalletPin(pin);
-  closePinSetup();
-  if(typeof showToast === 'function') showToast('Wallet PIN updated successfully!', 'success');
 }
 
-init();
+async function renderScans() {
+  const el = document.getElementById('scans-list');
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Loading cloud scans...</div>';
+
+  try {
+    const token = localStorage.getItem('ssc_token');
+    const response = await fetch('/api/scans', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const result = await response.json();
+
+    if (!result.success || !result.data.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">📷</div><h3>No scan history</h3><p>Scanned items will appear here</p></div>';
+      return;
+    }
+
+    const scanItems = result.data.map(s => `
+      <div class="scan-item">
+        <div class="scan-emoji">📱</div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:700">${s.msg}</div><div style="font-size:11px;color:var(--muted)">${new Date(s.ts).toLocaleString()}</div></div>
+      </div>`).join('');
+    el.innerHTML = `<div class="card">${scanItems}</div>`;
+  } catch (e) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📷</div><h3>Offline Mode</h3></div>';
+  }
+}
+
+async function init() {
+  const sess = getSession();
+  if (!sess) { location.href = 'login.html'; return; }
+
+  // FETCH LIVE PROFILE DATA
+  try {
+    const token = localStorage.getItem('ssc_token');
+    const response = await fetch('/api/users/profile', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const result = await response.json();
+    
+    if (result.success) {
+      const u = result.data;
+      const initial = (u.name || 'U')[0].toUpperCase();
+      document.getElementById('prof-avatar').textContent = initial;
+      document.getElementById('prof-name').textContent = u.name || 'User';
+      document.getElementById('prof-email').textContent = u.email || '';
+      document.getElementById('info-name').textContent = u.name || '—';
+      document.getElementById('info-email').textContent = u.email || '—';
+      document.getElementById('info-phone').textContent = u.phone || 'Not set';
+      document.getElementById('info-joined').textContent = u.joined || 'Recently';
+      
+      document.getElementById('prof-points').textContent = `✨ ${u.stats.points} Points`;
+      const tier = u.stats.loyalty_tier;
+      document.getElementById('prof-tier').textContent = `⭐ ${tier} Member`;
+    }
+  } catch (err) {
+    console.error('CONVIX: Profile fetch error:', err);
+    // Use fallback session data if API fails
+    const u = sess.user;
+    document.getElementById('prof-name').textContent = u.name;
+    document.getElementById('prof-email').textContent = u.email;
+  }
+
 </script>
 </body>
 </html>

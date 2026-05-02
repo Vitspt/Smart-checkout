@@ -1,44 +1,61 @@
-// controllers/scansController.js
-const { v4: uuidv4 } = require('uuid');
-const { db }         = require('../config/db');
-const { PRODUCTS }   = require('../data/mockData');
+const { supabase } = require('../config/db');
 
 // POST /api/scans  { barcode }  — scan a product by barcode
-exports.scan = (req, res) => {
-  const { barcode } = req.body;
-  if (!barcode) return res.status(400).json({ success: false, message: 'barcode is required' });
+exports.scan = async (req, res, next) => {
+  try {
+    const { barcode } = req.body;
+    if (!barcode) return res.status(400).json({ success: false, message: 'barcode is required' });
 
-  const product = PRODUCTS.find(p => p.id === barcode || p.barcode === barcode);
-  if (!product) return res.status(404).json({ success: false, message: `No product found for barcode: ${barcode}` });
+    // Fetch product
+    const { data: product, error: pError } = await supabase
+      .from('products')
+      .select('*')
+      .or(`id.eq.${barcode},barcode.eq.${barcode}`)
+      .single();
 
-  const entry = {
-    id: uuidv4(),
-    user_id: req.user.id,
-    product_id: product.id,
-    product_name: product.name,
-    brand: product.brand,
-    emoji: product.emoji,
-    price: product.price,
-    scanned_at: new Date().toISOString()
-  };
-  db.scan_history.push(entry);
+    if (pError || !product) return res.status(404).json({ success: false, message: `No product found for barcode: ${barcode}` });
 
-  res.status(201).json({ success: true, product, scan_entry: entry });
+    // Log the scan
+    const { error: logError } = await supabase.from('activity_log').insert([{
+      user_email: req.user.email,
+      type: 'SCAN',
+      msg: `Scanned product: ${product.name} (${product.barcode})`
+    }]);
+
+    if (logError) console.error('CONVIX: Failed to log scan to DB:', logError);
+
+    res.status(201).json({ success: true, product });
+  } catch (e) { next(e); }
 };
 
-// GET /api/scans  — get logged-in user's scan history
-exports.getHistory = (req, res) => {
-  const limit = Math.min(Number(req.query.limit) || 50, 100);
-  const history = db.scan_history
-    .filter(s => s.user_id === req.user.id)
-    .sort((a, b) => new Date(b.scanned_at) - new Date(a.scanned_at))
-    .slice(0, limit);
-  res.json({ success: true, count: history.length, data: history });
+// GET /api/scans  — get logged-in user's scan history from logs
+exports.getHistory = async (req, res, next) => {
+  try {
+    const limit = Math.min(Number(req.query.limit) || 50, 100);
+    const { data: history, error } = await supabase
+      .from('activity_log')
+      .select('*')
+      .eq('user_email', req.user.email)
+      .eq('type', 'SCAN')
+      .order('ts', { ascending: false })
+      .limit(limit);
+    
+    if (error) throw error;
+    res.json({ success: true, count: history.length, data: history });
+  } catch (e) { next(e); }
 };
 
 // DELETE /api/scans  — clear scan history
-exports.clearHistory = (req, res) => {
-  const before = db.scan_history.length;
-  db.scan_history = db.scan_history.filter(s => s.user_id !== req.user.id);
-  res.json({ success: true, message: `Cleared ${before - db.scan_history.length} scan records` });
+exports.clearHistory = async (req, res, next) => {
+  try {
+    const { error } = await supabase
+      .from('activity_log')
+      .delete()
+      .eq('user_email', req.user.email)
+      .eq('type', 'SCAN');
+    
+    if (error) throw error;
+    res.json({ success: true, message: 'Scan history cleared' });
+  } catch (e) { next(e); }
 };
+
