@@ -3,7 +3,7 @@
 // ============================================
 
 // PASTE YOUR KEYS HERE FROM SUPABASE DASHBOARD
-const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE';
+const SUPABASE_URL = 'https://lxqcefozawxvclclzuhaj.supabase.co';
 const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
 
 // Initialize the Supabase client

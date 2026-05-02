@@ -42,9 +42,33 @@ const DEFAULT_PRODUCTS = [
   { id:'6002', barcode:'6002', name:'Parker Vector Ball Pen', brand:'Parker', category:'Stationery', price:250, mrp:250, emoji:'🖋️', stock:30, img:'img/products/Parker Vector Ball Pen.jpg', location:{ floor:'1st', section:'Writing', hall:'West Hall', tab:'W04', row:'R09' } }
 ];
 
-const DATA_VERSION = '1.0.5'; // Update this to force refresh
+const DATA_VERSION = '1.0.5'; 
+
+// Check if Supabase is configured and ready
+function isSupabaseReady() {
+  return typeof supabase !== 'undefined' && 
+         typeof SUPABASE_URL !== 'undefined' && SUPABASE_URL !== 'YOUR_SUPABASE_URL_HERE' && 
+         typeof SUPABASE_ANON_KEY !== 'undefined' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY_HERE';
+}
 
 async function fetchProducts() {
+  // TRY SUPABASE FIRST
+  if (isSupabaseReady()) {
+    try {
+      console.log('CONVIX: Fetching products from Supabase...');
+      const { data, error } = await supabase.from('products').select('*').order('id', { ascending: true });
+      if (error) throw error;
+      if (data && data.length > 0) {
+        localStorage.setItem('ssc_products', JSON.stringify(data));
+        return data;
+      }
+      console.warn('CONVIX: Supabase table empty, falling back to local defaults.');
+    } catch (err) {
+      console.error('CONVIX: Supabase fetch error:', err.message);
+    }
+  }
+
+  // FALLBACK TO LOCAL STORAGE / DEFAULTS
   try {
     const v = localStorage.getItem('ssc_products_v');
     if (v !== DATA_VERSION) {
@@ -58,12 +82,39 @@ async function fetchProducts() {
       if (parsed && parsed.length > 0) return parsed;
     }
   } catch(e) {}
+  
   localStorage.setItem('ssc_products', JSON.stringify(DEFAULT_PRODUCTS));
   return DEFAULT_PRODUCTS;
 }
 
-function saveProducts(prods) {
+async function saveProducts(prods) {
   localStorage.setItem('ssc_products', JSON.stringify(prods));
+  
+  if (isSupabaseReady()) {
+    try {
+      const { error } = await supabase.from('products').upsert(prods);
+      if (error) throw error;
+      console.log('CONVIX: Products synced to Supabase successfully');
+    } catch (err) {
+      console.error('CONVIX: Supabase save error:', err.message);
+    }
+  }
+}
+
+// Special one-time tool to move all local products to Supabase
+async function syncLocalToSupabase() {
+  if (!isSupabaseReady()) return alert('Please set your Supabase Keys in js/supabase.js first!');
+  
+  if (confirm('Move all current products to Supabase? This will overwrite data in your "products" table.')) {
+    try {
+      const prods = await fetchProducts();
+      const { error } = await supabase.from('products').upsert(prods);
+      if (error) throw error;
+      alert('Success! All products are now in your cloud database.');
+    } catch (err) {
+      alert('Sync failed: ' + err.message);
+    }
+  }
 }
 
 function getProductById(id) {
