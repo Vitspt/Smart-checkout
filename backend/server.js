@@ -18,17 +18,10 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ── Middleware ────────────────────────────────────────────────
+app.use(cors()); // Allow all origins for easier mobile/vercel testing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',');
-app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-    cb(new Error('CORS: origin not allowed'));
-  },
-  credentials: true
-}));
 
 // ── Health Check ──────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
