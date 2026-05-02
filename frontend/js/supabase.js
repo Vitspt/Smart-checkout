@@ -4,7 +4,7 @@
 
 // PASTE YOUR KEYS HERE FROM SUPABASE DASHBOARD
 const SUPABASE_URL = 'https://lxqcefozawxvclclzuhaj.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
+const SUPABASE_ANON_KEY = 'sb_publishable_xnUCNkbwqzxF1A6DYYe8pw_NS5Fcxtt';
 
 // Initialize the Supabase client
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
