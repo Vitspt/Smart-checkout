@@ -48,7 +48,21 @@ async function authGuard(){
   return true;
 }
 
+// VALIDATION HELPERS
+function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+function isValidPhone(p){ return /^[0-9]{10}$/.test(p); }
+function isStrongPassword(p){ return p.length >= 6; }
+
 async function signIn(email, password){
+  if (isSupabaseReady()) {
+    const { data, error } = await window.supabase.from('users').select('*').eq('email', email).eq('password', password).single();
+    if (error || !data) throw new Error('Invalid email or password');
+    setSession(data);
+    logActivity('LOGIN', `User ${data.email} signed in via Cloud`);
+    return data;
+  }
+
+  // Fallback to local
   const users = getUsers();
   const user = users.find(u => u.email === email && u.password === password);
   if(!user) throw new Error('Invalid credentials');
@@ -58,14 +72,39 @@ async function signIn(email, password){
 }
 
 async function signUp(name, email, password, phone){
+  // 1. VALIDATIONS
+  if(!name || name.length < 2) throw new Error('Please enter a valid full name');
+  if(!isValidEmail(email)) throw new Error('Please enter a valid email address');
+  if(!isValidPhone(phone)) throw new Error('Please enter a 10-digit phone number');
+  if(!isStrongPassword(password)) throw new Error('Password must be at least 6 characters long');
+
+  const userData = { 
+    name, 
+    email, 
+    password, 
+    phone, 
+    joined: new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'}) 
+  };
+
+  if (isSupabaseReady()) {
+    const { error } = await window.supabase.from('users').insert([userData]);
+    if (error) {
+      if (error.message.includes('unique')) throw new Error('Email already registered');
+      throw new Error('Cloud registration failed: ' + error.message);
+    }
+    setSession(userData);
+    logActivity('SIGNUP', `New user registered via Cloud: ${email}`);
+    return userData;
+  }
+
+  // Fallback to local
   const users = getUsers();
   if(users.find(u => u.email === email)) throw new Error('Email already registered');
-  const user = { name, email, password, phone, joined: new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'}) };
-  users.push(user);
+  users.push(userData);
   saveUsers(users);
-  setSession(user);
+  setSession(userData);
   logActivity('SIGNUP', `New user registered: ${email}`);
-  return user;
+  return userData;
 }
 
 function signOut(){
