@@ -2,7 +2,7 @@
 const bcrypt = require('bcryptjs');
 const jwt    = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
-const { db } = require('../config/db');
+const { supabase } = require('../config/db');
 
 const sign = (id) => jwt.sign({ id }, process.env.JWT_SECRET || 'dev_secret', {
   expiresIn: process.env.JWT_EXPIRES_IN || '7d'
@@ -15,24 +15,27 @@ exports.register = async (req, res, next) => {
     if (!name || !email || !password)
       return res.status(400).json({ success: false, message: 'name, email and password are required' });
 
-    if (db.users.find(u => u.email === email))
+    // Check if user exists
+    const { data: existing } = await supabase.from('users').select('id').eq('email', email).single();
+    if (existing)
       return res.status(409).json({ success: false, message: 'Email already registered' });
 
+    const password_hash = await bcrypt.hash(password, 10);
     const user = {
-      id: uuidv4(),
       name,
       email,
       phone: phone || '',
-      password_hash: await bcrypt.hash(password, 10),
+      password: password_hash, // matching table column 'password'
       joined: new Date().toISOString().split('T')[0],
       points: 0,
-      role: 'user',
-      created_at: new Date().toISOString()
+      role: 'user'
     };
-    db.users.push(user);
 
-    const { password_hash, ...safe } = user;
-    res.status(201).json({ success: true, token: sign(user.id), user: safe });
+    const { data, error } = await supabase.from('users').insert([user]).select().single();
+    if (error) throw error;
+
+    const { password: _, ...safe } = data;
+    res.status(201).json({ success: true, token: sign(data.id), user: safe });
   } catch (e) { next(e); }
 };
 
@@ -43,24 +46,25 @@ exports.login = async (req, res, next) => {
     if (!email || !password)
       return res.status(400).json({ success: false, message: 'email and password are required' });
 
-    const user = db.users.find(u => u.email === email);
-    if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    const { data: user, error } = await supabase.from('users').select('*').eq('email', email).single();
+    if (error || !user) return res.status(401).json({ success: false, message: 'Invalid credentials' });
 
-    const match = await bcrypt.compare(password, user.password_hash);
+    const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ success: false, message: 'Invalid credentials' });
 
-    const { password_hash, ...safe } = user;
+    const { password: _, ...safe } = user;
     res.json({ success: true, token: sign(user.id), user: safe });
   } catch (e) { next(e); }
 };
 
 // GET /api/auth/me  (protected)
 exports.me = (req, res) => {
-  const { password_hash, ...safe } = req.user;
+  const { password, ...safe } = req.user;
   res.json({ success: true, user: safe });
 };
 
-// POST /api/auth/logout  (client discards token; nothing to invalidate server-side in JWT)
+// POST /api/auth/logout
 exports.logout = (req, res) => {
   res.json({ success: true, message: 'Logged out successfully' });
 };
+

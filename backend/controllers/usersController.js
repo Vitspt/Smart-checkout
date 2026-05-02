@@ -1,40 +1,55 @@
-// controllers/usersController.js
-const bcrypt = require('bcryptjs');
-const { db } = require('../config/db');
+const { supabase } = require('../config/db');
 
 // GET /api/users/me/profile
-exports.getProfile = (req, res) => {
-  const { password_hash, ...safe } = req.user;
-  const orderCount = db.orders.filter(o => o.user_id === req.user.id).length;
-  const scanCount  = db.scan_history.filter(s => s.user_id === req.user.id).length;
-  const tier = req.user.points > 1000 ? 'Platinum' : req.user.points > 500 ? 'Gold' : 'Silver';
-  res.json({ success: true, data: { ...safe, orderCount, scanCount, tier } });
+exports.getProfile = async (req, res, next) => {
+  try {
+    const { password, ...safe } = req.user;
+    
+    // Get counts
+    const { count: orderCount } = await supabase.from('orders').select('*', { count: 'exact', head: true }).eq('user_id', req.user.id);
+    const { count: scanCount }  = await supabase.from('activity_log').select('*', { count: 'exact', head: true }).eq('user_email', req.user.email).eq('type', 'SCAN');
+    
+    const tier = req.user.points > 1000 ? 'Platinum' : req.user.points > 500 ? 'Gold' : 'Silver';
+    res.json({ success: true, data: { ...safe, orderCount: orderCount || 0, scanCount: scanCount || 0, tier } });
+  } catch (e) { next(e); }
 };
 
 // PATCH /api/users/me  { name, phone }
-exports.updateProfile = (req, res) => {
-  const { name, phone } = req.body;
-  const user = db.users.find(u => u.id === req.user.id);
-  if (name)  user.name  = name;
-  if (phone) user.phone = phone;
-  const { password_hash, ...safe } = user;
-  res.json({ success: true, message: 'Profile updated', data: safe });
+exports.updateProfile = async (req, res, next) => {
+  try {
+    const { name, phone } = req.body;
+    const updates = {};
+    if (name) updates.name = name;
+    if (phone) updates.phone = phone;
+
+    const { data, error } = await supabase.from('users').update(updates).eq('id', req.user.id).select().single();
+    if (error) throw error;
+
+    const { password, ...safe } = data;
+    res.json({ success: true, message: 'Profile updated', data: safe });
+  } catch (e) { next(e); }
 };
 
 // PATCH /api/users/me/password  { current_password, new_password }
-exports.changePassword = async (req, res) => {
-  const { current_password, new_password } = req.body;
-  if (!current_password || !new_password)
-    return res.status(400).json({ success: false, message: 'current_password and new_password are required' });
+exports.changePassword = async (req, res, next) => {
+  try {
+    const { current_password, new_password } = req.body;
+    if (!current_password || !new_password)
+      return res.status(400).json({ success: false, message: 'current_password and new_password are required' });
 
-  const user = db.users.find(u => u.id === req.user.id);
-  const match = await bcrypt.compare(current_password, user.password_hash);
-  if (!match) return res.status(401).json({ success: false, message: 'Current password is incorrect' });
-  if (new_password.length < 6)
-    return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+    const { data: user } = await supabase.from('users').select('password').eq('id', req.user.id).single();
+    const match = await bcrypt.compare(current_password, user.password);
+    if (!match) return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+    
+    if (new_password.length < 6)
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
 
-  user.password_hash = await bcrypt.hash(new_password, 10);
-  res.json({ success: true, message: 'Password changed successfully' });
+    const new_password_hash = await bcrypt.hash(new_password, 10);
+    const { error } = await supabase.from('users').update({ password: new_password_hash }).eq('id', req.user.id);
+    if (error) throw error;
+
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (e) { next(e); }
 };
 
 // GET /api/users/me/points
@@ -44,11 +59,17 @@ exports.getPoints = (req, res) => {
 };
 
 // DELETE /api/users/me  — delete account and all data
-exports.deleteAccount = (req, res) => {
-  const uid = req.user.id;
-  db.users        = db.users.filter(u => u.id !== uid);
-  db.cart_items   = db.cart_items.filter(i => i.user_id !== uid);
-  db.orders       = db.orders.filter(o => o.user_id !== uid);
-  db.scan_history = db.scan_history.filter(s => s.user_id !== uid);
-  res.json({ success: true, message: 'Account and all data deleted' });
+exports.deleteAccount = async (req, res, next) => {
+  try {
+    const uid = req.user.id;
+    const email = req.user.email;
+
+    await supabase.from('users').delete().eq('id', uid);
+    await supabase.from('cart_items').delete().eq('user_id', uid);
+    await supabase.from('orders').delete().eq('user_id', uid);
+    await supabase.from('activity_log').delete().eq('user_email', email);
+
+    res.json({ success: true, message: 'Account and all data deleted' });
+  } catch (e) { next(e); }
 };
+
