@@ -14,8 +14,8 @@ function isSupabaseReady() {
 
 // Initialize the Supabase client if keys are present
 if (isSupabaseReady()) {
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  window.supabase = supabaseClient;
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  window.supabase = client;
   console.log('CONVIX: Supabase Connection Initialized');
 } else {
   console.warn('CONVIX: Supabase Keys missing or using placeholders. Running in LocalStorage mode.');
