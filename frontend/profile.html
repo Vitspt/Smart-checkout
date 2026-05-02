@@ -341,14 +341,29 @@ async function init() {
   const sess = getSession();
   if (!sess) { location.href = 'login.html'; return; }
 
+  const fallback = () => {
+    const u = sess.user;
+    const initial = (u.name || 'U')[0].toUpperCase();
+    document.getElementById('prof-avatar').textContent = initial;
+    document.getElementById('prof-name').textContent = u.name || 'User';
+    document.getElementById('prof-email').textContent = u.email || '';
+    document.getElementById('info-name').textContent = u.name || '—';
+    document.getElementById('info-email').textContent = u.email || '—';
+    document.getElementById('prof-points').textContent = `✨ 0 Points`;
+  };
+
   // FETCH LIVE PROFILE DATA
   try {
     const token = localStorage.getItem('ssc_token');
+    if(!token) { fallback(); return; }
+
     const response = await fetch('/api/users/profile', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
-    const result = await response.json();
     
+    if (!response.ok) throw new Error('Profile fetch failed');
+    
+    const result = await response.json();
     if (result.success) {
       const u = result.data;
       const initial = (u.name || 'U')[0].toUpperCase();
@@ -358,20 +373,30 @@ async function init() {
       document.getElementById('info-name').textContent = u.name || '—';
       document.getElementById('info-email').textContent = u.email || '—';
       document.getElementById('info-phone').textContent = u.phone || 'Not set';
-      document.getElementById('info-joined').textContent = u.joined || 'Recently';
+      document.getElementById('info-joined').textContent = u.joined ? new Date(u.joined).toLocaleDateString() : 'Recently';
       
-      document.getElementById('prof-points').textContent = `✨ ${u.stats.points} Points`;
-      const tier = u.stats.loyalty_tier;
+      document.getElementById('prof-points').textContent = `✨ ${u.stats.points || 0} Points`;
+      const tier = u.stats.loyalty_tier || 'Silver';
       document.getElementById('prof-tier').textContent = `⭐ ${tier} Member`;
+    } else {
+      fallback();
     }
   } catch (err) {
     console.error('CONVIX: Profile fetch error:', err);
-    // Use fallback session data if API fails
-    const u = sess.user;
-    document.getElementById('prof-name').textContent = u.name;
-    document.getElementById('prof-email').textContent = u.email;
+    fallback();
   }
+}
 
+function doLogout(){ 
+  if(confirm('Sign out of your account?')){ 
+    localStorage.removeItem('ssc_session');
+    localStorage.removeItem('ssc_token');
+    location.href = 'login.html';
+  } 
+}
+
+init();
 </script>
 </body>
 </html>
+
