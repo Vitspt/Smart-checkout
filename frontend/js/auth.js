@@ -1,6 +1,7 @@
 // ============================================
 // SmartCheckout — Auth System
 // ============================================
+console.log('%c CONVIX VERSION 3.0 LOADED ', 'background: #ef4d23; color: #fff; font-weight: bold;');
 const DEMO_USER = { name:'Demo User', email:'user@store.com', password:'password', phone:'9876543210', joined:'April 2025' };
 
 function getSession(){ try{ return JSON.parse(localStorage.getItem('ssc_session')); }catch(e){ return null; } }
