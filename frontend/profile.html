@@ -74,7 +74,7 @@
       <div class="info-row"><span class="label" data-i18n="profile_email">Email</span><span class="val" id="info-email">—</span></div>
       <div class="info-row"><span class="label" data-i18n="profile_phone">Phone</span><span class="val" id="info-phone">—</span></div>
       <div class="info-row"><span class="label" data-i18n="profile_joined">Member Since</span><span class="val" id="info-joined">—</span></div>
-      <div class="info-row"><span class="label" data-i18n="profile_membership">Membership</span><span class="val"><span class="pill pill-amber">⭐ Gold</span></span></div>
+      <div class="info-row"><span class="label" data-i18n="profile_membership">Membership</span><span class="val" id="info-membership">—</span></div>
     </div>
     <div class="menu-group">
       <div class="menu-section-title" data-i18n="profile_actions">Quick Actions</div>
@@ -184,17 +184,21 @@
 <script src="js/agent.js?v=2.0"></script>
 
 <script>
+console.log('CONVIX: Profile Page v3.2 Loaded');
 updateCartBadge();
 
-let activeTab='profile';
-function showTab(t){
-  activeTab=t;
-  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
-  document.getElementById('tab-'+t).classList.add('active');
-  event.target.classList.add('active');
-  if(t==='orders') renderOrders();
-  if(t==='scans') renderScans();
+let activeTab = 'profile';
+function showTab(t) {
+  activeTab = t;
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + t).classList.add('active');
+  
+  const btn = document.querySelector(`.tab-btn[onclick*="${t}"]`);
+  if(btn) btn.classList.add('active');
+  
+  if (t === 'orders') renderOrders();
+  if (t === 'scans') renderScans();
 }
 
 let notifOn = localStorage.getItem(ukey('notif')) !== 'false';
@@ -209,9 +213,10 @@ function toggleNotif() {
   updateNotifUI();
   toast(notifOn ? 'Notifications Enabled' : 'Notifications Disabled');
 }
+
 function updateNotifUI() {
   const el = document.getElementById('set-notif');
-  if(el){
+  if (el) {
     el.textContent = notifOn ? 'ON' : 'OFF';
     el.style.background = notifOn ? 'var(--green)' : 'var(--muted)';
   }
@@ -223,60 +228,84 @@ function toggleDarkMode() {
   updateDarkUI();
   toast(isDark ? 'Dark Mode Enabled' : 'Dark Mode Disabled');
 }
+
 function updateDarkUI() {
   const isDark = localStorage.getItem(ukey('dark')) === 'true';
-  const el = document.getElementById('set-dark');
-  if(el){
-    el.textContent = isDark ? 'ON' : 'OFF';
-    el.style.background = isDark ? 'var(--green)' : 'var(--muted)';
-  }
-  if(isDark) document.body.classList.add('dark');
+  if (isDark) document.body.classList.add('dark');
   else document.body.classList.remove('dark');
 }
 
-function doLogout(){ if(confirm('Sign out?')){ signOut(); } }
-
-function init(){
-  const sess=getSession();
-  if(!sess){ location.href='login.html'; return; }
-  const u=sess.user;
-  const initial=(u.name||'U')[0].toUpperCase();
-  document.getElementById('prof-avatar').textContent=initial;
-  document.getElementById('prof-name').textContent=u.name||'User';
-  document.getElementById('prof-email').textContent=u.email||'';
-  document.getElementById('info-name').textContent=u.name||'—';
-  document.getElementById('info-email').textContent=u.email||'—';
-  document.getElementById('info-phone').textContent=u.phone||'Not set';
-  document.getElementById('info-joined').textContent=u.joined||'Recently';
-  
-  const points = getPoints();
-  document.getElementById('prof-points').textContent = `✨ ${points} Points`;
-  const tier = points > 1000 ? 'Platinum' : (points > 500 ? 'Gold' : 'Silver');
-  document.getElementById('prof-tier').textContent = `⭐ ${tier} Member`;
-  
-  initSettings();
-  updateDarkUI();
-  updateWalletUI();
-  
-  // Handle Deep Linking via Hash
-  const hash = location.hash.replace('#', '');
-  if(['profile', 'orders', 'scans', 'settings'].includes(hash)) {
-    const targetBtn = document.querySelector(`.tab-btn[onclick*="${hash}"]`);
-    if(targetBtn) targetBtn.click();
-  }
-
-  // Initialize Background Grid
-  window.initShapeGrid('hero-grid', {
-    speed: 0.5,
-    squareSize: 40,
-    direction: 'diagonal',
-    borderColor: 'rgba(255,255,255,0.1)',
-    hoverFillColor: 'rgba(255,255,255,0.15)',
-    shape: 'hexagon',
-    hoverTrailAmount: 3
-  });
+// ============================================
+// WALLET FUNCTIONS
+// ============================================
+function updateWalletUI() {
+  const bal = getWalletBalance();
+  const el = document.getElementById('wallet-balance');
+  if(el) el.textContent = `₹${bal.toLocaleString('en-IN', {minimumFractionDigits:2})}`;
 }
 
+function openTopup() {
+  document.getElementById('topupModal').style.display = 'flex';
+}
+
+function closeTopup() {
+  document.getElementById('topupModal').style.display = 'none';
+}
+
+function confirmTopup(amt) {
+  const pin = prompt("Enter 4-digit Wallet PIN to authorize top-up:");
+  if (pin === null) return;
+  
+  if (verifyWalletPin(pin)) {
+    closeTopup();
+    showGateway(amt);
+  } else {
+    toast('❌ Incorrect PIN', 'error');
+  }
+}
+
+function showGateway(amt) {
+  const modal = document.getElementById('gatewayModal');
+  modal.style.display = 'flex';
+  document.getElementById('gateway-processing').style.display = 'block';
+  document.getElementById('gateway-success').style.display = 'none';
+
+  setTimeout(() => {
+    topUpWallet(amt);
+    updateWalletUI();
+    document.getElementById('gateway-processing').style.display = 'none';
+    document.getElementById('gateway-success').style.display = 'block';
+    document.getElementById('gateway-amt').textContent = `₹${amt.toLocaleString()}`;
+    toast(`₹${amt} added to wallet!`, 'success');
+  }, 2000);
+}
+
+function closeGateway() {
+  document.getElementById('gatewayModal').style.display = 'none';
+}
+
+function openPinSetup() {
+  document.getElementById('pinSetupModal').style.display = 'flex';
+}
+
+function closePinSetup() {
+  document.getElementById('pinSetupModal').style.display = 'none';
+}
+
+function saveNewPin() {
+  const pin = document.getElementById('new-pin').value;
+  if (pin.length !== 4 || isNaN(pin)) {
+    toast('Please enter a 4-digit numeric PIN', 'error');
+    return;
+  }
+  setWalletPin(pin);
+  toast('Wallet PIN updated successfully', 'success');
+  closePinSetup();
+}
+
+// ============================================
+// PROFILE & HISTORY
+// ============================================
 async function renderOrders() {
   const el = document.getElementById('orders-list');
   el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Loading cloud orders...</div>';
@@ -349,6 +378,9 @@ async function init() {
     document.getElementById('prof-email').textContent = u.email || '';
     document.getElementById('info-name').textContent = u.name || '—';
     document.getElementById('info-email').textContent = u.email || '—';
+    document.getElementById('info-phone').textContent = u.phone || u.mobile || 'Not set';
+    document.getElementById('info-joined').textContent = u.joined ? new Date(u.joined).toLocaleDateString() : 'Recently';
+    document.getElementById('info-membership').textContent = 'Silver';
     document.getElementById('prof-points').textContent = `✨ 0 Points`;
   };
 
@@ -357,7 +389,7 @@ async function init() {
     const token = localStorage.getItem('ssc_token');
     if(!token) { fallback(); return; }
 
-    const response = await fetch('/api/users/profile', {
+    const response = await fetch('/api/users/me/profile', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     
@@ -372,11 +404,18 @@ async function init() {
       document.getElementById('prof-email').textContent = u.email || '';
       document.getElementById('info-name').textContent = u.name || '—';
       document.getElementById('info-email').textContent = u.email || '—';
-      document.getElementById('info-phone').textContent = u.phone || 'Not set';
-      document.getElementById('info-joined').textContent = u.joined ? new Date(u.joined).toLocaleDateString() : 'Recently';
+      document.getElementById('info-phone').textContent = u.phone || u.mobile || 'Not set';
       
-      document.getElementById('prof-points').textContent = `✨ ${u.stats.points || 0} Points`;
-      const tier = u.stats.loyalty_tier || 'Silver';
+      let joinedDate = 'Recently';
+      if (u.joined) {
+        const d = new Date(u.joined);
+        if (!isNaN(d.getTime())) joinedDate = d.toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+      }
+      document.getElementById('info-joined').textContent = joinedDate;
+      
+      const tier = u.tier || 'Silver';
+      document.getElementById('info-membership').textContent = tier;
+      document.getElementById('prof-points').textContent = `✨ ${u.points || 0} Points`;
       document.getElementById('prof-tier').textContent = `⭐ ${tier} Member`;
     } else {
       fallback();
@@ -384,6 +423,29 @@ async function init() {
   } catch (err) {
     console.error('CONVIX: Profile fetch error:', err);
     fallback();
+  }
+
+  initSettings();
+  updateDarkUI();
+  updateWalletUI();
+  
+  // Handle Deep Linking via Hash
+  const hash = location.hash.replace('#', '');
+  if(['profile', 'orders', 'scans', 'settings'].includes(hash)) {
+    showTab(hash);
+  }
+
+  // Initialize Background Grid
+  if (window.initShapeGrid) {
+    window.initShapeGrid('hero-grid', {
+      speed: 0.5,
+      squareSize: 40,
+      direction: 'diagonal',
+      borderColor: 'rgba(255,255,255,0.1)',
+      hoverFillColor: 'rgba(255,255,255,0.15)',
+      shape: 'hexagon',
+      hoverTrailAmount: 3
+    });
   }
 }
 
@@ -399,4 +461,3 @@ init();
 </script>
 </body>
 </html>
-
