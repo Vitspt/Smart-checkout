@@ -15,14 +15,9 @@ exports.scan = async (req, res, next) => {
 
     if (pError || !product) return res.status(404).json({ success: false, message: `No product found for barcode: ${barcode}` });
 
-    // Log the scan
-    const { error: logError } = await supabase.from('activity_log').insert([{
-      user_email: req.user.email,
-      type: 'SCAN',
-      msg: `Scanned product: ${product.name} (${product.barcode})`
-    }]);
+    // Log the scan (Local only as requested by user)
+    console.log(`CONVIX: Scanned product: ${product.name}`);
 
-    if (logError) console.error('CONVIX: Failed to log scan to DB:', logError);
 
     res.status(201).json({ success: true, product });
   } catch (e) { next(e); }

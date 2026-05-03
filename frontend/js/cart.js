@@ -119,6 +119,6 @@ function payWithWallet(amt){
   localStorage.setItem(ukey('wallet_balance'), (current - amt).toFixed(2));
   return true;
 }
-function getWalletPin(){ return localStorage.getItem(ukey('wallet_pin')) || '1234'; }
+function getWalletPin(){ return localStorage.getItem(ukey('wallet_pin')) || '2019'; }
 function setWalletPin(pin){ localStorage.setItem(ukey('wallet_pin'), pin); }
 function verifyWalletPin(pin){ return pin === getWalletPin(); }
