@@ -75,20 +75,35 @@
   </div>
 
   <script>
-    function handleLogin() {
+    async function handleLogin() {
       const email = document.getElementById('adm-email').value.trim();
-      const pass = document.getElementById('adm-pass').value.trim();
+      const password = document.getElementById('adm-pass').value.trim();
 
-      if (email === 'manager@smart.com' && pass === 'manager123') {
-        localStorage.setItem('ssc_admin_token', 'ADM_' + Date.now());
-        localStorage.setItem('ssc_admin_role', 'manager');
-        location.href = 'admin_dashboard.html';
-      } else if (email === 'security@smart.com' && pass === 'sec123') {
-        localStorage.setItem('ssc_admin_token', 'SEC_' + Date.now());
-        localStorage.setItem('ssc_admin_role', 'security');
-        location.href = 'admin_dashboard.html';
-      } else {
-        alert('Invalid Admin Credentials');
+      if (!email || !password) return alert('Please fill in all fields');
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const result = await res.json();
+
+        if (result.success) {
+          const user = result.user;
+          if (user.role === 'manager' || user.role === 'security' || user.role === 'admin') {
+            localStorage.setItem('ssc_admin_token', result.token);
+            localStorage.setItem('ssc_admin_role', user.role === 'admin' ? 'manager' : user.role);
+            location.href = 'admin_dashboard.html';
+          } else {
+            alert('Access Denied: Not an administrative account.');
+          }
+        } else {
+          alert(result.message || 'Invalid Credentials');
+        }
+      } catch (err) {
+        console.error('Login Error:', err);
+        alert('Server unreachable. Are you sure the backend is running?');
       }
     }
     // Enter key support

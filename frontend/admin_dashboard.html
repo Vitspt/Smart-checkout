@@ -382,22 +382,9 @@
           showTab('dashboard', document.getElementById('nav-dashboard'));
         }
 
-        const sales = JSON.parse(localStorage.getItem('ssc_all_sales') || '[]');
-        const users = JSON.parse(localStorage.getItem('ssc_users') || '[]');
-        const activity = JSON.parse(localStorage.getItem('ssc_global_activity') || '[]');
-
-        const totalRev = sales.reduce((s,o)=>s+(o.total||0),0);
-        const revEl = document.getElementById('stat-rev');
-        if(revEl) revEl.textContent = '₹' + totalRev.toLocaleString();
-        
-        const userCountEl = document.getElementById('stat-users-count');
-        if(userCountEl) userCountEl.textContent = users.length;
-
-        const usersTbody = document.getElementById('users-tbody');
-        if(usersTbody) usersTbody.innerHTML = users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td><button class="btn-sm" style="background:#ef4444" onclick="deleteUser('${u.email}')">Delete</button></td></tr>`).join('');
-        
-        const activityTbody = document.getElementById('activity-tbody');
-        if(activityTbody) activityTbody.innerHTML = activity.slice(0, 30).map(a => `<tr><td>${new Date(a.ts).toLocaleTimeString()}</td><td>${a.user}</td><td>${a.type}</td></tr>`).join('');
+        // LOAD CLOUD DATA
+        fetchCloudDashboard();
+        fetchCloudUsers();
         
         renderInventory();
         renderCoupons();
@@ -405,6 +392,71 @@
       } catch(e) {
         console.error("Dashboard Init Error:", e);
       }
+    }
+
+    async function fetchCloudDashboard() {
+      try {
+        const token = localStorage.getItem('ssc_admin_token');
+        // Fetch users count from cloud
+        const res = await fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } });
+        const result = await res.json();
+        if (result.success) {
+          document.getElementById('stat-users-count').textContent = result.data.length;
+        }
+        
+        // Fetch revenue from orders (cloud)
+        const resOrders = await fetch('/api/orders', { headers: { 'Authorization': `Bearer ${token}` } });
+        const resultOrders = await resOrders.json();
+        if (resultOrders.success) {
+          const totalRev = resultOrders.data.reduce((s, o) => s + (o.total || 0), 0);
+          document.getElementById('stat-rev').textContent = '₹' + totalRev.toLocaleString();
+        }
+      } catch (err) { console.error('Cloud Dashboard Fetch Error:', err); }
+    }
+
+    async function fetchCloudUsers() {
+      const tbody = document.getElementById('users-tbody');
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center">Loading cloud users...</td></tr>';
+      
+      try {
+        const token = localStorage.getItem('ssc_admin_token');
+        const res = await fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } });
+        const result = await res.json();
+        
+        if (result.success) {
+          tbody.innerHTML = result.data.map(u => `
+            <tr>
+              <td>${u.name} ${u.role === 'manager' || u.role === 'admin' ? '<span class="pill pill-amber" style="font-size:9px">STAFF</span>' : ''}</td>
+              <td>${u.email}</td>
+              <td>
+                ${u.role !== 'manager' && u.role !== 'admin' ? 
+                  `<button class="btn-sm" style="background:#ef4444" onclick="deleteCloudUser('${u.id}', '${u.email}')">Delete</button>` : 
+                  '<span style="font-size:10px;opacity:0.3">Protected</span>'}
+              </td>
+            </tr>`).join('');
+        }
+      } catch (err) { 
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#ef4444">Failed to load users</td></tr>';
+      }
+    }
+
+    async function deleteCloudUser(id, email) {
+      if (!confirm(`Permanently delete user ${email} and all their data?`)) return;
+      
+      try {
+        const token = localStorage.getItem('ssc_admin_token');
+        const res = await fetch(`/api/admin/users/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const result = await res.json();
+        if (result.success) {
+          toast('User deleted successfully');
+          fetchCloudUsers();
+        } else {
+          alert(result.message);
+        }
+      } catch (err) { alert('Failed to delete user'); }
     }
 
     function renderRecentScans() {

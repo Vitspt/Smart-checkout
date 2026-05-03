@@ -13,6 +13,7 @@ const ordersRoutes   = require('./routes/orders');
 const usersRoutes    = require('./routes/users');
 const scansRoutes    = require('./routes/scans');
 const couponsRoutes  = require('./routes/coupons');
+const adminRoutes    = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -36,6 +37,7 @@ app.use('/api/orders',   ordersRoutes);
 app.use('/api/users',    usersRoutes);
 app.use('/api/scans',    scansRoutes);
 app.use('/api/coupons',  couponsRoutes);
+app.use('/api/admin',    adminRoutes);
 
 // ── 404 ───────────────────────────────────────────────────────
 app.use((req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
