@@ -295,25 +295,35 @@
       if(stopBtn) stopBtn.remove();
     }
 
-    function handleQRResult(data) {
+    async function handleQRResult(data) {
       const res = document.getElementById('verify-result');
       const st = document.getElementById('v-status');
       res.style.display = 'block';
+      st.innerHTML = '<div style="font-size:14px;opacity:0.5">Verifying with cloud...</div>';
       
       try {
         const qr = JSON.parse(data);
         const orderId = qr.id;
         
-        // FETCH OFFICIAL DATA FROM GLOBAL STORE
-        const allSales = JSON.parse(localStorage.getItem('ssc_all_sales') || '[]');
-        const officialOrder = allSales.find(o => o.id === orderId);
+        const token = localStorage.getItem('ssc_admin_token');
+        const response = await fetch('/api/admin/verify', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+          },
+          body: JSON.stringify({ order_id: orderId })
+        });
         
-        if (!officialOrder) {
-          st.innerHTML = '<div style="color:#ef4444;font-size:24px;font-weight:900;margin-bottom:16px">❌ INVALID ORDER ID</div><div style="font-size:12px;opacity:0.5">Order not found in global sales records.</div>';
+        const result = await response.json();
+        
+        if (!result.success) {
+          st.innerHTML = `<div style="color:#ef4444;font-size:24px;font-weight:900;margin-bottom:16px">❌ ${result.message.toUpperCase()}</div>`;
           return;
         }
 
-        const isHighValue = officialOrder.total > 5000 || officialOrder.items.some(i => i.price > 1000);
+        const officialOrder = result.order;
+        const isHighValue = result.is_high_value;
         
         st.innerHTML = `
           <div style="color:#22c55e;font-size:24px;font-weight:900;margin-bottom:8px">✅ VERIFIED BILL</div>
@@ -339,29 +349,24 @@
           </div>
           
           <div style="display:flex;gap:12px">
-            <button class="btn btn-primary" style="flex:1;background:#22c55e" onclick="openGate()">OPEN GATE</button>
+            <button class="btn btn-primary" style="flex:1;background:#22c55e" onclick="openGate('${officialOrder.id}')">OPEN GATE</button>
             <button class="btn" style="width:auto;background:#334155;padding:0 20px" onclick="closeVerify()">Done</button>
           </div>
         `;
 
-        const scans = JSON.parse(localStorage.getItem('ssc_security_scans') || '[]');
-        scans.unshift({ id: officialOrder.id, time: Date.now(), total: officialOrder.total, high: isHighValue });
-        localStorage.setItem('ssc_security_scans', JSON.stringify(scans.slice(0, 15)));
         renderRecentScans();
-        logActivity('QR_VERIFY', `Verified Order #${officialOrder.id.slice(-8)} (₹${officialOrder.total})`);
       } catch (err) {
         st.innerHTML = '<div style="color:#ef4444;font-size:18px;font-weight:900">⚠️ SCAN ERROR</div><div style="font-size:12px;opacity:0.5;margin-top:8px">Could not process QR data.</div>';
         console.error("QR Error:", err);
       }
     }
 
-    function openGate() {
+    function openGate(id) {
       document.getElementById('v-status').innerHTML = `
         <div style="color:#22c55e;font-size:32px;font-weight:900;margin:40px 0;animation:bounceIn 0.5s">🔓 GATE OPEN</div>
         <p style="font-size:14px;opacity:0.6;margin-bottom:24px">Customer cleared for exit</p>
         <button class="btn btn-primary" onclick="closeVerify()">CLOSE & RESET</button>
       `;
-      logActivity('GATE_OPEN', 'Security opened exit gate');
     }
 
     function closeVerify() { document.getElementById('verify-result').style.display='none'; }
@@ -459,20 +464,35 @@
       } catch (err) { alert('Failed to delete user'); }
     }
 
-    function renderRecentScans() {
-      const scans = JSON.parse(localStorage.getItem('ssc_security_scans') || '[]');
+    async function renderRecentScans() {
       const wrap = document.getElementById('recent-scans');
       if(!wrap) return;
-      if(!scans.length) { wrap.innerHTML = '<div style="font-size:11px;opacity:0.4;text-align:center;padding:20px">No recent scans</div>'; return; }
-      wrap.innerHTML = scans.map(s => `
-        <div style="padding:10px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid ${s.high ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.05)'}">
-          <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800;margin-bottom:4px">
-            <span>#${s.id.slice(-6)}</span>
-            <span style="color:${s.high ? '#ef4444' : '#22c55e'}">₹${s.total}</span>
+      
+      try {
+        const token = localStorage.getItem('ssc_admin_token');
+        const res = await fetch('/api/admin/verifications', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const result = await res.json();
+
+        if(!result.success || !result.data.length) {
+          wrap.innerHTML = '<div style="font-size:11px;opacity:0.4;text-align:center;padding:20px">No recent scans</div>';
+          return;
+        }
+
+        wrap.innerHTML = result.data.map(s => `
+          <div style="padding:10px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid ${s.status === 'flagged' ? 'rgba(239,68,68,0.4)' : s.is_high_value ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.05)'}">
+            <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800;margin-bottom:4px">
+              <span>#${s.order_id.slice(-6)}</span>
+              <span style="color:${s.status === 'flagged' ? '#ef4444' : '#22c55e'}">₹${s.total_amount}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;opacity:0.4">
+              <span>${new Date(s.created_at).toLocaleTimeString()}</span>
+              <span>${s.status.toUpperCase()}</span>
+            </div>
           </div>
-          <div style="font-size:10px;opacity:0.4">${new Date(s.time).toLocaleTimeString()}</div>
-        </div>
-      `).join('');
+        `).join('');
+      } catch (err) { console.error('Recent scans fetch error:', err); }
     }
 
     let shiftStart = null;
@@ -484,7 +504,6 @@
         btn.textContent = 'END SHIFT';
         btn.style.background = '#ef4444';
         time.textContent = 'Shift active since ' + new Date(shiftStart).toLocaleTimeString();
-        logActivity('SHIFT_START', 'Security staff started shift');
       } else {
         const dur = Math.round((Date.now() - shiftStart) / 60000);
         alert(`Shift completed. Duration: ${dur} minutes`);
@@ -492,20 +511,43 @@
         btn.textContent = 'START SHIFT';
         btn.style.background = '#ef4d23';
         time.textContent = 'No active shift detected';
-        logActivity('SHIFT_END', `Security staff ended shift (${dur}m)`);
       }
     }
 
     function openIncidentModal() { document.getElementById('incidentModal').style.display='flex'; }
     function closeIncidentModal() { document.getElementById('incidentModal').style.display='none'; }
-    function saveIncident() {
+    async function saveIncident() {
       const type = document.getElementById('in-type').value;
       const desc = document.getElementById('in-desc').value;
       if(!desc) return alert('Please describe the incident');
-      logActivity('INCIDENT', `[${type}] ${desc}`);
-      alert('Security report submitted successfully');
-      closeIncidentModal();
-      document.getElementById('in-desc').value = '';
+      
+      const orderId = prompt('Enter Order ID (if known) or leave blank:');
+
+      try {
+        const token = localStorage.getItem('ssc_admin_token');
+        const res = await fetch('/api/admin/verify', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+          },
+          body: JSON.stringify({ 
+            order_id: orderId || '00000000-0000-0000-0000-000000000000', // Placeholder if unknown
+            status: 'flagged',
+            incident_type: type,
+            notes: desc
+          })
+        });
+        const result = await res.json();
+        if (result.success) {
+          toast('Security report submitted successfully', 'success');
+          closeIncidentModal();
+          document.getElementById('in-desc').value = '';
+          renderRecentScans();
+        } else {
+          alert(result.message);
+        }
+      } catch (err) { alert('Failed to submit report'); }
     }
 
     function renderCoupons() {

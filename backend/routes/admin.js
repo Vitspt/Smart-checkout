@@ -9,5 +9,7 @@ router.use(adminAuth);
 
 router.get('/users', c.getAllUsers);
 router.delete('/users/:id', c.deleteUser);
+router.post('/verify', c.verifyOrder);
+router.get('/verifications', c.getVerifications);
 
 module.exports = router;
