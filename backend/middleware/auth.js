@@ -18,4 +18,5 @@ module.exports = async (req, res, next) => {
   } catch {
     res.status(401).json({ success: false, message: 'Invalid or expired token' });
   }
+};
 
