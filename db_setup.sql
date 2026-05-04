@@ -62,3 +62,11 @@ CREATE TABLE IF NOT EXISTS security_verifications (
   notes TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
+-- 6. Disable Row Level Security (RLS)
+-- Since the Backend API handles security and filtering by user_id/email, 
+-- we disable RLS to allow the Backend's Service/Anon key to manage data.
+
+ALTER TABLE orders DISABLE ROW LEVEL SECURITY;
+ALTER TABLE activity_log DISABLE ROW LEVEL SECURITY;
+ALTER TABLE coupons DISABLE ROW LEVEL SECURITY;
+ALTER TABLE security_verifications DISABLE ROW LEVEL SECURITY;
