@@ -272,7 +272,7 @@ function finishPayment(){
         location.href = 'login.html';
       } else {
         alert('Error syncing order: ' + result.message);
-        // Fallback: still show success but QR might not verify at exit
+        clearCart(); // Still clear cart as payment was successful
         document.getElementById('success-overlay').style.display='flex';
         setTimeout(()=>location.href='qrcode.html', 2000);
       }
