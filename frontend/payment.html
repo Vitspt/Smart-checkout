@@ -269,7 +269,7 @@ function finishPayment(){
     } else {
       console.error('CONVIX: Backend Order Save Error:', result.message);
       if (result.message.toLowerCase().includes('not found') || result.message.toLowerCase().includes('token') || result.message.toLowerCase().includes('auth')) {
-        alert('Your session has expired. Please log in again.');
+        alert(result.message); // Show the real diagnostic message
         localStorage.removeItem('ssc_session');
         localStorage.removeItem('ssc_token');
         location.href = 'login.html';
