@@ -306,6 +306,13 @@ function saveNewPin() {
 // ============================================
 // PROFILE & HISTORY
 // ============================================
+
+function showOrderQR(idx) {
+  if (window.ssc_current_orders && window.ssc_current_orders[idx]) {
+    localStorage.setItem('ssc_last_order', JSON.stringify(window.ssc_current_orders[idx]));
+    location.href = 'qrcode.html';
+  }
+}
 async function renderOrders() {
   const el = document.getElementById('orders-list');
   el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Loading cloud orders...</div>';
@@ -322,8 +329,10 @@ async function renderOrders() {
       return;
     }
 
-    el.innerHTML = result.data.map(o => `
-      <div class="order-card" onclick="localStorage.setItem('ssc_last_order', JSON.stringify(${JSON.stringify(o).replace(/"/g, '&quot;')})); location.href='qrcode.html'">
+    window.ssc_current_orders = result.data; // Store globally for click handler
+
+    el.innerHTML = result.data.map((o, idx) => `
+      <div class="order-card" onclick="showOrderQR(${idx})">
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
           <span style="font-size:12px;font-weight:800;color:var(--muted)">#${o.id.slice(0, 8)}</span>
           <span class="pill pill-green">✅ ${o.status.toUpperCase()}</span>
