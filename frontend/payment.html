@@ -265,7 +265,7 @@ function finishPayment(){
       setTimeout(()=>location.href='qrcode.html', 1500);
     } else {
       console.error('CONVIX: Backend Order Save Error:', result.message);
-      if (result.message.includes('token') || result.message.includes('Auth')) {
+      if (result.message.toLowerCase().includes('not found') || result.message.toLowerCase().includes('token') || result.message.toLowerCase().includes('auth')) {
         alert('Your session has expired. Please log in again.');
         localStorage.removeItem('ssc_session');
         localStorage.removeItem('ssc_token');

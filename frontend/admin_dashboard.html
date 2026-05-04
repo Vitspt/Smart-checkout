@@ -319,7 +319,14 @@
         const result = await response.json();
         
         if (!result.success) {
-          st.innerHTML = `<div style="color:#ef4444;font-size:24px;font-weight:900;margin-bottom:16px">❌ ${result.message.toUpperCase()}</div>`;
+          if (result.message.toLowerCase().includes('user not found') || result.message.toLowerCase().includes('invalid token')) {
+            alert('Security session expired. Please log in again.');
+            localStorage.removeItem('ssc_admin_session');
+            localStorage.removeItem('ssc_admin_token');
+            location.href = 'admin_login.html';
+          } else {
+            st.innerHTML = `<div style="color:#ef4444;font-size:24px;font-weight:900;margin-bottom:16px">❌ ${result.message.toUpperCase()}</div>`;
+          }
           return;
         }
 
