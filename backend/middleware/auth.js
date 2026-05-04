@@ -10,10 +10,7 @@ module.exports = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (!decoded.id) {
-      const keys = Object.keys(decoded).join(', ');
-      return res.status(401).json({ success: false, message: `Invalid token payload (Found keys: ${keys})` });
-    }
+    if (!decoded.id) return res.status(401).json({ success: false, message: 'Session expired' });
 
     const { data: user, error } = await supabase.from('users').select('*').eq('id', decoded.id).single();
     

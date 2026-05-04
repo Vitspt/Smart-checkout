@@ -319,8 +319,8 @@
         const result = await response.json();
         
         if (!result.success) {
-          if (result.message.toLowerCase().includes('user not found') || result.message.toLowerCase().includes('invalid token') || result.message.toLowerCase().includes('expired')) {
-            alert(result.message); // Show the real diagnostic message
+          if (result.message.toLowerCase().includes('not found') || result.message.toLowerCase().includes('token') || result.message.toLowerCase().includes('expired')) {
+            alert('Security session expired. Please log in again.');
             localStorage.removeItem('ssc_admin_session');
             localStorage.removeItem('ssc_admin_token');
             location.href = 'admin_login.html';
