@@ -265,10 +265,17 @@ function finishPayment(){
       setTimeout(()=>location.href='qrcode.html', 1500);
     } else {
       console.error('CONVIX: Backend Order Save Error:', result.message);
-      alert('Error syncing order: ' + result.message);
-      // Fallback: still show success but QR might not verify at exit
-      document.getElementById('success-overlay').style.display='flex';
-      setTimeout(()=>location.href='qrcode.html', 2000);
+      if (result.message.includes('token') || result.message.includes('Auth')) {
+        alert('Your session has expired. Please log in again.');
+        localStorage.removeItem('ssc_session');
+        localStorage.removeItem('ssc_token');
+        location.href = 'login.html';
+      } else {
+        alert('Error syncing order: ' + result.message);
+        // Fallback: still show success but QR might not verify at exit
+        document.getElementById('success-overlay').style.display='flex';
+        setTimeout(()=>location.href='qrcode.html', 2000);
+      }
     }
   })
   .catch(err => {
