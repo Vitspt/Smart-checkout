@@ -37,6 +37,10 @@ exports.register = async (req, res, next) => {
       throw error;
     }
 
+    if (!data || !data.id) {
+      return res.status(500).json({ success: false, message: 'Database Error: Failed to retrieve new user ID' });
+    }
+
     const { password: _, ...safeUser } = data;
     res.status(201).json({
       success: true,
@@ -61,6 +65,10 @@ exports.login = async (req, res, next) => {
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+
+    if (!user.id) {
+      return res.status(500).json({ success: false, message: 'Database Error: User record is missing an ID' });
+    }
 
     const { password: _, ...safeUser } = user;
     res.json({
