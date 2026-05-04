@@ -48,6 +48,15 @@ exports.createOrder = async (req, res, next) => {
     const tax      = Math.round(subtotal * TAX_RATE);
     const total    = subtotal + tax - Number(coupon_discount);
 
+    // Handle Wallet Deduction (Cloud Sync)
+    if (payment_method === 'wallet') {
+      if (Number(req.user.wallet_balance) < total) {
+        return res.status(400).json({ success: false, message: `Insufficient balance (Required: ₹${total}, Current: ₹${req.user.wallet_balance})` });
+      }
+      const newBalance = Number(req.user.wallet_balance) - total;
+      await supabase.from('users').update({ wallet_balance: newBalance }).eq('id', req.user.id);
+    }
+
     const orderData = {
       user_id: req.user.id,
       items: cartItems,

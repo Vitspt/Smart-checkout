@@ -1,6 +1,6 @@
--- ========================================================
--- SmartCheckout Database Schema — Orders & Coupons
--- ========================================================
+-- 0. Ensure Users table has wallet_balance (Run this first)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS wallet_balance NUMERIC DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS points INTEGER DEFAULT 0;
 
 -- 1. Create ORDERS table if not exists
 CREATE TABLE IF NOT EXISTS orders (

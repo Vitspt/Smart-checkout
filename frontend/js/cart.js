@@ -107,18 +107,38 @@ function redeemPoints(pts){
 // ============================================
 // CONVIX Digital Wallet System
 // ============================================
-function getWalletBalance(){ return parseFloat(localStorage.getItem(ukey('wallet_balance')) || '0'); }
-function topUpWallet(amt){ 
-  const current = getWalletBalance();
-  localStorage.setItem(ukey('wallet_balance'), (current + amt).toFixed(2));
-  logActivity('WALLET_TOPUP', `Topped up ₹${amt}`);
+async function getCloudWallet(){ 
+  const token = localStorage.getItem('ssc_token');
+  if(!token) return 0;
+  try {
+    const res = await fetch(`${API_URL}/users/me/wallet`, { headers: { 'Authorization': `Bearer ${token}` } });
+    const result = await res.json();
+    if(result.success) {
+      localStorage.setItem(ukey('wallet_balance'), result.balance);
+      return result.balance;
+    }
+  } catch(e) { console.error("Wallet Sync Error:", e); }
+  return parseFloat(localStorage.getItem(ukey('wallet_balance')) || '0'); 
 }
-function payWithWallet(amt){
-  const current = getWalletBalance();
-  if(current < amt) return false;
-  localStorage.setItem(ukey('wallet_balance'), (current - amt).toFixed(2));
-  return true;
+
+async function topUpWalletCloud(amt){ 
+  const token = localStorage.getItem('ssc_token');
+  if(!token) return false;
+  try {
+    const res = await fetch(`${API_URL}/users/me/wallet/topup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ amount: amt })
+    });
+    const result = await res.json();
+    if(result.success) {
+      localStorage.setItem(ukey('wallet_balance'), result.balance);
+      return true;
+    }
+  } catch(e) { console.error("TopUp Error:", e); }
+  return false;
 }
+function getWalletBalanceLocal(){ return parseFloat(localStorage.getItem(ukey('wallet_balance')) || '0'); }
 function getWalletPin(){ return localStorage.getItem(ukey('wallet_pin')) || '2019'; }
 function setWalletPin(pin){ localStorage.setItem(ukey('wallet_pin'), pin); }
 function verifyWalletPin(pin){ return pin === getWalletPin(); }

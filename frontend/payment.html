@@ -97,6 +97,9 @@ async function init(){
 
   const disc=mrp-subtotal, tax=Math.round(finalSubtotal*TAX_RATE), total=finalSubtotal+tax;
 
+  // Cloud Wallet Sync
+  const cloudBalance = await getCloudWallet();
+
   document.getElementById('pay-page').innerHTML=`
     <!-- ITEM LIST -->
     <div class="card">
@@ -136,7 +139,7 @@ async function init(){
       </div>
       <div class="pay-option" data-method="convix" onclick="selectMethod('convix')">
         <span class="material-icons" style="color:#ef4d23">account_balance_wallet</span>
-        <div><h4>CONVIX Wallet</h4><p id="wallet-status">Balance: ₹0.00</p></div>
+        <div><h4>CONVIX Wallet</h4><p id="wallet-status">Balance: ₹${Number(cloudBalance).toFixed(2)}</p></div>
         <div class="pay-radio"></div>
       </div>
     </div>

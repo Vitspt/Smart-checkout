@@ -58,6 +58,28 @@ exports.getPoints = (req, res) => {
   res.json({ success: true, points: req.user.points, tier });
 };
 
+// GET /api/users/me/wallet
+exports.getWallet = async (req, res, next) => {
+  try {
+    const { data: user } = await supabase.from('users').select('wallet_balance').eq('id', req.user.id).single();
+    res.json({ success: true, balance: user.wallet_balance });
+  } catch (e) { next(e); }
+};
+
+// POST /api/users/me/wallet/topup { amount }
+exports.topUpWallet = async (req, res, next) => {
+  try {
+    const { amount } = req.body;
+    if (!amount || amount <= 0) return res.status(400).json({ success: false, message: 'Invalid amount' });
+
+    const newBalance = Number(req.user.wallet_balance) + Number(amount);
+    const { data, error } = await supabase.from('users').update({ wallet_balance: newBalance }).eq('id', req.user.id).select().single();
+    if (error) throw error;
+
+    res.json({ success: true, message: `Topped up ₹${amount} successfully`, balance: data.wallet_balance });
+  } catch (e) { next(e); }
+};
+
 // DELETE /api/users/me  — delete account and all data
 exports.deleteAccount = async (req, res, next) => {
   try {

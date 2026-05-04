@@ -26,6 +26,7 @@ exports.register = async (req, res, next) => {
       password: hashedPassword,
       joined: new Date().toISOString(),
       points: 0,
+      wallet_balance: 0,
       role: 'user'
     };
 

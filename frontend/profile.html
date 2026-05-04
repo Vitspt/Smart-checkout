@@ -238,10 +238,10 @@ function updateDarkUI() {
 // ============================================
 // WALLET FUNCTIONS
 // ============================================
-function updateWalletUI() {
-  const bal = getWalletBalance();
+async function updateWalletUI() {
+  const bal = await getCloudWallet();
   const el = document.getElementById('wallet-balance');
-  if(el) el.textContent = `₹${bal.toLocaleString('en-IN', {minimumFractionDigits:2})}`;
+  if(el) el.textContent = `₹${Number(bal).toLocaleString('en-IN', {minimumFractionDigits:2})}`;
 }
 
 function openTopup() {
@@ -264,20 +264,23 @@ function confirmTopup(amt) {
   }
 }
 
-function showGateway(amt) {
+async function showGateway(amt) {
   const modal = document.getElementById('gatewayModal');
   modal.style.display = 'flex';
   document.getElementById('gateway-processing').style.display = 'block';
   document.getElementById('gateway-success').style.display = 'none';
 
-  setTimeout(() => {
-    topUpWallet(amt);
+  const success = await topUpWalletCloud(amt);
+  if(success) {
     updateWalletUI();
     document.getElementById('gateway-processing').style.display = 'none';
     document.getElementById('gateway-success').style.display = 'block';
     document.getElementById('gateway-amt').textContent = `₹${amt.toLocaleString()}`;
     toast(`₹${amt} added to wallet!`, 'success');
-  }, 2000);
+  } else {
+    toast('Top-up failed', 'error');
+    closeGateway();
+  }
 }
 
 function closeGateway() {
@@ -436,7 +439,7 @@ async function init() {
 
   initSettings();
   updateDarkUI();
-  updateWalletUI();
+  await updateWalletUI();
   
   // Handle Deep Linking via Hash
   const hash = location.hash.replace('#', '');
