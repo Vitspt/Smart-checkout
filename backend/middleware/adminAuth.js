@@ -6,10 +6,10 @@ const adminAuth = (req, res, next) => {
   }
 
   const role = req.user.role;
-  if (role === 'admin' || role === 'manager') {
+  if (role === 'admin' || role === 'manager' || role === 'security') {
     next();
   } else {
-    res.status(403).json({ success: false, message: 'Forbidden: Admin access required' });
+    res.status(403).json({ success: false, message: `Forbidden: Admin or Security access required (Current: ${role})` });
   }
 };
 

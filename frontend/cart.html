@@ -168,25 +168,50 @@ function doRemove(id){
   renderCart();
 }
 
-function applyCoupon() {
+async function applyCoupon() {
   const code = document.getElementById('coupon-inp').value.trim().toUpperCase();
   const msg = document.getElementById('coupon-msg');
   if(!code) return;
 
-  const coupons = JSON.parse(localStorage.getItem('ssc_coupons') || '[]');
-  const c = coupons.find(x => x.code === code);
-  
-  if(c) {
-    localStorage.setItem(ukey('active_coupon'), JSON.stringify(c));
-    toast(`Coupon ${c.code} applied!`);
-    renderCart();
-  } else if (code === 'WELCOME20') {
-    localStorage.setItem(ukey('active_coupon'), JSON.stringify({ code: 'WELCOME20', discount: 20 }));
-    toast('Welcome coupon applied!');
-    renderCart();
-  } else {
-    msg.style.color = '#ef4444';
-    msg.textContent = 'Invalid coupon code';
+  const orderAmount = getCartSubtotal();
+  const token = localStorage.getItem('ssc_token');
+
+  try {
+    const response = await fetch('/api/coupons/validate', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ code, order_amount: orderAmount })
+    });
+
+    const result = await response.json();
+    if(result.success) {
+      const c = { 
+        code: result.coupon.code, 
+        discount: result.coupon.type === 'percent' ? result.coupon.value : (result.coupon.value / orderAmount * 100),
+        type: result.coupon.type,
+        value: result.coupon.value
+      };
+      localStorage.setItem(ukey('active_coupon'), JSON.stringify(c));
+      toast(`Coupon ${c.code} applied!`);
+      renderCart();
+    } else {
+      msg.style.color = '#ef4444';
+      msg.textContent = result.message;
+    }
+  } catch (err) {
+    console.error('Coupon Error:', err);
+    // Fallback to local if server is down
+    if (code === 'WELCOME20') {
+      localStorage.setItem(ukey('active_coupon'), JSON.stringify({ code: 'WELCOME20', discount: 20 }));
+      toast('Welcome coupon applied!');
+      renderCart();
+    } else {
+      msg.style.color = '#ef4444';
+      msg.textContent = 'Server error. Try again.';
+    }
   }
 }
 

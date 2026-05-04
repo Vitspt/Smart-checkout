@@ -221,6 +221,7 @@
 
   <!-- Supabase SDK & Config -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
   <script src="js/supabase.js"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -306,7 +307,7 @@
         const orderId = qr.id;
         
         const token = localStorage.getItem('ssc_admin_token');
-        const response = await fetch('/api/admin/verify', {
+        const response = await fetch(`${API_URL}/admin/verify`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -403,14 +404,14 @@
       try {
         const token = localStorage.getItem('ssc_admin_token');
         // Fetch users count from cloud
-        const res = await fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } });
+        const res = await fetch(`${API_URL}/admin/users`, { headers: { 'Authorization': `Bearer ${token}` } });
         const result = await res.json();
         if (result.success) {
           document.getElementById('stat-users-count').textContent = result.data.length;
         }
         
-        // Fetch revenue from orders (cloud)
-        const resOrders = await fetch('/api/orders', { headers: { 'Authorization': `Bearer ${token}` } });
+        // Fetch revenue from ALL orders (cloud admin endpoint)
+        const resOrders = await fetch(`${API_URL}/admin/orders`, { headers: { 'Authorization': `Bearer ${token}` } });
         const resultOrders = await resOrders.json();
         if (resultOrders.success) {
           const totalRev = resultOrders.data.reduce((s, o) => s + (o.total || 0), 0);
@@ -425,7 +426,7 @@
       
       try {
         const token = localStorage.getItem('ssc_admin_token');
-        const res = await fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } });
+        const res = await fetch(`${API_URL}/admin/users`, { headers: { 'Authorization': `Bearer ${token}` } });
         const result = await res.json();
         
         if (result.success) {
@@ -450,7 +451,7 @@
       
       try {
         const token = localStorage.getItem('ssc_admin_token');
-        const res = await fetch(`/api/admin/users/${id}`, {
+        const res = await fetch(`${API_URL}/admin/users/${id}`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -470,7 +471,7 @@
       
       try {
         const token = localStorage.getItem('ssc_admin_token');
-        const res = await fetch('/api/admin/verifications', {
+        const res = await fetch(`${API_URL}/admin/verifications`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const result = await res.json();
@@ -525,7 +526,7 @@
 
       try {
         const token = localStorage.getItem('ssc_admin_token');
-        const res = await fetch('/api/admin/verify', {
+        const res = await fetch(`${API_URL}/admin/verify`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',

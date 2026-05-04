@@ -9,6 +9,7 @@ router.use(adminAuth);
 
 router.get('/users', c.getAllUsers);
 router.delete('/users/:id', c.deleteUser);
+router.get('/orders', c.getAllOrders); // New route for revenue stats
 router.post('/verify', c.verifyOrder);
 router.get('/verifications', c.getVerifications);
 

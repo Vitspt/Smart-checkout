@@ -242,21 +242,41 @@ function finishPayment(){
     },
     body: JSON.stringify({ 
       payment_method: order.method,
-      items: order.items, // Backend also calculates this, but we send it for logging
+      items: order.items,
       total: order.total
     })
   })
   .then(res => res.json())
   .then(result => {
-    if (result.success) console.log('CONVIX: Order synced to Backend');
-    else console.error('CONVIX: Backend Order Save Error:', result.message);
+    if (result.success) {
+      console.log('CONVIX: Order synced to Backend');
+      // UPDATE LOCAL ORDER WITH REAL BACKEND ID
+      const realOrder = result.order;
+      localStorage.setItem('ssc_last_order', JSON.stringify(realOrder));
+      
+      // Update sales log with real ID too
+      const allSales = JSON.parse(localStorage.getItem('ssc_all_sales') || '[]');
+      const lastIdx = allSales.findIndex(s => s.id === order.id);
+      if(lastIdx !== -1) allSales[lastIdx] = realOrder;
+      localStorage.setItem('ssc_all_sales', JSON.stringify(allSales));
+
+      clearCart();
+      document.getElementById('success-overlay').style.display='flex';
+      setTimeout(()=>location.href='qrcode.html', 1500);
+    } else {
+      console.error('CONVIX: Backend Order Save Error:', result.message);
+      alert('Error syncing order: ' + result.message);
+      // Fallback: still show success but QR might not verify at exit
+      document.getElementById('success-overlay').style.display='flex';
+      setTimeout(()=>location.href='qrcode.html', 2000);
+    }
   })
-  .catch(err => console.error('CONVIX: Order Sync Network Error:', err));
-
-
-  clearCart();
-  document.getElementById('success-overlay').style.display='flex';
-  setTimeout(()=>location.href='qrcode.html', 2000);
+  .catch(err => {
+    console.error('CONVIX: Order Sync Network Error:', err);
+    // Fallback
+    document.getElementById('success-overlay').style.display='flex';
+    setTimeout(()=>location.href='qrcode.html', 2000);
+  });
 }
 
 init();

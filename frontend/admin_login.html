@@ -74,6 +74,7 @@
     </div>
   </div>
 
+  <script src="js/config.js"></script>
   <script>
     async function handleLogin() {
       const email = document.getElementById('adm-email').value.trim();
@@ -82,7 +83,7 @@
       if (!email || !password) return alert('Please fill in all fields');
 
       try {
-        const res = await fetch('/api/auth/login', {
+        const res = await fetch(`${API_URL}/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })

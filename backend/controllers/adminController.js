@@ -35,6 +35,19 @@ exports.deleteUser = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+// GET /api/admin/orders — for revenue and stats
+exports.getAllOrders = async (req, res, next) => {
+  try {
+    const { data: orders, error } = await supabase
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    res.json({ success: true, data: orders });
+  } catch (e) { next(e); }
+};
+
 // POST /api/admin/verify
 exports.verifyOrder = async (req, res, next) => {
   try {

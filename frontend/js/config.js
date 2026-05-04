@@ -7,6 +7,7 @@ const TAX_RATE = 0;        // 0% GST (Removed)
 const PLATFORM_FEE = 0;       // no platform fee
 
 const CATEGORIES = ['All','Grocery','Snacks','Drinks','Personal Care'];
+const API_URL = '/api';
 
 // Global Dark Mode Init
 if(localStorage.getItem('ssc_dark') === 'true'){

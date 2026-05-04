@@ -312,7 +312,7 @@ async function renderOrders() {
   
   try {
     const token = localStorage.getItem('ssc_token');
-    const response = await fetch('/api/orders', {
+    const response = await fetch(`${API_URL}/orders`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     const result = await response.json();
@@ -323,14 +323,14 @@ async function renderOrders() {
     }
 
     el.innerHTML = result.data.map(o => `
-      <div class="order-card">
+      <div class="order-card" onclick="localStorage.setItem('ssc_last_order', JSON.stringify(${JSON.stringify(o).replace(/"/g, '&quot;')})); location.href='qrcode.html'">
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-          <span style="font-size:12px;font-weight:800;color:var(--muted)">${o.id.slice(0, 8)}</span>
-          <span class="pill pill-green">✅ ${o.status}</span>
+          <span style="font-size:12px;font-weight:800;color:var(--muted)">#${o.id.slice(0, 8)}</span>
+          <span class="pill pill-green">✅ ${o.status.toUpperCase()}</span>
         </div>
-        <div style="font-size:13px;margin-bottom:4px">Order from ${new Date(o.time).toLocaleDateString()}</div>
+        <div style="font-size:13px;margin-bottom:4px">Order from ${new Date(o.created_at || o.time).toLocaleDateString()}</div>
         <div style="display:flex;justify-content:space-between;font-size:13px">
-          <span style="color:var(--muted)">Method: ${o.payment_method.toUpperCase()}</span>
+          <span style="color:var(--muted)">Method: ${(o.method || 'UPI').toUpperCase()}</span>
           <span style="font-weight:800;color:var(--green)">₹${o.total}</span>
         </div>
       </div>`).join('');
@@ -345,7 +345,7 @@ async function renderScans() {
 
   try {
     const token = localStorage.getItem('ssc_token');
-    const response = await fetch('/api/scans', {
+    const response = await fetch(`${API_URL}/scans`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     const result = await response.json();
@@ -389,7 +389,7 @@ async function init() {
     const token = localStorage.getItem('ssc_token');
     if(!token) { fallback(); return; }
 
-    const response = await fetch('/api/users/me/profile', {
+    const response = await fetch(`${API_URL}/users/me/profile`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     
