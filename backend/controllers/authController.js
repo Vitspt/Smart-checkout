@@ -67,7 +67,8 @@ exports.login = async (req, res, next) => {
     if (!match) return res.status(401).json({ success: false, message: 'Invalid credentials' });
 
     if (!user.id) {
-      return res.status(500).json({ success: false, message: 'Database Error: User record is missing an ID' });
+      const keys = Object.keys(user).join(', ');
+      return res.status(500).json({ success: false, message: `Database Error: User record is missing 'id'. Available fields: [${keys}]` });
     }
 
     const { password: _, ...safeUser } = user;
