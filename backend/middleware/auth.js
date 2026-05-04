@@ -10,13 +10,19 @@ module.exports = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
+    if (!decoded.id) return res.status(401).json({ success: false, message: 'Invalid token payload' });
+
     const { data: user, error } = await supabase.from('users').select('*').eq('id', decoded.id).single();
     
-    if (error || !user) return res.status(401).json({ success: false, message: 'User not found' });
+    if (error || !user) {
+      console.error('Auth Error: User not found for ID', decoded.id, error);
+      return res.status(401).json({ success: false, message: `User session not found in database (ID: ${decoded.id.slice(0,5)}...)` });
+    }
     req.user = user;
     next();
-  } catch {
-    res.status(401).json({ success: false, message: 'Invalid or expired token' });
+  } catch (err) {
+    console.error('JWT Error:', err.message);
+    res.status(401).json({ success: false, message: 'Session expired or invalid token: ' + err.message });
   }
 };
 
