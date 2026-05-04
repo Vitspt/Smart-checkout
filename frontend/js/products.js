@@ -55,7 +55,7 @@ async function fetchProducts() {
   // TRY BACKEND API FIRST
   try {
     console.log('CONVIX: Fetching products from Backend API...');
-    const response = await fetch('/api/products');
+    const response = await fetch(`${API_URL}/products`);
     const result = await response.json();
     
     if (result.success && result.data && result.data.length > 0) {

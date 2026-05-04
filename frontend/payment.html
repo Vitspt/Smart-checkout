@@ -234,7 +234,7 @@ function finishPayment(){
 
   // SAVE TO BACKEND API
   const token = localStorage.getItem('ssc_token');
-  fetch('/api/orders', {
+  fetch(`${API_URL}/orders`, {
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json',

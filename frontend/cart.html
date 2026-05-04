@@ -177,7 +177,7 @@ async function applyCoupon() {
   const token = localStorage.getItem('ssc_token');
 
   try {
-    const response = await fetch('/api/coupons/validate', {
+    const response = await fetch(`${API_URL}/coupons/validate`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',

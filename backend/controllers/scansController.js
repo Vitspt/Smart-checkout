@@ -15,9 +15,14 @@ exports.scan = async (req, res, next) => {
 
     if (pError || !product) return res.status(404).json({ success: false, message: `No product found for barcode: ${barcode}` });
 
-    // Log the scan (Local only as requested by user)
-    console.log(`CONVIX: Scanned product: ${product.name}`);
-
+    // Log the scan to Supabase activity_log
+    const logData = {
+      user_email: req.user.email,
+      type: 'SCAN',
+      msg: `Scanned ${product.name} (₹${product.price})`
+      // created_at is automatic in Supabase
+    };
+    await supabase.from('activity_log').insert([logData]);
 
     res.status(201).json({ success: true, product });
   } catch (e) { next(e); }
@@ -32,7 +37,7 @@ exports.getHistory = async (req, res, next) => {
       .select('*')
       .eq('user_email', req.user.email)
       .eq('type', 'SCAN')
-      .order('ts', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(limit);
     
     if (error) throw error;

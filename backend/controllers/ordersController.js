@@ -10,22 +10,14 @@ exports.createOrder = async (req, res, next) => {
     if (!VALID_METHODS.includes(payment_method))
       return res.status(400).json({ success: false, message: `payment_method must be one of: ${VALID_METHODS.join(', ')}` });
 
-    const { data: cartItems, error: cartError } = await supabase
+    let cartItems = [];
+    const { data: dbItems } = await supabase
       .from('cart_items')
       .select('*, products(*)')
       .eq('user_id', req.user.id);
-
-    if (cartError || !cartItems.length)
-      return res.status(400).json({ success: false, message: 'Cart is empty' });
-
-    const subtotal = cartItems.reduce((s, i) => s + i.products.price * i.qty, 0);
-    const mrp      = cartItems.reduce((s, i) => s + i.products.mrp   * i.qty, 0);
-    const tax      = Math.round(subtotal * TAX_RATE);
-    const total    = subtotal + tax - Number(coupon_discount);
-
-    const orderData = {
-      user_id: req.user.id,
-      items: cartItems.map(i => ({
+    
+    if (dbItems && dbItems.length > 0) {
+      cartItems = dbItems.map(i => ({
         product_id: i.product_id,
         name: i.products.name,
         brand: i.products.brand,
@@ -34,7 +26,31 @@ exports.createOrder = async (req, res, next) => {
         mrp: i.products.mrp,
         qty: i.qty,
         line_total: i.products.price * i.qty
-      })),
+      }));
+    } else if (req.body.items && req.body.items.length > 0) {
+      // Use items from request body if DB cart is empty
+      cartItems = req.body.items.map(i => ({
+        product_id: i.id || i.product_id,
+        name: i.name,
+        brand: i.brand || '',
+        emoji: i.emoji || '🛒',
+        price: i.price,
+        mrp: i.mrp || i.price,
+        qty: i.qty,
+        line_total: i.price * i.qty
+      }));
+    }
+
+    if (!cartItems.length)
+      return res.status(400).json({ success: false, message: 'Cart is empty' });
+
+    const subtotal = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
+    const tax      = Math.round(subtotal * TAX_RATE);
+    const total    = subtotal + tax - Number(coupon_discount);
+
+    const orderData = {
+      user_id: req.user.id,
+      items: cartItems,
       total,
       method: payment_method,
       status: 'paid'
