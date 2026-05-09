@@ -18,6 +18,9 @@
 .cat-search input{background:none; border:none; color:#fff; flex:1; font-size:14px; padding-left:8px}
 .cat-search input::placeholder{color:var(--muted)}
 .cat-search .material-icons{color:var(--primary); font-size:20px}
+.add-btn{width:34px;height:34px;border-radius:10px;background:#ef4d23;color:#fff;border:none;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;transition:transform .15s,background .15s;box-shadow:0 4px 12px rgba(239,77,35,0.3);flex-shrink:0}
+.add-btn:active{transform:scale(0.88)}
+.add-btn.added{background:#10b981}
 </style>
 </head>
 <body class="page-anim">
@@ -122,7 +125,10 @@ function toast(msg,type='green'){
 function productCard(p){
   const off=discount(p.mrp,p.price);
   const isProduce = p.category === 'Produce';
-  return `<div class="prod-card" onclick="${isProduce?`openWeightModal('${p.id}')`:`location.href='product.html?id=${p.id}'`}">
+  const addAction = isProduce
+    ? `openWeightModal('${p.id}')`
+    : `event.stopPropagation(); doAdd('${p.id}', this)`;
+  return `<div class="prod-card" onclick="${isProduce ? `openWeightModal('${p.id}')` : `location.href='product.html?id=${p.id}'`}">
     ${off>0?`<div style="position:absolute;top:8px;left:8px;background:var(--red);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px">${off}% OFF</div>`:''}
     <div class="prod-img-ph">
       ${p.img ? `<img src="${p.img}" class="prod-img" alt="${p.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='${p.emoji}'"/>` : p.emoji}
@@ -132,7 +138,10 @@ function productCard(p){
     ${isProduce?`<div style="font-size:11px;color:var(--green);font-weight:700;margin-top:4px">Weight based price</div>`:''}
     <div class="prod-footer">
       <div><span class="prod-price">${formatPrice(p.price)}${p.unit?`/${p.unit}`:''}</span></div>
-      <span class="material-icons" style="color:var(--muted);font-size:20px">chevron_right</span>
+      ${isProduce
+        ? `<span class="material-icons" style="color:var(--muted);font-size:20px">scale</span>`
+        : `<button class="add-btn" onclick="event.stopPropagation(); doAdd('${p.id}', this)">+</button>`
+      }
     </div>
   </div>`;
 }
