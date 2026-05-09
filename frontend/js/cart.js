@@ -1,9 +1,20 @@
 // ============================================
 // SmartCheckout — Cart System (localStorage)
 // ============================================
-function getCart(){ try{ return JSON.parse(localStorage.getItem(ukey('cart'))) || []; }catch(e){ return []; } }
-function saveCart(c){ localStorage.setItem(ukey('cart'), JSON.stringify(c)); updateCartBadge(); }
-function clearCart(){ localStorage.removeItem(ukey('cart')); updateCartBadge(); }
+
+// Safe ukey: works even if auth.js hasn't loaded yet
+function _ukey(key) {
+  if (typeof ukey === 'function') return ukey(key);
+  try {
+    const s = JSON.parse(localStorage.getItem('ssc_session'));
+    const id = s ? s.user.email.replace(/[^a-zA-Z0-9]/g, '_') : 'guest';
+    return `ssc_${id}_${key}`;
+  } catch(e) { return `ssc_guest_${key}`; }
+}
+
+function getCart(){ try{ return JSON.parse(localStorage.getItem(_ukey('cart'))) || []; }catch(e){ return []; } }
+function saveCart(c){ localStorage.setItem(_ukey('cart'), JSON.stringify(c)); updateCartBadge(); }
+function clearCart(){ localStorage.removeItem(_ukey('cart')); updateCartBadge(); }
 
 function addToCart(product, qty=1){
   const cart = getCart();
@@ -15,7 +26,7 @@ function addToCart(product, qty=1){
   }
 
   // 2. DUPLICATE DETECTION (Fast Scan Prevention)
-  const lastScanKey = ukey('last_scan_time');
+  const lastScanKey = _ukey('last_scan_time');
   const lastScan = localStorage.getItem(lastScanKey);
   const now = Date.now();
   if (lastScan && (now - lastScan < 800)) { 
@@ -28,7 +39,7 @@ function addToCart(product, qty=1){
   if(idx >= 0){ cart[idx].qty += qty; }
   else { cart.push({ id:product.id, name:product.name, brand:product.brand||'', price:product.price, mrp:product.mrp||product.price, emoji:product.emoji||'🛒', img:product.img||'', qty }); }
   saveCart(cart);
-  logActivity('CART_ADD', `Added ${product.name} to cart`);
+  if(typeof logActivity === 'function') logActivity('CART_ADD', `Added ${product.name} to cart`);
   if(navigator.vibrate) navigator.vibrate(60);
   
   // 3. INVENTORY REDUCTION (Simulation)
@@ -63,26 +74,26 @@ function updateCartBadge(){
 // Add to scan history
 function addScanHistory(product){
   try{
-    const h = JSON.parse(localStorage.getItem(ukey('scan_history')) || '[]');
+    const h = JSON.parse(localStorage.getItem(_ukey('scan_history')) || '[]');
     h.unshift({ id:product.id, name:product.name, emoji:product.emoji, price:product.price, time: new Date().toLocaleTimeString() });
-    localStorage.setItem(ukey('scan_history'), JSON.stringify(h.slice(0,20)));
+    localStorage.setItem(_ukey('scan_history'), JSON.stringify(h.slice(0,20)));
   }catch(e){}
 }
 
 // Save order to purchase history
 function savePurchaseHistory(order){
   try{
-    const h = JSON.parse(localStorage.getItem(ukey('orders')) || '[]');
+    const h = JSON.parse(localStorage.getItem(_ukey('orders')) || '[]');
     h.unshift(order);
-    localStorage.setItem(ukey('orders'), JSON.stringify(h.slice(0,50)));
+    localStorage.setItem(_ukey('orders'), JSON.stringify(h.slice(0,50)));
     
     // Global log for Admin
     try {
-      const session = getSession();
+      const session = typeof getSession === 'function' ? getSession() : null;
       const adminLog = JSON.parse(localStorage.getItem('ssc_admin_sales') || '[]');
       adminLog.unshift({ ...order, customer: session ? session.user.name : 'Guest' });
       localStorage.setItem('ssc_admin_sales', JSON.stringify(adminLog.slice(0, 500)));
-      logActivity('PAYMENT', `Order completed: ${order.id} (₹${order.total})`);
+      if(typeof logActivity === 'function') logActivity('PAYMENT', `Order completed: ${order.id} (₹${order.total})`);
     } catch(err) {}
 
     // Award points (1 point per 100 spent)
@@ -92,15 +103,15 @@ function savePurchaseHistory(order){
 }
 
 // Points Logic
-function getPoints(){ return parseInt(localStorage.getItem(ukey('points')) || '0'); }
+function getPoints(){ return parseInt(localStorage.getItem(_ukey('points')) || '0'); }
 function awardPoints(pts){ 
   const current = getPoints();
-  localStorage.setItem(ukey('points'), current + pts);
+  localStorage.setItem(_ukey('points'), current + pts);
 }
 function redeemPoints(pts){
   const current = getPoints();
   if(current < pts) return false;
-  localStorage.setItem(ukey('points'), current - pts);
+  localStorage.setItem(_ukey('points'), current - pts);
   return true;
 }
 
@@ -120,25 +131,25 @@ function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
 
 async function getCloudWallet(){ 
   const token = localStorage.getItem('ssc_token');
-  if(!token) return parseFloat(localStorage.getItem(ukey('wallet_balance')) || '0');
+  if(!token) return parseFloat(localStorage.getItem(_ukey('wallet_balance')) || '0');
   try {
     const res = await fetchWithTimeout(`${API_URL}/users/me/wallet`, { headers: { 'Authorization': `Bearer ${token}` } });
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const result = await res.json();
     if(result.success) {
-      localStorage.setItem(ukey('wallet_balance'), result.balance);
+      localStorage.setItem(_ukey('wallet_balance'), result.balance);
       return result.balance;
     }
   } catch(e) { console.error("Wallet Sync Error:", e); }
-  return parseFloat(localStorage.getItem(ukey('wallet_balance')) || '0'); 
+  return parseFloat(localStorage.getItem(_ukey('wallet_balance')) || '0'); 
 }
 
 async function topUpWalletCloud(amt){ 
   const token = localStorage.getItem('ssc_token');
   // LOCAL FALLBACK: if no token, update local balance only
   if(!token) {
-    const current = parseFloat(localStorage.getItem(ukey('wallet_balance')) || '0');
-    localStorage.setItem(ukey('wallet_balance'), current + amt);
+    const current = parseFloat(localStorage.getItem(_ukey('wallet_balance')) || '0');
+    localStorage.setItem(_ukey('wallet_balance'), current + amt);
     return true;
   }
   try {
@@ -150,19 +161,20 @@ async function topUpWalletCloud(amt){
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const result = await res.json();
     if(result.success) {
-      localStorage.setItem(ukey('wallet_balance'), result.balance);
+      localStorage.setItem(_ukey('wallet_balance'), result.balance);
       return true;
     }
     throw new Error(result.message || 'Top-up failed');
   } catch(e) { 
     console.error("TopUp Error:", e);
     // LOCAL FALLBACK: still credit wallet locally so user isn't blocked
-    const current = parseFloat(localStorage.getItem(ukey('wallet_balance')) || '0');
-    localStorage.setItem(ukey('wallet_balance'), current + amt);
-    return true; // Return true so the UI shows success
+    const current = parseFloat(localStorage.getItem(_ukey('wallet_balance')) || '0');
+    localStorage.setItem(_ukey('wallet_balance'), current + amt);
+    return true;
   }
 }
-function getWalletBalanceLocal(){ return parseFloat(localStorage.getItem(ukey('wallet_balance')) || '0'); }
-function getWalletPin(){ return localStorage.getItem(ukey('wallet_pin')) || '2019'; }
-function setWalletPin(pin){ localStorage.setItem(ukey('wallet_pin'), pin); }
+
+function getWalletBalanceLocal(){ return parseFloat(localStorage.getItem(_ukey('wallet_balance')) || '0'); }
+function getWalletPin(){ return localStorage.getItem(_ukey('wallet_pin')) || '2019'; }
+function setWalletPin(pin){ localStorage.setItem(_ukey('wallet_pin'), pin); }
 function verifyWalletPin(pin){ return pin === getWalletPin(); }
