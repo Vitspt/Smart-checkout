@@ -51,7 +51,7 @@ const DEFAULT_PRODUCTS = [
   { id:'7005', barcode:'7005', name:'Pringles Original 107g', brand:'Pringles', category:'Snacks', price:75, mrp:150, emoji:'🍟', stock:90, img:'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=600&q=80', location:{ floor:'G', section:'Snack Zone', hall:'East Wing', tab:'S03', row:'R10' } }
 ];
 
-const DATA_VERSION = '1.0.5'; 
+const DATA_VERSION = '1.1.0'; // bumped — clears old product cache, loads 50% OFF items
 
 // Check if Supabase is configured and ready
 function isSupabaseReady() {
