@@ -50,10 +50,16 @@ exports.createOrder = async (req, res, next) => {
 
     // Handle Wallet Deduction (Cloud Sync)
     if (payment_method === 'wallet') {
-      if (Number(req.user.wallet_balance) < total) {
-        return res.status(400).json({ success: false, message: `Insufficient balance (Required: ₹${total}, Current: ₹${req.user.wallet_balance})` });
+      const dbBalance = Number(req.user.wallet_balance || 0);
+      const localBalance = Number(req.body.wallet_balance_local || 0);
+      const effectiveBalance = Math.max(dbBalance, localBalance);
+
+      if (effectiveBalance < total) {
+        return res.status(400).json({ success: false, message: `Insufficient balance (Required: ₹${total}, Current: ₹${effectiveBalance})` });
       }
-      const newBalance = Number(req.user.wallet_balance) - total;
+      const newBalance = effectiveBalance - total;
+      
+      // Still try to update DB
       await supabase.from('users').update({ wallet_balance: newBalance }).eq('id', req.user.id);
     }
 

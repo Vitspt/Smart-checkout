@@ -253,7 +253,8 @@ function finishPayment(){
     body: JSON.stringify({ 
       payment_method: order.method === 'convix' ? 'wallet' : order.method,
       items: order.items,
-      total: order.total
+      total: order.total,
+      wallet_balance_local: getWalletBalanceLocal() + order.total
     })
   })
   .then(res => res.json())
