@@ -251,7 +251,7 @@ function finishPayment(){
       'Authorization': `Bearer ${token}`
     },
     body: JSON.stringify({ 
-      payment_method: order.method,
+      payment_method: order.method === 'convix' ? 'wallet' : order.method,
       items: order.items,
       total: order.total
     })
