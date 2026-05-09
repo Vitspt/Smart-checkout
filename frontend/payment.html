@@ -89,7 +89,7 @@ async function init(){
   
   let finalSubtotal = subtotal;
   let couponDisc = 0;
-  const activeCoupon = JSON.parse(localStorage.getItem(ukey('active_coupon')) || 'null');
+  const activeCoupon = JSON.parse(localStorage.getItem(_ukey('active_coupon')) || 'null');
   if(activeCoupon) {
     couponDisc = Math.round(subtotal * (activeCoupon.discount / 100));
     finalSubtotal = subtotal - couponDisc;
@@ -152,18 +152,17 @@ async function init(){
     </div>
   `;
   
-  const bal = getWalletBalance();
+  const bal = getWalletBalanceLocal();
   const statusEl = document.getElementById('wallet-status');
-  if(statusEl) statusEl.textContent = `Balance: ₹${bal.toFixed(2)}`;
+  if(statusEl) statusEl.textContent = `Balance: ₹${Number(bal).toFixed(2)}`;
 }
 
 let pendingTotal = 0;
 function processPayment(total){
   if(selectedMethod === 'convix') {
-    const bal = getWalletBalance();
+    const bal = getWalletBalanceLocal();
     if(bal < total) {
-      if(typeof showToast === 'function') showToast('Insufficient wallet balance! Please top up.', 'error');
-      else alert('Insufficient balance');
+      alert('Insufficient wallet balance! Please top up from Profile. Balance: ₹' + bal.toFixed(2));
       return;
     }
     pendingTotal = total;
@@ -191,6 +190,14 @@ function confirmPin(){
     document.getElementById('pin-input').value = '';
     if(navigator.vibrate) navigator.vibrate(200);
   }
+}
+
+function payWithWallet(total) {
+  // Deduct from local wallet balance
+  const current = getWalletBalanceLocal();
+  const newBal = Math.max(0, current - total);
+  localStorage.setItem(_ukey('wallet_balance'), newBal);
+  console.log(`CONVIX Wallet: Deducted ₹${total}. New balance: ₹${newBal}`);
 }
 
 function startProcessing(){
