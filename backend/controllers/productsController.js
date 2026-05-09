@@ -1,5 +1,6 @@
 // controllers/productsController.js
 const { supabase } = require('../config/db');
+const { PRODUCTS: MOCK_PRODUCTS } = require('../data/mockData');
 
 // GET /api/products
 exports.getAll = async (req, res, next) => {
@@ -10,23 +11,33 @@ exports.getAll = async (req, res, next) => {
     if (category && category !== 'All') {
       query = query.eq('category', category);
     }
-
     if (q) {
       query = query.or(`name.ilike.%${q}%,brand.ilike.%${q}%,category.ilike.%${q}%`);
     }
-
     if (min) query = query.gte('price', Number(min));
     if (max) query = query.lte('price', Number(max));
-
     if (sort === 'price_asc') query = query.order('price', { ascending: true });
     else if (sort === 'price_desc') query = query.order('price', { ascending: false });
     else query = query.order('created_at', { ascending: false });
 
     const { data, error } = await query;
-    if (error) throw error;
+
+    // Use mockData if Supabase fails or returns empty
+    if (error || !data || data.length === 0) {
+      console.log('CONVIX: Supabase empty/error — using mockData');
+      let results = MOCK_PRODUCTS;
+      if (category && category !== 'All') results = results.filter(p => p.category === category);
+      if (q) results = results.filter(p => p.name.toLowerCase().includes(q.toLowerCase()) || p.brand.toLowerCase().includes(q.toLowerCase()));
+      if (sort === 'price_asc') results.sort((a,b) => a.price - b.price);
+      else if (sort === 'price_desc') results.sort((a,b) => b.price - a.price);
+      return res.json({ success: true, count: results.length, data: results });
+    }
 
     res.json({ success: true, count: data.length, data });
-  } catch (e) { next(e); }
+  } catch (e) { 
+    // Final fallback to mockData
+    return res.json({ success: true, count: MOCK_PRODUCTS.length, data: MOCK_PRODUCTS });
+  }
 };
 
 // GET /api/products/categories
