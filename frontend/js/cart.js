@@ -130,48 +130,57 @@ function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
 }
 
 async function getCloudWallet(){ 
+  // Always read local balance first — this is our source of truth
+  const localBal = parseFloat(localStorage.getItem(_ukey('wallet_balance')) || '0');
   const token = localStorage.getItem('ssc_token');
-  if(!token) return parseFloat(localStorage.getItem(_ukey('wallet_balance')) || '0');
+  if(!token) return localBal;
   try {
     const res = await fetchWithTimeout(`${API_URL}/users/me/wallet`, { headers: { 'Authorization': `Bearer ${token}` } });
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const result = await res.json();
     if(result.success) {
-      localStorage.setItem(_ukey('wallet_balance'), result.balance);
-      return result.balance;
+      // CRITICAL: Use Math.max — never let cloud overwrite a higher local balance
+      // This protects against Supabase returning stale 0 if column not updated
+      const cloudBal = parseFloat(result.balance || 0);
+      const best = Math.max(cloudBal, localBal);
+      localStorage.setItem(_ukey('wallet_balance'), best);
+      return best;
     }
   } catch(e) { console.error("Wallet Sync Error:", e); }
-  return parseFloat(localStorage.getItem(_ukey('wallet_balance')) || '0'); 
+  return localBal; 
 }
 
 async function topUpWalletCloud(amt){ 
   const token = localStorage.getItem('ssc_token');
-  // LOCAL FALLBACK: if no token, update local balance only
-  if(!token) {
-    const current = parseFloat(localStorage.getItem(_ukey('wallet_balance')) || '0');
-    localStorage.setItem(_ukey('wallet_balance'), current + amt);
-    return true;
-  }
+  // Always read current local balance before adding
+  const currentLocal = parseFloat(localStorage.getItem(_ukey('wallet_balance')) || '0');
+  const newLocal = currentLocal + Number(amt);
+
+  // Credit locally immediately — guaranteed
+  localStorage.setItem(_ukey('wallet_balance'), newLocal);
+
+  if(!token) return true;
+
+  // Try to sync with backend too
   try {
     const res = await fetchWithTimeout(`${API_URL}/users/me/wallet/topup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify({ amount: amt })
     });
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const result = await res.json();
-    if(result.success) {
-      localStorage.setItem(_ukey('wallet_balance'), result.balance);
-      return true;
+    if(res.ok) {
+      const result = await res.json();
+      if(result.success) {
+        // Cloud saved — use Math.max to keep the higher value
+        const cloudBal = parseFloat(result.balance || 0);
+        const best = Math.max(cloudBal, newLocal);
+        localStorage.setItem(_ukey('wallet_balance'), best);
+      }
     }
-    throw new Error(result.message || 'Top-up failed');
   } catch(e) { 
-    console.error("TopUp Error:", e);
-    // LOCAL FALLBACK: still credit wallet locally so user isn't blocked
-    const current = parseFloat(localStorage.getItem(_ukey('wallet_balance')) || '0');
-    localStorage.setItem(_ukey('wallet_balance'), current + amt);
-    return true;
+    console.warn("TopUp cloud sync failed (local already credited):", e.message);
   }
+  return true; // Always success — local is always credited
 }
 
 function getWalletBalanceLocal(){ return parseFloat(localStorage.getItem(_ukey('wallet_balance')) || '0'); }
