@@ -48,7 +48,7 @@ function isStrongPassword(p){ return p.length >= 6; }
 
 async function signIn(email, password) {
   try {
-    const response = await fetch('/api/auth/login', {
+    const response = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -76,7 +76,7 @@ async function signUp(name, email, password, phone) {
   if (!isStrongPassword(password)) throw new Error('Password must be at least 6 characters long');
 
   try {
-    const response = await fetch('/api/auth/register', {
+    const response = await fetch(`${API_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password, phone })

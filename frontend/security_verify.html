@@ -58,7 +58,7 @@ async function onScanSuccess(decodedText) {
     if(!orderId) throw new Error('Invalid QR Data');
 
     const token = localStorage.getItem('ssc_token');
-    const response = await fetch(`/api/orders/${orderId}/verify`, {
+    const response = await fetch(`${API_URL}/orders/${orderId}/verify`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
